@@ -110,4 +110,8 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'bank_admin:dashboard'
 
 REFUND_REFERENCE = 'Payment refunded'
+
+ADI_TEMPLATE_FILEPATH = 'local_files/adi_template.xlsx'
+OUTPUT_FILENAME = 'adi_file_%Y-%m-%d.xlsx'
+
 REQUEST_PAGE_SIZE = 500

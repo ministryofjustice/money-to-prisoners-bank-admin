@@ -10,5 +10,7 @@ urlpatterns = [
         template_name='bank_admin/dashboard.html')),
         name='dashboard'),
     url(r'^refund/download/$', views.download_refund_file,
-        name='download_refund_file')
+        name='download_refund_file'),
+    url(r'^adi/download/$', views.download_adi_file,
+        name='download_adi_file')
 ]

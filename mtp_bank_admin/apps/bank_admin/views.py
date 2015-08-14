@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from . import refund
 from .exceptions import EmptyFileError
+from . import adi
 
 
 @login_required
@@ -25,3 +26,16 @@ def download_refund_file(request):
         messages.add_message(request, messages.ERROR,
                              _('Could not download AccessPay file'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
+
+
+@login_required
+def download_adi_file(request):
+    filename, filedata = adi.generate_file(request)
+
+    response = HttpResponse(
+        filedata,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+
+    return response
