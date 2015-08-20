@@ -35,3 +35,6 @@ class BankAdminViewsTestCase(SimpleTestCase):
 
     def test_requires_login_dashboard(self):
         self.check_login_redirect(reverse('bank_admin:dashboard'))
+
+    def test_requires_download_refund_file(self):
+        self.check_login_redirect(reverse('bank_admin:download_refund_file'))
