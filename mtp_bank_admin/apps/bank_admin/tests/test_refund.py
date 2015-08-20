@@ -1,5 +1,5 @@
 from unittest import mock
-from copy import copy
+from copy import deepcopy
 
 from django.test import SimpleTestCase
 
@@ -29,7 +29,7 @@ class RefundFileTestCase(SimpleTestCase):
                          csvdata)
 
     def test_generate_missing_ref(self, mock_api_client):
-        missing_ref = copy(REFUND_TRANSACTION)
+        missing_ref = deepcopy(REFUND_TRANSACTION)
         missing_ref[0]['reference'] = ''
 
         conn = mock_api_client.get_connection().transactions
@@ -40,8 +40,8 @@ class RefundFileTestCase(SimpleTestCase):
         self.assertEqual('111111,22222222,DOE JO,25.68,\r\n',
                          csvdata)
 
-    def test_missing_account_details(self, mock_api_client):
-        missing_account_details = copy(REFUND_TRANSACTION)
+    def test_generate_missing_account_details(self, mock_api_client):
+        missing_account_details = deepcopy(REFUND_TRANSACTION)
         missing_account_details[0]['sender_account_number'] = ''
 
         conn = mock_api_client.get_connection().transactions
