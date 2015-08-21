@@ -19,7 +19,7 @@ class BankAdminViewsTestCase(SimpleTestCase):
         }
 
         response = self.client.post(
-            reverse('auth:login'),
+            reverse('login'),
             data={'username': 'shall', 'password': 'pass'},
             follow=True
         )
@@ -29,7 +29,7 @@ class BankAdminViewsTestCase(SimpleTestCase):
     def check_login_redirect(self, attempted_url):
         response = self.client.get(attempted_url)
         redirect_url = '%(login_url)s?next=%(attempted_url)s' % \
-            {'login_url': reverse('auth:login'),
+            {'login_url': reverse('login'),
              'attempted_url': attempted_url}
         self.assertRedirects(response, redirect_url)
 

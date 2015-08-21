@@ -34,7 +34,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bank_admin',
-    'mtp_auth',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -107,5 +106,5 @@ API_URL = os.environ.get('API_URL', 'http://localhost:8000')
 
 OAUTHLIB_INSECURE_TRANSPORT = True
 
-LOGIN_URL = 'auth:login'
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'bank_admin:dashboard'
