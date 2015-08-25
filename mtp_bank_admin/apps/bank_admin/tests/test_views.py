@@ -1,6 +1,7 @@
 from unittest import mock
 from django.test import SimpleTestCase
 from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext_lazy as _
 from moj_auth.tests.utils import generate_tokens
 
 from .test_refund import REFUND_TRANSACTION
@@ -54,3 +55,30 @@ class BankAdminViewsTestCase(SimpleTestCase):
         self.assertEqual('text/csv', response['Content-Type'])
         self.assertEqual(b'111111,22222222,DOE JO,25.68,A1234BC 22/03/66\r\n',
                          response.content)
+
+    @mock.patch('bank_admin.refund.api_client')
+    def test_download_refund_file_error(self, mock_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.side_effect = Exception('Problem?')
+
+        response = self.client.get(reverse('bank_admin:download_refund_file'),
+                                   follow=True)
+
+        self.assertContains(response, _('Could not download AccessPay file'),
+                            status_code=200)
+
+    @mock.patch('bank_admin.refund.api_client')
+    def test_download_refund_file_no_transactions(self, mock_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = []
+
+        response = self.client.get(reverse('bank_admin:download_refund_file'),
+                                   follow=True)
+
+        self.assertContains(response,
+                            _('No new transactions available for refund'),
+                            status_code=200)

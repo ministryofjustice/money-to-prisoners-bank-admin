@@ -4,6 +4,7 @@ from copy import deepcopy
 from django.test import SimpleTestCase
 
 from .. import refund
+from ..exceptions import EmptyFileError
 
 REFUND_TRANSACTION = [{
     'id': '3',
@@ -50,10 +51,11 @@ class RefundFileTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = missing_account_details
 
-        _, csvdata = refund.generate_refund_file(None)
-
-        self.assertFalse(conn.patch.called)
-        self.assertEqual('', csvdata)
+        try:
+            _, csvdata = refund.generate_refund_file(None)
+            self.fail('EmptyFileError expected')
+        except EmptyFileError:
+            self.assertFalse(conn.patch.called)
 
     def test_generate_mixed(self, mock_api_client):
         missing_account_details = deepcopy(REFUND_TRANSACTION)
