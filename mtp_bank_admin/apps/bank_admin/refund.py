@@ -9,7 +9,7 @@ OUTPUT_FILENAME = 'mtp_accesspay_%s.csv'
 
 def generate_refund_file(request):
     client = api_client.get_connection(request)
-    refund_transactions = client.transactions.get()
+    refund_transactions = client.bank_admin.transactions.get()
 
     out = io.StringIO()
     writer = csv.writer(out)
