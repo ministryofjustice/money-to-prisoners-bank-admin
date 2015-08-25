@@ -45,7 +45,7 @@ class BankAdminViewsTestCase(SimpleTestCase):
     def test_download_refund_file(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
+        conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = REFUND_TRANSACTION
 
         response = self.client.get(reverse('bank_admin:download_refund_file'))

@@ -14,6 +14,7 @@ def generate_refund_file(request):
     out = io.StringIO()
     writer = csv.writer(out)
 
+    refunded_transactions = []
     for transaction in refund_transactions:
         if (not transaction['sender_sort_code'] or
                 not transaction['sender_account_number'] or
@@ -27,6 +28,10 @@ def generate_refund_file(request):
             transaction['amount'],
             transaction['reference']
         ])
+        refunded_transactions.append({'id': transaction['id'], 'refunded': True})
+
+    if len(refunded_transactions) > 0:
+        client.bank_admin.transactions.patch(refunded_transactions)
 
     return (OUTPUT_FILENAME % datetime.now().strftime('%Y-%m-%d'),
             out.getvalue())
