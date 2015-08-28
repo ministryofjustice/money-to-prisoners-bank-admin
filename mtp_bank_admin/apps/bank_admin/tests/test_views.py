@@ -8,7 +8,7 @@ from moj_auth.tests.utils import generate_tokens
 from .test_refund import REFUND_TRANSACTION
 
 
-class BankAdminViewsTestCase(SimpleTestCase):
+class BankAdminViewTestCase(SimpleTestCase):
 
     @mock.patch('moj_auth.backends.api_client')
     def login(self, mock_api_client):
@@ -37,10 +37,13 @@ class BankAdminViewsTestCase(SimpleTestCase):
              'attempted_url': attempted_url}
         self.assertRedirects(response, redirect_url)
 
-    def test_requires_login_dashboard(self):
+
+class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
+
+    def test_dashboard_requires_login(self):
         self.check_login_redirect(reverse('bank_admin:dashboard'))
 
-    def test_requires_download_refund_file(self):
+    def test_download_refund_file_requires_login(self):
         self.check_login_redirect(reverse('bank_admin:download_refund_file'))
 
     @mock.patch('bank_admin.refund.api_client')
@@ -57,8 +60,11 @@ class BankAdminViewsTestCase(SimpleTestCase):
         self.assertEqual(bytes('111111,22222222,DOE JO,25.68,%s\r\n' % settings.REFUND_REFERENCE, 'utf8'),
                          response.content)
 
-    @mock.patch('bank_admin.refund.api_client')
-    def test_download_refund_file_error(self, mock_api_client):
+
+@mock.patch('bank_admin.refund.api_client')
+class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
+
+    def test_download_refund_file_general_error_message(self, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -70,8 +76,7 @@ class BankAdminViewsTestCase(SimpleTestCase):
         self.assertContains(response, _('Could not download AccessPay file'),
                             status_code=200)
 
-    @mock.patch('bank_admin.refund.api_client')
-    def test_download_refund_file_no_transactions(self, mock_api_client):
+    def test_download_refund_file_no_transactions_error_message(self, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions

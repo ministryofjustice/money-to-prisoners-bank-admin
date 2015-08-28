@@ -1,5 +1,4 @@
 from unittest import mock
-from copy import deepcopy
 
 from django.test import SimpleTestCase
 from django.conf import settings
@@ -20,9 +19,9 @@ REFUND_TRANSACTION = [{
 
 
 @mock.patch('bank_admin.refund.api_client')
-class RefundFileTestCase(SimpleTestCase):
+class ValidTransactionsTestCase(SimpleTestCase):
 
-    def test_generate(self, mock_api_client):
+    def test_generate_refund_file(self, mock_api_client):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = REFUND_TRANSACTION
 
@@ -32,7 +31,11 @@ class RefundFileTestCase(SimpleTestCase):
         self.assertEqual('111111,22222222,DOE JO,25.68,%s\r\n' % settings.REFUND_REFERENCE,
                          csvdata)
 
-    def test_generate_no_transactions(self, mock_api_client):
+
+@mock.patch('bank_admin.refund.api_client')
+class NoTransactionsTestCase(SimpleTestCase):
+
+    def test_generate_refund_file_raises_error(self, mock_api_client):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = []
 
