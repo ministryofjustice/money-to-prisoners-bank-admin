@@ -2,6 +2,7 @@ from unittest import mock
 from django.test import SimpleTestCase
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 from moj_auth.tests.utils import generate_tokens
 
 from .test_refund import REFUND_TRANSACTION
@@ -53,7 +54,7 @@ class BankAdminViewsTestCase(SimpleTestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/csv', response['Content-Type'])
-        self.assertEqual(b'111111,22222222,DOE JO,25.68,A1234BC 22/03/66\r\n',
+        self.assertEqual(bytes('111111,22222222,DOE JO,25.68,%s\r\n' % settings.REFUND_REFERENCE, 'utf8'),
                          response.content)
 
     @mock.patch('bank_admin.refund.api_client')

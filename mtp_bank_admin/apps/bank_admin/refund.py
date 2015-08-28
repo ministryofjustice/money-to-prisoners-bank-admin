@@ -2,6 +2,7 @@ import csv
 import io
 from datetime import datetime
 
+from django.conf import settings
 from moj_auth.backends import api_client
 
 from .exceptions import EmptyFileError
@@ -23,7 +24,7 @@ def generate_refund_file(request):
                 transaction['sender_account_number'],
                 transaction['sender_name'],
                 transaction['amount'],
-                transaction['reference']
+                settings.REFUND_REFERENCE
             ])
             refunded_transactions.append({'id': transaction['id'], 'refunded': True})
 
