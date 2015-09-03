@@ -1,4 +1,14 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
+{% if messages %}
+<ul class="errors">
+	{% for message in messages %}
+	<li>{{ message }}</li>
+	{% endfor %}
+</ul>
+<p/>
+<a href="{% url "bank_admin:download_refund_file" %}">{% trans "Download Refunds" %}</a>
+{% endif %}
 {% endblock %}
