@@ -30,12 +30,20 @@ def download_refund_file(request):
 
 @login_required
 def download_adi_file(request):
-    filename, filedata = adi.generate_file(request)
+    try:
+        filename, filedata = adi.generate_adi_file(request)
 
-    response = HttpResponse(
-        filedata,
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+        response = HttpResponse(
+            filedata,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="%s"' % filename
 
-    return response
+        return response
+    except EmptyFileError:
+        messages.add_message(request, messages.ERROR,
+                             _('No new transactions available for reconciliation'))
+    except:
+        messages.add_message(request, messages.ERROR,
+                             _('Could not download ADI file'))
+    return redirect(reverse_lazy('bank_admin:dashboard'))
