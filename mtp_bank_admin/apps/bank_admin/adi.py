@@ -62,9 +62,10 @@ class AdiJournal(object):
 
     def _lookup(self, field, payment_type, record_type):
         try:
-            return config.ADI_FIELD_VALUES[field][payment_type.name][record_type.name]
+            value_dict = config.ADI_JOURNAL_FIELDS[field]['value']
+            return value_dict[payment_type.name][record_type.name]
         except KeyError:
-            # non-static value
+            # no static value
             return None
 
     def _add_payment_row(self, prison, amount, payment_type, record_type):

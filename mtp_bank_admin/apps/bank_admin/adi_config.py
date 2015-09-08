@@ -32,6 +32,10 @@ ADI_FINAL_ROW_STYLE = {
 ADI_JOURNAL_FIELDS = {
     'upload': {
         'column': 'B',
+        'value': {
+            'payment': {'debit': 'O', 'credit': 'O'},
+            'refund': {'debit': 'O', 'credit': 'O'},
+        },
         'style': dict(
             border={
                 'left': styles.Side(style='medium', color='000000'),
@@ -40,15 +44,63 @@ ADI_JOURNAL_FIELDS = {
             **_white_style
         )
     },
-    'company': {'column': 'C', 'style': _white_style},
-    'business_unit': {'column': 'D', 'style': _white_style},
-    'responsibility_code': {'column': 'E', 'style': _white_style},
-    'activity': {'column': 'F', 'style': _white_style},
-    'account': {'column': 'G', 'style': _white_style},
-    'funding_source': {'column': 'H', 'style': _white_style},
-    'analysis': {'column': 'I', 'style': _white_style},
+    'company': {
+        'column': 'C',
+        'value': {
+            'payment': {'debit': '1', 'credit': '1'},
+            'refund': {'debit': '1', 'credit': '1'},
+        },
+        'style': _white_style
+    },
+    'business_unit': {
+        'column': 'D',
+        'value': {
+            'payment': {'debit': '535'},
+        },
+        'style': _white_style
+    },
+    'responsibility_code': {
+        'column': 'E',
+        'value': {
+            'payment': {'debit': '9500', 'credit': '9500'},
+        },
+        'style': _white_style
+    },
+    'activity': {
+        'column': 'F',
+        'value': {
+            'payment': {'debit': '950', 'credit': '950'},
+        },
+        'style': _white_style
+    },
+    'account': {
+        'column': 'G',
+        'value': {
+            'payment': {'debit': '8890', 'credit': '9400'},
+        },
+        'style': _white_style
+    },
+    'funding_source': {
+        'column': 'H',
+        'value': {
+            'payment': {'debit': '95', 'credit': '95'},
+        },
+        'style': _white_style
+    },
+    'analysis': {
+        'column': 'I',
+        'value': {
+            'payment': {'debit': '000000', 'credit': '000000'},
+            'refund': {'debit': '000000', 'credit': '000000'},
+        },
+        'style': _white_style
+    },
     'spare': {
         'column': 'J',
+        'value': {
+            'payment': {'debit': '000000', 'credit': '000000'},
+            'refund': {'debit': '000000', 'credit': '000000'},
+        },
         'style': dict(
             border={
                 'right': styles.Side(style='medium', color='000000')
@@ -78,6 +130,10 @@ ADI_JOURNAL_FIELDS = {
     },
     'description': {
         'column': 'M',
+        'value': {
+            'payment': {'debit': 'MTP Payment', 'credit': 'MTP Payment'},
+            'refund': {'debit': 'MTP Refund', 'credit': 'MTP Refund'},
+        },
         'style': dict(
             border={
                 'left': styles.Side(style='thin', color='000000'),
@@ -95,43 +151,5 @@ ADI_JOURNAL_FIELDS = {
             },
             **_tan_style
         )
-    },
-}
-
-ADI_FIELD_VALUES = {
-    'upload': {
-        'payment': {'debit': 'O', 'credit': 'O'},
-        'refund': {'debit': 'O', 'credit': 'O'},
-    },
-    'company': {
-        'payment': {'debit': '1', 'credit': '1'},
-        'refund': {'debit': '1', 'credit': '1'},
-    },
-    'business_unit': {
-        'payment': {'debit': '535'},
-    },
-    'responsibility_code': {
-        'payment': {'debit': '9500', 'credit': '9500'},
-    },
-    'activity': {
-        'payment': {'debit': '950', 'credit': '950'},
-    },
-    'account': {
-        'payment': {'debit': '8890', 'credit': '9400'},
-    },
-    'funding_source': {
-        'payment': {'debit': '95', 'credit': '95'},
-    },
-    'analysis': {
-        'payment': {'debit': '000000', 'credit': '000000'},
-        'refund': {'debit': '000000', 'credit': '000000'},
-    },
-    'spare': {
-        'payment': {'debit': '000000', 'credit': '000000'},
-        'refund': {'debit': '000000', 'credit': '000000'},
-    },
-    'description': {
-        'payment': {'debit': 'MTP Payment', 'credit': 'MTP Payment'},
-        'refund': {'debit': 'MTP Refund', 'credit': 'MTP Refund'},
     },
 }
