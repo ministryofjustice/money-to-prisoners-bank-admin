@@ -26,8 +26,8 @@ class AdiJournal(object):
 
         self.current_row = config.ADI_JOURNAL_START_ROW
 
-    def _next_row(self):
-        self.current_row += 1
+    def _next_row(self, increment=1):
+        self.current_row += increment
 
     def _set_field(self, field, value, style=None, extra_style=None):
         cell = '%s%s' % (config.ADI_JOURNAL_FIELDS[field]['column'],
@@ -91,22 +91,13 @@ class AdiJournal(object):
 
         bold = {'font': {'bold': True}}
 
-        self._next_row()
-        self._next_row()
-        self._next_row()
-
+        self._next_row(increment=3)
         self._set_field('description', 'UPLOADED BY:', style=bold)
 
-        self._next_row()
-        self._next_row()
-        self._next_row()
-
+        self._next_row(increment=3)
         self._set_field('description', 'CHECKED BY:', style=bold)
 
-        self._next_row()
-        self._next_row()
-        self._next_row()
-
+        self._next_row(increment=3)
         self._set_field('description', 'POSTED BY:', style=bold)
 
     def add_payment(self, prison, amount, payment_type):
