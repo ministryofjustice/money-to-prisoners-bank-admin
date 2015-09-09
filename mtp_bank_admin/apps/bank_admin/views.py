@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from . import refund
 from .exceptions import EmptyFileError
 from . import adi
+from .types import PaymentType
 
 
 @login_required
@@ -28,10 +29,12 @@ def download_refund_file(request):
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
 
-@login_required
-def download_adi_file(request):
+def download_adi_file(payment_type, request):
     try:
-        filename, filedata = adi.generate_adi_file(request)
+        if payment_type == PaymentType.payment:
+            filename, filedata = adi.generate_adi_payment_file(request)
+        else:
+            filename, filedata = adi.generate_adi_refund_file(request)
 
         response = HttpResponse(
             filedata,
@@ -47,3 +50,13 @@ def download_adi_file(request):
         messages.add_message(request, messages.ERROR,
                              _('Could not download ADI file'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
+
+
+@login_required
+def download_adi_payment_file(request):
+    return download_adi_file(PaymentType.payment, request)
+
+
+@login_required
+def download_adi_refund_file(request):
+    return download_adi_file(PaymentType.refund, request)

@@ -55,7 +55,8 @@ ADI_JOURNAL_FIELDS = {
     'business_unit': {
         'column': 'D',
         'value': {
-            'payment': {'debit': '535'},
+            'payment': {'debit': '535', 'credit': '{prison_id}'},
+            'refund': {'debit': '535', 'credit': '535'},
         },
         'style': _white_style
     },
@@ -63,6 +64,7 @@ ADI_JOURNAL_FIELDS = {
         'column': 'E',
         'value': {
             'payment': {'debit': '9500', 'credit': '9500'},
+            'refund': {'debit': '9500', 'credit': '9500'},
         },
         'style': _white_style
     },
@@ -70,13 +72,15 @@ ADI_JOURNAL_FIELDS = {
         'column': 'F',
         'value': {
             'payment': {'debit': '950', 'credit': '950'},
+            'refund': {'debit': '950', 'credit': '950'},
         },
         'style': _white_style
     },
     'account': {
         'column': 'G',
         'value': {
-            'payment': {'debit': '8890', 'credit': '9400'},
+            'payment': {'debit': '8830', 'credit': '9400'},
+            'refund': {'debit': '8830', 'credit': '8830'},
         },
         'style': _white_style
     },
@@ -84,6 +88,7 @@ ADI_JOURNAL_FIELDS = {
         'column': 'H',
         'value': {
             'payment': {'debit': '95', 'credit': '95'},
+            'refund': {'debit': '95', 'credit': '95'},
         },
         'style': _white_style
     },
@@ -131,18 +136,24 @@ ADI_JOURNAL_FIELDS = {
     'description': {
         'column': 'M',
         'value': {
-            'payment': {'debit': 'MTP Payment', 'credit': 'MTP Payment'},
-            'refund': {'debit': 'MTP Refund', 'credit': 'MTP Refund'},
+            'payment': {'debit': '{unique_id}', 'credit': '{prison_name} MTP Total {date}'},
+            'refund': {'debit': '{unique_id}', 'credit': 'MTP Refund File {date}'},
         },
         'style': dict(
             border={
                 'left': styles.Side(style='thin', color='000000'),
                 'right': styles.Side(style='medium', color='000000')
             },
+            alignment={
+                'horizontal': 'center'
+            },
             **_white_style
         )
     },
-    'line_dff_1': {'column': 'N', 'style': _tan_style},
+    'line_dff_1': {
+        'column': 'N',
+        'style': _tan_style
+    },
     'messages': {
         'column': 'O',
         'style': dict(

@@ -17,7 +17,8 @@ class AdiJournal(object):
     STYLE_TYPES = {
         'fill': styles.PatternFill,
         'border': styles.Border,
-        'font': styles.Font
+        'font': styles.Font,
+        'alignment': styles.Alignment
     }
 
     def __init__(self, *args, **kwargs):
@@ -60,27 +61,15 @@ class AdiJournal(object):
                 })
         )
 
-    def _lookup(self, field, payment_type, record_type):
+    def _lookup(self, field, payment_type, record_type, context={}):
         try:
             value_dict = config.ADI_JOURNAL_FIELDS[field]['value']
-            return value_dict[payment_type.name][record_type.name]
+            value = value_dict[payment_type.name][record_type.name]
+            if value:
+                return value.format(**context)
         except KeyError:
-            # no static value
-            return None
-
-    def _add_payment_row(self, prison, amount, payment_type, record_type):
-        self._set_field('business_unit', prison)
-        if record_type == RecordType.debit:
-            self._set_field('debit', float(amount))
-        elif record_type == RecordType.credit:
-            self._set_field('credit', float(amount))
-
-        for field in config.ADI_JOURNAL_FIELDS:
-            static_value = self._lookup(field, payment_type, record_type)
-            if static_value:
-                self._set_field(field, static_value)
-
-        self._next_row()
+            pass  # no static value
+        return None
 
     def _finish_journal(self):
         for field in config.ADI_JOURNAL_FIELDS:
@@ -89,7 +78,7 @@ class AdiJournal(object):
         self._add_column_sum('debit')
         self._add_column_sum('credit')
 
-        bold = {'font': {'bold': True}}
+        bold = {'font': {'bold': True}, 'alignment': {'horizontal': 'left'}}
 
         self._next_row(increment=3)
         self._set_field('description', 'UPLOADED BY:', style=bold)
@@ -100,9 +89,18 @@ class AdiJournal(object):
         self._next_row(increment=3)
         self._set_field('description', 'POSTED BY:', style=bold)
 
-    def add_payment(self, prison, amount, payment_type):
-        self._add_payment_row(prison, amount, payment_type, RecordType.debit)
-        self._add_payment_row(prison, amount, payment_type, RecordType.credit)
+    def add_payment_row(self, amount, payment_type, record_type, **kwargs):
+        for field in config.ADI_JOURNAL_FIELDS:
+            static_value = self._lookup(field, payment_type, record_type,
+                                        context=kwargs)
+            self._set_field(field, static_value)
+
+        if record_type == RecordType.debit:
+            self._set_field('debit', float(amount))
+        elif record_type == RecordType.credit:
+            self._set_field('credit', float(amount))
+
+        self._next_row()
 
     def create_file(self):
         self._finish_journal()
@@ -113,32 +111,58 @@ class AdiJournal(object):
                 save_virtual_workbook(self.wb))
 
 
-def generate_adi_file(request):
+def generate_adi_payment_file(request):
     journal = AdiJournal()
 
     client = api_client.get_connection(request)
-    new_transactions = client.bank_admin.transactions.get(status='refunded,credited')
+    new_transactions = client.bank_admin.transactions.get(status='credited')
 
     if len(new_transactions) == 0:
         raise EmptyFileError()
 
+    today = datetime.now().strftime('%d/%m/%Y')
     prison_payments = defaultdict(list)
-    refunds = []
     for transaction in new_transactions:
-        try:
-            prison_payments[transaction['prison']].append(transaction)
-        except KeyError:
-            if transaction['refunded']:
-                refunds.append(transaction)
+        prison_payments[transaction['prison']['nomis_id']].append(transaction)
 
     # do payments
-    for prison, transaction_list in prison_payments.items():
+    for _, transaction_list in prison_payments.items():
         total_credit = sum([Decimal(t['amount']) for t in transaction_list
                             if t['credited']])
-        journal.add_payment(prison, total_credit, PaymentType.payment)
+        for transaction in transaction_list:
+            journal.add_payment_row(
+                transaction['amount'], PaymentType.payment, RecordType.debit,
+                unique_id=1
+            )
+        journal.add_payment_row(
+            total_credit, PaymentType.payment, RecordType.credit,
+            prison_id=transaction_list[0]['prison']['nomis_id'],
+            prison_name=transaction_list[0]['prison']['name'],
+            date=today
+        )
+
+    return journal.create_file()
+
+
+def generate_adi_refund_file(request):
+    journal = AdiJournal()
+
+    client = api_client.get_connection(request)
+    refunds = client.bank_admin.transactions.get(status='refunded')
+
+    if len(refunds) == 0:
+        raise EmptyFileError()
+
+    today = datetime.now().strftime('%d/%m/%Y')
 
     # do refunds
-    total_debit = sum([Decimal(t['amount']) for t in refunds])
-    journal.add_payment(None, total_debit, PaymentType.refund)
+    refund_total = sum([Decimal(t['amount']) for t in refunds])
+    for refund in refunds:
+        journal.add_payment_row(
+            refund['amount'], PaymentType.refund, RecordType.debit,
+            unique_id=1
+        )
+    journal.add_payment_row(refund_total, PaymentType.refunded, RecordType.debit,
+                            date=today)
 
     return journal.create_file()
