@@ -12,13 +12,29 @@ OUTPUT_FILENAME = 'mtp_accesspay_%s.csv'
 
 def generate_refund_file(request):
     client = api_client.get_connection(request)
-    refund_transactions = client.bank_admin.transactions.get(status='refund_pending')
+    response = client.bank_admin.transactions.get(
+        status='refund_pending',
+        limit=settings.REQUEST_PAGE_SIZE
+    )
+    transactions_to_refund = response.get('results', [])
+    total_count = response.get('count', 0)
+
+    page_num = 1
+    while len(transactions_to_refund) < total_count:
+        response = client.bank_admin.transactions.get(
+            status='refund_pending',
+            limit=settings.REQUEST_PAGE_SIZE,
+            offset=settings.REQUEST_PAGE_SIZE*page_num
+        )
+        transactions_to_refund += response.get('results', [])
+        total_count = response.get('count', 0)
+        page_num += 1
 
     with io.StringIO() as out:
         writer = csv.writer(out)
 
         refunded_transactions = []
-        for transaction in refund_transactions:
+        for transaction in transactions_to_refund:
             writer.writerow([
                 transaction['sender_sort_code'],
                 transaction['sender_account_number'],

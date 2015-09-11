@@ -110,3 +110,4 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'bank_admin:dashboard'
 
 REFUND_REFERENCE = 'Payment refunded'
+REQUEST_PAGE_SIZE = 500
