@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from moj_auth.tests.utils import generate_tokens
 
-from .test_refund import REFUND_TRANSACTION
+from .test_refund import REFUND_TRANSACTIONS, NO_TRANSACTIONS
 
 
 class BankAdminViewTestCase(SimpleTestCase):
@@ -51,14 +51,17 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.return_value = REFUND_TRANSACTION
+        conn.get.side_effect = REFUND_TRANSACTIONS
 
         response = self.client.get(reverse('bank_admin:download_refund_file'))
 
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/csv', response['Content-Type'])
-        self.assertEqual(bytes('111111,22222222,DOE JO,25.68,%s\r\n' % settings.REFUND_REFERENCE, 'utf8'),
-                         response.content)
+        self.assertEqual(
+            bytes(('111111,22222222,John Doe,25.68,%(ref)s\r\n' +
+                   '999999,33333333,Joe Bloggs,18.72,%(ref)s\r\n')
+                  % {'ref': settings.REFUND_REFERENCE}, 'utf8'),
+            response.content)
 
 
 @mock.patch('bank_admin.refund.api_client')
@@ -80,7 +83,7 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.return_value = []
+        conn.get.return_value = NO_TRANSACTIONS
 
         response = self.client.get(reverse('bank_admin:download_refund_file'),
                                    follow=True)

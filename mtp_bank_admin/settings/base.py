@@ -100,8 +100,8 @@ AUTHENTICATION_BACKENDS = (
     'moj_auth.backends.MojBackend',
 )
 
-API_CLIENT_ID = 'bank_admin'
-API_CLIENT_SECRET = os.environ.get('API_CLIENT_SECRET', 'bank_admin')
+API_CLIENT_ID = 'bank-admin'
+API_CLIENT_SECRET = os.environ.get('API_CLIENT_SECRET', 'bank-admin')
 API_URL = os.environ.get('API_URL', 'http://localhost:8000')
 
 OAUTHLIB_INSECURE_TRANSPORT = True
@@ -110,3 +110,4 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'bank_admin:dashboard'
 
 REFUND_REFERENCE = 'Payment refunded'
+REQUEST_PAGE_SIZE = 500
