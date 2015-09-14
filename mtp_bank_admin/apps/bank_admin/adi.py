@@ -21,11 +21,12 @@ class AdiJournal(object):
         'alignment': styles.Alignment
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, payment_type, *args, **kwargs):
         self.wb = load_workbook(settings.ADI_TEMPLATE_FILEPATH)
         self.journal_ws = self.wb.get_sheet_by_name(config.ADI_JOURNAL_SHEET)
 
         self.current_row = config.ADI_JOURNAL_START_ROW
+        self.payment_type = payment_type
 
     def _next_row(self, increment=1):
         self.current_row += increment
@@ -35,18 +36,21 @@ class AdiJournal(object):
                          self.current_row)
         self.journal_ws[cell] = value
 
-        if not style:
-            style = defaultdict(dict)
-            style.update(config.ADI_JOURNAL_FIELDS[field]['style'])
+        computed_style = defaultdict(dict)
+        if style:
+            computed_style.update(style)
+        else:
+            computed_style.update(config.ADI_JOURNAL_FIELDS[field]['style'])
 
         if extra_style:
             for key in extra_style:
-                style[key].update(extra_style[key])
+                computed_style[key].update(extra_style[key])
 
-        for key in style:
-            self.journal_ws[cell].__setattr__(
+        for key in computed_style:
+            setattr(
+                self.journal_ws[cell],
                 key,
-                self.STYLE_TYPES[key](**style[key])
+                self.STYLE_TYPES[key](**computed_style[key])
             )
         return self.journal_ws[cell]
 
@@ -61,10 +65,10 @@ class AdiJournal(object):
                 })
         )
 
-    def _lookup(self, field, payment_type, record_type, context={}):
+    def _lookup(self, field, record_type, context={}):
         try:
             value_dict = config.ADI_JOURNAL_FIELDS[field]['value']
-            value = value_dict[payment_type.name][record_type.name]
+            value = value_dict[self.payment_type.name][record_type.name]
             if value:
                 return value.format(**context)
         except KeyError:
@@ -89,10 +93,9 @@ class AdiJournal(object):
         self._next_row(increment=3)
         self._set_field('description', 'POSTED BY:', style=bold)
 
-    def add_payment_row(self, amount, payment_type, record_type, **kwargs):
+    def add_payment_row(self, amount, record_type, **kwargs):
         for field in config.ADI_JOURNAL_FIELDS:
-            static_value = self._lookup(field, payment_type, record_type,
-                                        context=kwargs)
+            static_value = self._lookup(field, record_type, context=kwargs)
             self._set_field(field, static_value)
 
         if record_type == RecordType.debit:
@@ -105,14 +108,19 @@ class AdiJournal(object):
     def create_file(self):
         self._finish_journal()
 
+        if self.payment_type == PaymentType.payment:
+            filename = settings.ADI_PAYMENT_OUTPUT_FILENAME
+        elif self.payment_type == PaymentType.refund:
+            filename = settings.ADI_REFUND_OUTPUT_FILENAME
+
         today = datetime.now()
         self.journal_ws[config.ADI_DATE_FIELD] = today.strftime('%d/%m/%Y')
-        return (today.strftime(settings.OUTPUT_FILENAME),
+        return (today.strftime(filename),
                 save_virtual_workbook(self.wb))
 
 
 def generate_adi_payment_file(request):
-    journal = AdiJournal()
+    journal = AdiJournal(PaymentType.payment)
 
     new_transactions = retrieve_all_transactions(request, 'credited')
 
@@ -130,11 +138,11 @@ def generate_adi_payment_file(request):
                             if t['credited']])
         for transaction in transaction_list:
             journal.add_payment_row(
-                transaction['amount'], PaymentType.payment, RecordType.debit,
+                transaction['amount'], RecordType.debit,
                 unique_id=settings.TRANSACTION_ID_BASE+int(transaction['id'])
             )
         journal.add_payment_row(
-            total_credit, PaymentType.payment, RecordType.credit,
+            total_credit, RecordType.credit,
             prison_id=transaction_list[0]['prison']['nomis_id'],
             prison_name=transaction_list[0]['prison']['name'],
             date=today
@@ -144,7 +152,7 @@ def generate_adi_payment_file(request):
 
 
 def generate_adi_refund_file(request):
-    journal = AdiJournal()
+    journal = AdiJournal(PaymentType.refund)
 
     refunds = retrieve_all_transactions(request, 'refunded')
 
@@ -157,10 +165,9 @@ def generate_adi_refund_file(request):
     refund_total = sum([Decimal(t['amount']) for t in refunds])
     for refund in refunds:
         journal.add_payment_row(
-            refund['amount'], PaymentType.refund, RecordType.debit,
+            refund['amount'], RecordType.debit,
             unique_id=settings.TRANSACTION_ID_BASE+int(refund['id'])
         )
-    journal.add_payment_row(refund_total, PaymentType.refunded, RecordType.debit,
-                            date=today)
+    journal.add_payment_row(refund_total, RecordType.credit, date=today)
 
     return journal.create_file()
