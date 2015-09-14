@@ -113,5 +113,6 @@ REFUND_REFERENCE = 'Payment refunded'
 
 ADI_TEMPLATE_FILEPATH = 'local_files/adi_template.xlsx'
 OUTPUT_FILENAME = 'adi_file_%Y-%m-%d.xlsx'
+TRANSACTION_ID_BASE = os.environ.get('TRANSACTION_ID_BASE', 100000)
 
 REQUEST_PAGE_SIZE = 500

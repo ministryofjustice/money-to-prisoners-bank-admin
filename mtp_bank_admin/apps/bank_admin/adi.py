@@ -132,7 +132,7 @@ def generate_adi_payment_file(request):
         for transaction in transaction_list:
             journal.add_payment_row(
                 transaction['amount'], PaymentType.payment, RecordType.debit,
-                unique_id=1
+                unique_id=settings.TRANSACTION_ID_BASE+int(transaction['id'])
             )
         journal.add_payment_row(
             total_credit, PaymentType.payment, RecordType.credit,
@@ -160,7 +160,7 @@ def generate_adi_refund_file(request):
     for refund in refunds:
         journal.add_payment_row(
             refund['amount'], PaymentType.refund, RecordType.debit,
-            unique_id=1
+            unique_id=settings.TRANSACTION_ID_BASE+int(refund['id'])
         )
     journal.add_payment_row(refund_total, PaymentType.refunded, RecordType.debit,
                             date=today)
