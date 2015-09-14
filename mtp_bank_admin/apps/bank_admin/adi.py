@@ -5,11 +5,11 @@ from decimal import Decimal
 from django.conf import settings
 from openpyxl import load_workbook, styles
 from openpyxl.writer.excel import save_virtual_workbook
-from moj_auth import api_client
 
 from . import adi_config as config
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
+from .utils import retrieve_all_transactions
 
 
 class AdiJournal(object):
@@ -114,8 +114,7 @@ class AdiJournal(object):
 def generate_adi_payment_file(request):
     journal = AdiJournal()
 
-    client = api_client.get_connection(request)
-    new_transactions = client.bank_admin.transactions.get(status='credited')
+    new_transactions = retrieve_all_transactions(request, 'credited')
 
     if len(new_transactions) == 0:
         raise EmptyFileError()
@@ -147,8 +146,7 @@ def generate_adi_payment_file(request):
 def generate_adi_refund_file(request):
     journal = AdiJournal()
 
-    client = api_client.get_connection(request)
-    refunds = client.bank_admin.transactions.get(status='refunded')
+    refunds = retrieve_all_transactions(request, 'refunded')
 
     if len(refunds) == 0:
         raise EmptyFileError()

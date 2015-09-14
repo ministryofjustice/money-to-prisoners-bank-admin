@@ -17,6 +17,8 @@ TEST_PRISONS = [
     {'nomis_id': '054', 'name': 'Scary Prison'}
 ]
 
+NO_TRANSACTIONS = {'count': 0, 'results': []}
+
 
 @contextmanager
 def temp_file(name, data):
@@ -30,7 +32,7 @@ def temp_file(name, data):
 def get_adi_transactions(type, count=20):
     transactions = []
     for i in range(count):
-        transaction = {}
+        transaction = {'id': i}
         if type == PaymentType.refund:
             transaction['refunded'] = True
         else:
@@ -44,7 +46,7 @@ def get_adi_transactions(type, count=20):
 
         transaction['amount'] = Decimal(random.randint(500, 5000))/100
         transactions.append(transaction)
-    return transactions
+    return {'count': count, 'results': transactions}
 
 
 def get_cell_value(journal_ws, field, row):
@@ -55,10 +57,35 @@ def get_cell_value(journal_ws, field, row):
     return journal_ws[cell].value
 
 
-class AdiFileGenerationTestCase(SimpleTestCase):
+class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
-    @mock.patch('bank_admin.adi.api_client')
+    @mock.patch('bank_admin.utils.api_client')
     def test_adi_payment_file_debits_match_credit(self, mock_api_client):
+        test_data = get_adi_transactions(PaymentType.payment)
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = test_data
+
+        filename, exceldata = adi.generate_adi_payment_file(None)
+
+        with temp_file(filename, exceldata) as f:
+            wb = load_workbook(f)
+            journal_ws = wb.get_sheet_by_name(adi_config.ADI_JOURNAL_SHEET)
+
+            current_total_debit = 0
+            for i in range(len(test_data) + 3):
+                row = i + adi_config.ADI_JOURNAL_START_ROW
+                debit = get_cell_value(journal_ws, 'debit', row)
+                credit = get_cell_value(journal_ws, 'credit', row)
+
+                if debit:
+                    current_total_debit += debit
+                elif credit:
+                    self.assertEqual(credit, current_total_debit)
+                    current_total_debit = 0
+
+    @mock.patch('bank_admin.utils.api_client')
+    def test_adi_payment_file_credit_sum_correct(self, mock_api_client):
         test_data = get_adi_transactions(PaymentType.payment)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -77,28 +104,34 @@ class AdiFileGenerationTestCase(SimpleTestCase):
             wb = load_workbook(f)
             journal_ws = wb.get_sheet_by_name(adi_config.ADI_JOURNAL_SHEET)
 
-            current_total_debit = 0
             for i in range(len(test_data) + 3):
                 row = i + adi_config.ADI_JOURNAL_START_ROW
-                debit = get_cell_value(journal_ws, 'debit', row)
                 credit = get_cell_value(journal_ws, 'credit', row)
 
-                if debit:
-                    current_total_debit += debit
-                elif credit:
-                    self.assertEqual(credit, current_total_debit)
-                    current_total_debit = 0
+                if credit:
+                    prison = get_cell_value(journal_ws, 'business_unit', row)
+                    self.assertEqual(credit, prison_totals[prison])
 
 
-@mock.patch('bank_admin.adi.api_client')
+@mock.patch('bank_admin.utils.api_client')
 class NoTransactionsTestCase(SimpleTestCase):
 
-    def test_generate_refund_file_raises_error(self, mock_api_client):
+    def test_generate_adi_payment_file_raises_error(self, mock_api_client):
         conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.return_value = []
+        conn.get.return_value = NO_TRANSACTIONS
 
         try:
             _, exceldata = adi.generate_adi_payment_file(None)
+            self.fail('EmptyFileError expected')
+        except EmptyFileError:
+            self.assertFalse(conn.patch.called)
+
+    def test_generate_adi_refund_file_raises_error(self, mock_api_client):
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = NO_TRANSACTIONS
+
+        try:
+            _, exceldata = adi.generate_adi_refund_file(None)
             self.fail('EmptyFileError expected')
         except EmptyFileError:
             self.assertFalse(conn.patch.called)

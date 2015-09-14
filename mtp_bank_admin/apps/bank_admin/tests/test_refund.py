@@ -39,15 +39,18 @@ NO_TRANSACTIONS = {'count': 0, 'results': []}
 
 
 @mock.patch('bank_admin.refund.api_client')
+@mock.patch('bank_admin.utils.api_client')
 class ValidTransactionsTestCase(SimpleTestCase):
 
-    def test_generate_refund_file(self, mock_api_client):
+    def test_generate_refund_file(self, mock_api_client, mock_refund_api_client):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.side_effect = REFUND_TRANSACTIONS
 
+        refund_conn = mock_refund_api_client.get_connection().bank_admin.transactions
+
         _, csvdata = refund.generate_refund_file(None)
 
-        conn.patch.assert_called_once_with([
+        refund_conn.patch.assert_called_once_with([
             {'id': '3', 'refunded': True}, {'id': '4', 'refunded': True}
         ])
         self.assertEqual(
@@ -58,9 +61,11 @@ class ValidTransactionsTestCase(SimpleTestCase):
 
 
 @mock.patch('bank_admin.refund.api_client')
+@mock.patch('bank_admin.utils.api_client')
 class NoTransactionsTestCase(SimpleTestCase):
 
-    def test_generate_refund_file_raises_error(self, mock_api_client):
+    def test_generate_refund_file_raises_error(self, mock_api_client,
+                                               mock_refund_api_client):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = NO_TRANSACTIONS
 
