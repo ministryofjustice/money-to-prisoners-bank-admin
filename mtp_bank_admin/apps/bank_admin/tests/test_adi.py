@@ -57,7 +57,7 @@ def get_cell_value(journal_ws, field, row):
     return journal_ws[cell].value
 
 
-@mock.patch('bank_admin.utils.api_client')
+@mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
     @skip('Enable to generate an example file for inspection')
@@ -155,7 +155,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         self.assertEqual(credits_checked, len(TEST_PRISONS))
 
 
-@mock.patch('bank_admin.utils.api_client')
+@mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class AdiRefundFileGenerationTestCase(SimpleTestCase):
 
     @skip('Enable to generate an example file for inspection')
@@ -247,7 +247,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         self.assertTrue(credit_checked)
 
 
-@mock.patch('bank_admin.utils.api_client')
+@mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class NoTransactionsTestCase(SimpleTestCase):
 
     def test_generate_adi_payment_file_raises_error(self, mock_api_client):

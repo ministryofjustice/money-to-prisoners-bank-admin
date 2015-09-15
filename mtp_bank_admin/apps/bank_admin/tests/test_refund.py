@@ -38,8 +38,8 @@ REFUND_TRANSACTIONS = [
 NO_TRANSACTIONS = {'count': 0, 'results': []}
 
 
-@mock.patch('bank_admin.refund.api_client')
-@mock.patch('bank_admin.utils.api_client')
+@mock.patch('mtp_bank_admin.apps.bank_admin.refund.api_client')
+@mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class ValidTransactionsTestCase(SimpleTestCase):
 
     def test_generate_refund_file(self, mock_api_client, mock_refund_api_client):
@@ -60,8 +60,8 @@ class ValidTransactionsTestCase(SimpleTestCase):
             csvdata)
 
 
-@mock.patch('bank_admin.refund.api_client')
-@mock.patch('bank_admin.utils.api_client')
+@mock.patch('mtp_bank_admin.apps.bank_admin.refund.api_client')
+@mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class NoTransactionsTestCase(SimpleTestCase):
 
     def test_generate_refund_file_raises_error(self, mock_api_client,
