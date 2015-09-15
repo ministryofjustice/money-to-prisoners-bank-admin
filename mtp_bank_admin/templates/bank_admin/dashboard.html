@@ -10,5 +10,13 @@
 </ul>
 <p/>
 {% endif %}
-<a href="{% url "bank_admin:download_refund_file" %}">{% trans "Download Refunds" %}</a>
+<a href="{% url "bank_admin:download_refund_file" %}">
+	{% trans "Download Refunds" %}
+</a>
+<a href="{% url "bank_admin:download_adi_payment_file" %}">
+	{% trans "Download ADI Payment Reconciliation File" %}
+</a>
+<a href="{% url "bank_admin:download_adi_refund_file" %}">
+	{% trans "Download ADI Refund Reconciliation File" %}
+</a>
 {% endblock %}

@@ -6,6 +6,8 @@ from django.conf import settings
 from moj_auth.tests.utils import generate_tokens
 
 from .test_refund import REFUND_TRANSACTIONS, NO_TRANSACTIONS
+from .test_adi import get_adi_transactions
+from ..types import PaymentType
 
 
 class BankAdminViewTestCase(SimpleTestCase):
@@ -47,7 +49,8 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
         self.check_login_redirect(reverse('bank_admin:download_refund_file'))
 
     @mock.patch('bank_admin.refund.api_client')
-    def test_download_refund_file(self, mock_api_client):
+    @mock.patch('bank_admin.utils.api_client')
+    def test_download_refund_file(self, mock_api_client, mock_refund_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -64,7 +67,7 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
             response.content)
 
 
-@mock.patch('bank_admin.refund.api_client')
+@mock.patch('bank_admin.utils.api_client')
 class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
 
     def test_download_refund_file_general_error_message(self, mock_api_client):
@@ -90,4 +93,94 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
 
         self.assertContains(response,
                             _('No new transactions available for refund'),
+                            status_code=200)
+
+
+class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
+
+    def test_dashboard_requires_login(self):
+        self.check_login_redirect(reverse('bank_admin:dashboard'))
+
+    def test_download_adi_payment_file_requires_login(self):
+        self.check_login_redirect(reverse('bank_admin:download_adi_payment_file'))
+
+    def test_download_adi_refund_file_requires_login(self):
+        self.check_login_redirect(reverse('bank_admin:download_adi_refund_file'))
+
+    @mock.patch('bank_admin.utils.api_client')
+    def test_download_adi_payment_file(self, mock_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = get_adi_transactions(PaymentType.payment)
+
+        response = self.client.get(reverse('bank_admin:download_adi_payment_file'))
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response['Content-Type'])
+
+    @mock.patch('bank_admin.utils.api_client')
+    def test_download_adi_refund_file(self, mock_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = get_adi_transactions(PaymentType.refund)
+
+        response = self.client.get(reverse('bank_admin:download_adi_refund_file'))
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response['Content-Type'])
+
+
+@mock.patch('bank_admin.utils.api_client')
+class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
+
+    def test_download_adi_payment_file_general_error_message(self, mock_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.side_effect = Exception('Problem?')
+
+        response = self.client.get(reverse('bank_admin:download_adi_payment_file'),
+                                   follow=True)
+
+        self.assertContains(response, _('Could not download ADI file'),
+                            status_code=200)
+
+    def test_download_adi_refund_file_general_error_message(self, mock_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.side_effect = Exception('Problem?')
+
+        response = self.client.get(reverse('bank_admin:download_adi_refund_file'),
+                                   follow=True)
+
+        self.assertContains(response, _('Could not download ADI file'),
+                            status_code=200)
+
+    def test_download_adi_payment_file_no_transactions_error_message(self, mock_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = NO_TRANSACTIONS
+
+        response = self.client.get(reverse('bank_admin:download_adi_payment_file'),
+                                   follow=True)
+
+        self.assertContains(response,
+                            _('No new transactions available for reconciliation'),
+                            status_code=200)
+
+    def test_download_adi_refund_file_no_transactions_error_message(self, mock_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = NO_TRANSACTIONS
+
+        response = self.client.get(reverse('bank_admin:download_adi_refund_file'),
+                                   follow=True)
+
+        self.assertContains(response,
+                            _('No new transactions available for reconciliation'),
                             status_code=200)

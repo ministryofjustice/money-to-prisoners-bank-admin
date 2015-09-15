@@ -11,6 +11,8 @@ WORKDIR /app
 
 ADD ./conf/uwsgi /etc/uwsgi
 
+ADD ./local_files/* /var/local/
+
 ADD ./requirements/ /app/requirements/
 RUN pip3 install -r requirements/prod.txt
 

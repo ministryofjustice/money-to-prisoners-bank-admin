@@ -6,29 +6,11 @@ from django.conf import settings
 from moj_auth.backends import api_client
 
 from .exceptions import EmptyFileError
-
-OUTPUT_FILENAME = 'mtp_accesspay_%s.csv'
+from .utils import retrieve_all_transactions
 
 
 def generate_refund_file(request):
-    client = api_client.get_connection(request)
-    response = client.bank_admin.transactions.get(
-        status='refund_pending',
-        limit=settings.REQUEST_PAGE_SIZE
-    )
-    transactions_to_refund = response.get('results', [])
-    total_count = response.get('count', 0)
-
-    page_num = 1
-    while len(transactions_to_refund) < total_count:
-        response = client.bank_admin.transactions.get(
-            status='refund_pending',
-            limit=settings.REQUEST_PAGE_SIZE,
-            offset=settings.REQUEST_PAGE_SIZE*page_num
-        )
-        transactions_to_refund += response.get('results', [])
-        total_count = response.get('count', 0)
-        page_num += 1
+    transactions_to_refund = retrieve_all_transactions(request, 'refund_pending')
 
     with io.StringIO() as out:
         writer = csv.writer(out)
@@ -49,7 +31,8 @@ def generate_refund_file(request):
     if len(refunded_transactions) == 0:
         raise EmptyFileError()
 
+    client = api_client.get_connection(request)
     client.bank_admin.transactions.patch(refunded_transactions)
 
-    return (OUTPUT_FILENAME % datetime.now().strftime('%Y-%m-%d'),
+    return (settings.REFUND_OUTPUT_FILENAME % datetime.now().strftime('%Y-%m-%d'),
             filedata)
