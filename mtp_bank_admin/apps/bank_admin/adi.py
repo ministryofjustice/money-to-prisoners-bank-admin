@@ -143,7 +143,7 @@ def generate_adi_payment_file(request):
             )
         journal.add_payment_row(
             total_credit, RecordType.credit,
-            prison_id=transaction_list[0]['prison']['nomis_id'],
+            prison_ledger_code=transaction_list[0]['prison']['general_ledger_code'],
             prison_name=transaction_list[0]['prison']['name'],
             date=today
         )

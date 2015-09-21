@@ -55,7 +55,7 @@ ADI_JOURNAL_FIELDS = {
     'business_unit': {
         'column': 'D',
         'value': {
-            'payment': {'debit': '535', 'credit': '{prison_id}'},
+            'payment': {'debit': '535', 'credit': '{prison_ledger_code}'},
             'refund': {'debit': '535', 'credit': '535'},
         },
         'style': _white_style

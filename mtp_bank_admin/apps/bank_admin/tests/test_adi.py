@@ -12,9 +12,9 @@ from ..exceptions import EmptyFileError
 from ..types import PaymentType
 
 TEST_PRISONS = [
-    {'nomis_id': '048', 'name': 'Big Prison'},
-    {'nomis_id': '067', 'name': 'Dark Prison'},
-    {'nomis_id': '054', 'name': 'Scary Prison'}
+    {'nomis_id': 'BPR', 'general_ledger_code': '048', 'name': 'Big Prison'},
+    {'nomis_id': 'DPR', 'general_ledger_code': '067',  'name': 'Dark Prison'},
+    {'nomis_id': 'SPR', 'general_ledger_code': '054',  'name': 'Scary Prison'}
 ]
 
 NO_TRANSACTIONS = {'count': 0, 'results': []}
@@ -133,7 +133,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         prison_totals = {}
         for prison in TEST_PRISONS:
-            prison_totals[prison['nomis_id']] = float(sum(
+            prison_totals[prison['general_ledger_code']] = float(sum(
                 [t['amount'] for t in test_data['results']
                     if 'prison' in t and t['prison'] == prison]
             ))
