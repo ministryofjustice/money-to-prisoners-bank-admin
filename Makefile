@@ -54,7 +54,7 @@ endif
   requirements/base.txt requirements/prod.txt \
   | $(boot2docker_up) $(boot2docker_shellinit)
 	docker-compose build
-	@docker inspect -f '{{.Id}}' moneytoprisonerscashbook_django > .dev_django_container
+	@docker inspect -f '{{.Id}}' moneytoprisonersbankadmin_django > .dev_django_container
 
 clean:
 	@rm -f .dev_django_container
