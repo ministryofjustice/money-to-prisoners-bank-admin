@@ -40,6 +40,53 @@ class BankAdminViewTestCase(SimpleTestCase):
         self.assertRedirects(response, redirect_url)
 
 
+class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
+
+    @mock.patch('moj_auth.backends.api_client')
+    def test_can_see_refund_download_with_perm(self, mock_api_client):
+        mock_api_client.authenticate.return_value = {
+            'pk': 5,
+            'token': generate_tokens(),
+            'user_data': {
+                'first_name': 'Sam',
+                'last_name': 'Hall',
+                'username': 'shall',
+                'permissions': ['transaction.view_bank_details_transaction']
+            }
+        }
+
+        response = self.client.post(
+            reverse('login'),
+            data={'username': 'shall', 'password': 'pass'},
+            follow=True
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('bank_admin:download_refund_file'))
+
+    @mock.patch('moj_auth.backends.api_client')
+    def test_cannot_see_refund_download_without_perm(self, mock_api_client):
+        mock_api_client.authenticate.return_value = {
+            'pk': 5,
+            'token': generate_tokens(),
+            'user_data': {
+                'first_name': 'Sam',
+                'last_name': 'Hall',
+                'username': 'shall',
+                'permissions': []
+            }
+        }
+
+        response = self.client.post(
+            reverse('login'),
+            data={'username': 'shall', 'password': 'pass'},
+            follow=True
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse('bank_admin:download_refund_file'))
+
+
 class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
 
     def test_dashboard_requires_login(self):
