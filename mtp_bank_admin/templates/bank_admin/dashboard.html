@@ -10,12 +10,16 @@
 </ul>
 <p/>
 {% endif %}
+{% if perms.transaction.view_bank_details_transaction %}
 <a href="{% url "bank_admin:download_refund_file" %}">
 	{% trans "Download Refunds" %}
 </a>
+<br/>
+{% endif %}
 <a href="{% url "bank_admin:download_adi_payment_file" %}">
 	{% trans "Download ADI Payment Reconciliation File" %}
 </a>
+<br/>
 <a href="{% url "bank_admin:download_adi_refund_file" %}">
 	{% trans "Download ADI Refund Reconciliation File" %}
 </a>

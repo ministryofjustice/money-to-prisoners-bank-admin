@@ -9,7 +9,7 @@ urlpatterns = [
     url(r'^$', login_required(TemplateView.as_view(
         template_name='bank_admin/dashboard.html')),
         name='dashboard'),
-    url(r'^refund/download/$', views.download_refund_file,
+    url(r'^refund_pending/download/$', views.download_refund_file,
         name='download_refund_file'),
     url(r'^adi/payment/download/$', views.download_adi_payment_file,
         name='download_adi_payment_file'),
