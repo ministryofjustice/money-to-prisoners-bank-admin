@@ -1,0 +1,14 @@
+{
+  "name": "money-to-prisoners-bank-admin",
+  "version": "0.1.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "**/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "money-to-prisoners-common": "ministryofjustice/money-to-prisoners-common#0.2.1"
+  }
+}
