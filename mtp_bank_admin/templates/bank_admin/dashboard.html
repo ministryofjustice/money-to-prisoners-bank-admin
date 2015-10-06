@@ -8,7 +8,6 @@
   {% if perms.transaction.view_bank_details_transaction %}
     <section class="ContentBlock">
       <h2>AccessPay file - refunds</h2>
-      <p>Generated: 22/09/2015</p>
       <p>
         <a href="{% url 'bank_admin:download_refund_file' %}">{% trans 'Download file' %}</a>
       </p>
@@ -17,7 +16,6 @@
 
   <section class="ContentBlock">
     <h2>ADI Journal - refunds</h2>
-    <p>Generated: 22/09/2015</p>
     <p>
       <a href="{% url 'bank_admin:download_adi_payment_file' %}">{% trans 'Download file' %}</a>
     </p>
@@ -25,7 +23,6 @@
 
   <section class="ContentBlock">
     <h2>ADI Journal - payments</h2>
-    <p>Generated: 22/09/2015</p>
     <p>
       <a href="{% url 'bank_admin:download_adi_refund_file' %}">{% trans 'Download file' %}</a>
     </p>
