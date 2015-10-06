@@ -1,26 +1,34 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load i18n %}
 
 {% block content %}
-{% if messages %}
-<ul class="errors">
-	{% for message in messages %}
-	<li>{{ message }}</li>
-	{% endfor %}
-</ul>
-<p/>
-{% endif %}
-{% if perms.transaction.view_bank_details_transaction %}
-<a href="{% url "bank_admin:download_refund_file" %}">
-	{% trans "Download Refunds" %}
-</a>
-<br/>
-{% endif %}
-<a href="{% url "bank_admin:download_adi_payment_file" %}">
-	{% trans "Download ADI Payment Reconciliation File" %}
-</a>
-<br/>
-<a href="{% url "bank_admin:download_adi_refund_file" %}">
-	{% trans "Download ADI Refund Reconciliation File" %}
-</a>
+
+  <h1>Download files</h1>
+
+  {% if perms.transaction.view_bank_details_transaction %}
+    <section class="ContentBlock">
+      <h2>AccessPay file - refunds</h2>
+      <p>Generated: 22/09/2015</p>
+      <p>
+        <a href="{% url 'bank_admin:download_refund_file' %}">{% trans 'Download file' %}</a>
+      </p>
+    </section>
+  {% endif %}
+
+  <section class="ContentBlock">
+    <h2>ADI Journal - refunds</h2>
+    <p>Generated: 22/09/2015</p>
+    <p>
+      <a href="{% url 'bank_admin:download_adi_payment_file' %}">{% trans 'Download file' %}</a>
+    </p>
+  </section>
+
+  <section class="ContentBlock">
+    <h2>ADI Journal - payments</h2>
+    <p>Generated: 22/09/2015</p>
+    <p>
+      <a href="{% url 'bank_admin:download_adi_refund_file' %}">{% trans 'Download file' %}</a>
+    </p>
+  </section>
+
 {% endblock %}
