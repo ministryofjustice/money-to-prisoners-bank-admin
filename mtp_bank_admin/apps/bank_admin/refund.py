@@ -1,6 +1,7 @@
 import csv
 import io
 from datetime import datetime
+from decimal import Decimal
 
 from django.conf import settings
 from moj_auth.backends import api_client
@@ -21,7 +22,7 @@ def generate_refund_file(request):
                 transaction['sender_sort_code'],
                 transaction['sender_account_number'],
                 transaction['sender_name'],
-                transaction['amount'],
+                '%.2f' % (Decimal(transaction['amount'])/100),
                 settings.REFUND_REFERENCE
             ])
             refunded_transactions.append({'id': transaction['id'], 'refunded': True})

@@ -1,6 +1,5 @@
 import os
 import random
-from decimal import Decimal
 from contextlib import contextmanager
 
 from openpyxl import load_workbook
@@ -44,7 +43,7 @@ def get_adi_transactions(type, count=20):
             else:
                 transaction['prison'] = TEST_PRISONS[2]
 
-        transaction['amount'] = Decimal(random.randint(500, 5000))/100
+        transaction['amount'] = random.randint(500, 5000)
         transactions.append(transaction)
     return {'count': count, 'results': transactions}
 
@@ -136,7 +135,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             prison_totals[prison['general_ledger_code']] = float(sum(
                 [t['amount'] for t in test_data['results']
                     if 'prison' in t and t['prison'] == prison]
-            ))
+            ))/100
         credits_checked = 0
 
         with temp_file(filename, exceldata) as f:
@@ -229,7 +228,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
 
         filename, exceldata = adi.generate_adi_refund_file(None)
 
-        refund_total = float(sum([t['amount'] for t in test_data['results']]))
+        refund_total = float(sum([t['amount'] for t in test_data['results']]))/100
         credit_checked = False
 
         with temp_file(filename, exceldata) as f:

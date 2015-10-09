@@ -11,7 +11,7 @@ REFUND_TRANSACTIONS = [
         'count': 2,
         'results': [{
             'id': '3',
-            'amount': 25.68,
+            'amount': 2568,
             'sender_account_number': '22222222',
             'sender_sort_code': '111111',
             'sender_name': 'John Doe',
@@ -24,7 +24,7 @@ REFUND_TRANSACTIONS = [
         'count': 2,
         'results': [{
             'id': '4',
-            'amount': 18.72,
+            'amount': 1872,
             'sender_account_number': '33333333',
             'sender_sort_code': '999999',
             'sender_name': 'Joe Bloggs',
