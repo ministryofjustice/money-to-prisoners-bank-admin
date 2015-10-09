@@ -134,15 +134,16 @@ def generate_adi_payment_file(request):
 
     # do payments
     for _, transaction_list in prison_payments.items():
-        total_credit = sum([Decimal(t['amount']) for t in transaction_list
-                            if t['credited']])
+        credit_total = 0
         for transaction in transaction_list:
+            credit_amount = Decimal(transaction['amount'])/100
+            credit_total += credit_amount
             journal.add_payment_row(
-                transaction['amount'], RecordType.debit,
+                credit_amount, RecordType.debit,
                 unique_id=settings.TRANSACTION_ID_BASE+int(transaction['id'])
             )
         journal.add_payment_row(
-            total_credit, RecordType.credit,
+            credit_total, RecordType.credit,
             prison_ledger_code=transaction_list[0]['prison']['general_ledger_code'],
             prison_name=transaction_list[0]['prison']['name'],
             date=today
@@ -162,10 +163,12 @@ def generate_adi_refund_file(request):
     today = datetime.now().strftime('%d/%m/%Y')
 
     # do refunds
-    refund_total = sum([Decimal(t['amount']) for t in refunds])
+    refund_total = 0
     for refund in refunds:
+        refund_amount = Decimal(refund['amount'])/100
+        refund_total += refund_amount
         journal.add_payment_row(
-            refund['amount'], RecordType.debit,
+            refund_amount, RecordType.debit,
             unique_id=settings.TRANSACTION_ID_BASE+int(refund['id'])
         )
     journal.add_payment_row(refund_total, RecordType.credit, date=today)
