@@ -29,3 +29,6 @@ mtp_bank_admin/assets/
 
 # Docker make targets
 .dev_django_container
+
+# failed test screenshots
+test/errorshots/
