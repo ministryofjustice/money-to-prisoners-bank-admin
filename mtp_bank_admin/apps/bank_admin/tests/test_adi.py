@@ -56,11 +56,22 @@ def get_cell_value(journal_ws, field, row):
     return journal_ws[cell].value
 
 
+def assert_called_with_list(test_case, expected_list):
+        def is_equal(actual_list):
+            test_case.assertEqual(
+                sorted(actual_list, key=lambda k: k['id']),
+                sorted(expected_list, key=lambda k: k['id'])
+            )
+        return is_equal
+
+
+@mock.patch('mtp_bank_admin.apps.bank_admin.adi.api_client')
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
     @skip('Enable to generate an example file for inspection')
-    def test_adi_payment_file_generation(self, mock_api_client):
+    def test_adi_payment_file_generation(
+            self, mock_api_client, mock_adi_api_client):
         test_data = get_adi_transactions(PaymentType.payment)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -71,11 +82,17 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         with open(filename, 'wb+') as f:
             f.write(exceldata)
 
-    def test_adi_payment_file_debits_match_credit(self, mock_api_client):
+    def test_adi_payment_file_debits_match_credit(
+            self, mock_api_client, mock_adi_api_client):
         test_data = get_adi_transactions(PaymentType.payment)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
+
+        reconcile_conn = mock_adi_api_client.get_connection().bank_admin.transactions
+        reconcile_conn.patch.side_effect = assert_called_with_list(self, [
+            {'id': t['id'], 'reconciled': True} for t in test_data['results']
+        ])
 
         filename, exceldata = adi.generate_adi_payment_file(None)
 
@@ -95,16 +112,22 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                     self.assertAlmostEqual(credit, current_total_debit)
                     current_total_debit = 0
 
-    def test_adi_payment_file_number_of_payment_rows_correct(self, mock_api_client):
+    def test_adi_payment_file_number_of_payment_rows_correct(
+            self, mock_api_client, mock_adi_api_client):
         test_data = get_adi_transactions(PaymentType.payment)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
+        reconcile_conn = mock_adi_api_client.get_connection().bank_admin.transactions
+        reconcile_conn.patch.side_effect = assert_called_with_list(self, [
+            {'id': t['id'], 'reconciled': True} for t in test_data['results']
+        ])
+
         filename, exceldata = adi.generate_adi_payment_file(None)
+
         debit_rows = 0
         credit_rows = 0
-
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
             journal_ws = wb.get_sheet_by_name(adi_config.ADI_JOURNAL_SHEET)
@@ -122,11 +145,17 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         self.assertEqual(debit_rows, len(test_data['results']))
         self.assertEqual(credit_rows, len(TEST_PRISONS))
 
-    def test_adi_payment_file_credit_sum_correct(self, mock_api_client):
+    def test_adi_payment_file_credit_sum_correct(
+            self, mock_api_client, mock_adi_api_client):
         test_data = get_adi_transactions(PaymentType.payment)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
+
+        reconcile_conn = mock_adi_api_client.get_connection().bank_admin.transactions
+        reconcile_conn.patch.side_effect = assert_called_with_list(self, [
+            {'id': t['id'], 'reconciled': True} for t in test_data['results']
+        ])
 
         filename, exceldata = adi.generate_adi_payment_file(None)
 
@@ -154,11 +183,13 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         self.assertEqual(credits_checked, len(TEST_PRISONS))
 
 
+@mock.patch('mtp_bank_admin.apps.bank_admin.adi.api_client')
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class AdiRefundFileGenerationTestCase(SimpleTestCase):
 
     @skip('Enable to generate an example file for inspection')
-    def test_adi_refund_file_generation(self, mock_api_client):
+    def test_adi_refund_file_generation(
+            self, mock_api_client, mock_adi_api_client):
         test_data = get_adi_transactions(PaymentType.refund)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -169,11 +200,17 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         with open(filename, 'wb+') as f:
             f.write(exceldata)
 
-    def test_adi_refund_file_debits_match_credit(self, mock_api_client):
+    def test_adi_refund_file_debits_match_credit(
+            self, mock_api_client, mock_adi_api_client):
         test_data = get_adi_transactions(PaymentType.refund)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
+
+        reconcile_conn = mock_adi_api_client.get_connection().bank_admin.transactions
+        reconcile_conn.patch.side_effect = assert_called_with_list(self, [
+            {'id': t['id'], 'reconciled': True} for t in test_data['results']
+        ])
 
         filename, exceldata = adi.generate_adi_refund_file(None)
 
@@ -193,16 +230,22 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
                     self.assertAlmostEqual(credit, current_total_debit)
                     current_total_debit = 0
 
-    def test_adi_refund_file_number_of_payment_rows_correct(self, mock_api_client):
+    def test_adi_refund_file_number_of_payment_rows_correct(
+            self, mock_api_client, mock_adi_api_client):
         test_data = get_adi_transactions(PaymentType.refund)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
+        reconcile_conn = mock_adi_api_client.get_connection().bank_admin.transactions
+        reconcile_conn.patch.side_effect = assert_called_with_list(self, [
+            {'id': t['id'], 'reconciled': True} for t in test_data['results']
+        ])
+
         filename, exceldata = adi.generate_adi_refund_file(None)
+
         debit_rows = 0
         credit_rows = 0
-
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
             journal_ws = wb.get_sheet_by_name(adi_config.ADI_JOURNAL_SHEET)
@@ -220,11 +263,17 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         self.assertEqual(debit_rows, len(test_data['results']))
         self.assertEqual(credit_rows, 1)
 
-    def test_adi_refund_file_credit_sum_correct(self, mock_api_client):
+    def test_adi_refund_file_credit_sum_correct(
+            self, mock_api_client, mock_adi_api_client):
         test_data = get_adi_transactions(PaymentType.refund)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
+
+        reconcile_conn = mock_adi_api_client.get_connection().bank_admin.transactions
+        reconcile_conn.patch.side_effect = assert_called_with_list(self, [
+            {'id': t['id'], 'reconciled': True} for t in test_data['results']
+        ])
 
         filename, exceldata = adi.generate_adi_refund_file(None)
 

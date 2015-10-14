@@ -3,10 +3,11 @@ from django.conf import settings
 from moj_auth import api_client
 
 
-def retrieve_all_transactions(request, status):
+def retrieve_all_transactions(request, status, reconciled=False):
     client = api_client.get_connection(request)
     response = client.bank_admin.transactions.get(
         status=status,
+        reconciled=reconciled,
         limit=settings.REQUEST_PAGE_SIZE
     )
     transactions = response.get('results', [])
@@ -16,6 +17,7 @@ def retrieve_all_transactions(request, status):
     while len(transactions) < total_count:
         response = client.bank_admin.transactions.get(
             status=status,
+            reconciled=reconciled,
             limit=settings.REQUEST_PAGE_SIZE,
             offset=settings.REQUEST_PAGE_SIZE*num_reqs
         )
