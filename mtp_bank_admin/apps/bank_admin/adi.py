@@ -5,6 +5,7 @@ from decimal import Decimal
 from django.conf import settings
 from openpyxl import load_workbook, styles
 from openpyxl.writer.excel import save_virtual_workbook
+from moj_auth import api_client
 
 from . import adi_config as config
 from .types import PaymentType, RecordType
@@ -133,6 +134,7 @@ def generate_adi_payment_file(request):
         prison_payments[transaction['prison']['nomis_id']].append(transaction)
 
     # do payments
+    reconciled_transactions = []
     for _, transaction_list in prison_payments.items():
         credit_total = 0
         for transaction in transaction_list:
@@ -142,6 +144,8 @@ def generate_adi_payment_file(request):
                 credit_amount, RecordType.debit,
                 unique_id=settings.TRANSACTION_ID_BASE+int(transaction['id'])
             )
+            reconciled_transactions.append({'id': transaction['id'],
+                                            'reconciled': True})
         journal.add_payment_row(
             credit_total, RecordType.credit,
             prison_ledger_code=transaction_list[0]['prison']['general_ledger_code'],
@@ -149,7 +153,12 @@ def generate_adi_payment_file(request):
             date=today
         )
 
-    return journal.create_file()
+    created_journal = journal.create_file()
+    # update transactions after file created
+    client = api_client.get_connection(request)
+    client.bank_admin.transactions.patch(reconciled_transactions)
+
+    return created_journal
 
 
 def generate_adi_refund_file(request):
@@ -163,6 +172,7 @@ def generate_adi_refund_file(request):
     today = datetime.now().strftime('%d/%m/%Y')
 
     # do refunds
+    reconciled_transactions = []
     refund_total = 0
     for refund in refunds:
         refund_amount = Decimal(refund['amount'])/100
@@ -171,6 +181,13 @@ def generate_adi_refund_file(request):
             refund_amount, RecordType.debit,
             unique_id=settings.TRANSACTION_ID_BASE+int(refund['id'])
         )
+        reconciled_transactions.append({'id': refund['id'],
+                                        'reconciled': True})
     journal.add_payment_row(refund_total, RecordType.credit, date=today)
 
-    return journal.create_file()
+    created_journal = journal.create_file()
+    # update transactions after file created
+    client = api_client.get_connection(request)
+    client.bank_admin.transactions.patch(reconciled_transactions)
+
+    return created_journal
