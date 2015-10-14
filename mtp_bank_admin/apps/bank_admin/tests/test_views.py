@@ -154,8 +154,9 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
     def test_download_adi_refund_file_requires_login(self):
         self.check_login_redirect(reverse('bank_admin:download_adi_refund_file'))
 
+    @mock.patch('bank_admin.adi.api_client')
     @mock.patch('bank_admin.utils.api_client')
-    def test_download_adi_payment_file(self, mock_api_client):
+    def test_download_adi_payment_file(self, mock_api_client, mock_adi_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -166,8 +167,9 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response['Content-Type'])
 
+    @mock.patch('bank_admin.adi.api_client')
     @mock.patch('bank_admin.utils.api_client')
-    def test_download_adi_refund_file(self, mock_api_client):
+    def test_download_adi_refund_file(self, mock_api_client, mock_adi_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
