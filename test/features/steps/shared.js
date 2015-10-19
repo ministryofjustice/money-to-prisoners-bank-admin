@@ -29,6 +29,20 @@ var sharedSteps = function(){
   });
 
   /**
+   * Check if a link exists
+   *
+   * Usage: Then I should see a "Click here" link to  "/file.txt"
+   * @params {string} linkText the text of the link
+   * @params {string} linkTarget the text of the link's target
+   */
+  this.Then(/^I should see a "([^"]+)" link to "([^"]+)"$/, function (linkText, linkTarget, next) {
+    browser
+      .getSource('body')
+      .should.eventually.contain('<a href="' + linkTarget + '/">' + linkText + '</a>')
+      .and.notify(next);
+  });
+
+  /**
    * Check the current body content contains
    * supplied text
    *
