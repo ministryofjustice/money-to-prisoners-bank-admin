@@ -3,11 +3,11 @@
 
 {% block content %}
 
-  <h1>Download files</h1>
+  <h1>{% trans 'Download files' %}</h1>
 
   {% if perms.transaction.view_bank_details_transaction %}
     <section class="ContentBlock">
-      <h2>AccessPay file - refunds</h2>
+      <h2>{% trans 'AccessPay file - refunds' %}</h2>
       <p>
         <a href="{% url 'bank_admin:download_refund_file' %}">{% trans 'Download file' %}</a>
       </p>
@@ -15,14 +15,14 @@
   {% endif %}
 
   <section class="ContentBlock">
-    <h2>ADI Journal - refunds</h2>
+    <h2>{% trans 'ADI Journal - refunds' %}</h2>
     <p>
       <a href="{% url 'bank_admin:download_adi_payment_file' %}">{% trans 'Download file' %}</a>
     </p>
   </section>
 
   <section class="ContentBlock">
-    <h2>ADI Journal - payments</h2>
+    <h2>{% trans 'ADI Journal - payments' %}</h2>
     <p>
       <a href="{% url 'bank_admin:download_adi_refund_file' %}">{% trans 'Download file' %}</a>
     </p>
