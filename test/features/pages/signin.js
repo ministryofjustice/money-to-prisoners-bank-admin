@@ -10,8 +10,8 @@
  *
  */
 
-var testUsername = 'test_prison_1';
-var testPassword = 'test_prison_1';
+var testUsername = 'bank_admin';
+var testPassword = 'bank_admin';
 
 var SigninPage = function () {
   this.usernameField = '#id_username';
