@@ -33,3 +33,7 @@ def create_batch_record(request, label, transactions):
         'label': label,
         'transactions': transactions
     })
+
+
+def get_transaction_uid(transaction):
+    return settings.TRANSACTION_ID_BASE+int(transaction['id'])
