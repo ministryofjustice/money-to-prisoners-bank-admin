@@ -1,22 +1,14 @@
 import os
-import random
 from contextlib import contextmanager
 
 from openpyxl import load_workbook
 from django.test import SimpleTestCase
 from unittest import mock, skip
 
+from . import TEST_PRISONS, NO_TRANSACTIONS, get_test_transactions
 from .. import adi, adi_config, ADI_PAYMENT_LABEL, ADI_REFUND_LABEL
 from ..exceptions import EmptyFileError
 from ..types import PaymentType
-
-TEST_PRISONS = [
-    {'nomis_id': 'BPR', 'general_ledger_code': '048', 'name': 'Big Prison'},
-    {'nomis_id': 'DPR', 'general_ledger_code': '067',  'name': 'Dark Prison'},
-    {'nomis_id': 'SPR', 'general_ledger_code': '054',  'name': 'Scary Prison'}
-]
-
-NO_TRANSACTIONS = {'count': 0, 'results': []}
 
 
 @contextmanager
@@ -26,26 +18,6 @@ def temp_file(name, data):
         f.write(data)
     yield path
     os.remove(path)
-
-
-def get_adi_transactions(type, count=20):
-    transactions = []
-    for i in range(count):
-        transaction = {'id': i}
-        if type == PaymentType.refund:
-            transaction['refunded'] = True
-        else:
-            transaction['credited'] = True
-            if i % 2:
-                transaction['prison'] = TEST_PRISONS[0]
-            elif i % 3:
-                transaction['prison'] = TEST_PRISONS[1]
-            else:
-                transaction['prison'] = TEST_PRISONS[2]
-
-        transaction['amount'] = random.randint(500, 5000)
-        transactions.append(transaction)
-    return {'count': count, 'results': transactions}
 
 
 def get_cell_value(journal_ws, field, row):
@@ -73,7 +45,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
     @skip('Enable to generate an example file for inspection')
     def test_adi_payment_file_generation(self, mock_api_client):
-        test_data = get_adi_transactions(PaymentType.payment)
+        test_data = get_test_transactions(PaymentType.payment)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
@@ -84,7 +56,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             f.write(exceldata)
 
     def test_adi_payment_file_debits_match_credit(self, mock_api_client):
-        test_data = get_adi_transactions(PaymentType.payment)
+        test_data = get_test_transactions(PaymentType.payment)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
@@ -114,7 +86,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                     current_total_debit = 0
 
     def test_adi_payment_file_number_of_payment_rows_correct(self, mock_api_client):
-        test_data = get_adi_transactions(PaymentType.payment)
+        test_data = get_test_transactions(PaymentType.payment)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
@@ -147,7 +119,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         self.assertEqual(credit_rows, len(TEST_PRISONS))
 
     def test_adi_payment_file_credit_sum_correct(self, mock_api_client):
-        test_data = get_adi_transactions(PaymentType.payment)
+        test_data = get_test_transactions(PaymentType.payment)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
@@ -189,7 +161,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
 
     @skip('Enable to generate an example file for inspection')
     def test_adi_refund_file_generation(self, mock_api_client):
-        test_data = get_adi_transactions(PaymentType.refund)
+        test_data = get_test_transactions(PaymentType.refund)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
@@ -200,7 +172,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
             f.write(exceldata)
 
     def test_adi_refund_file_debits_match_credit(self, mock_api_client):
-        test_data = get_adi_transactions(PaymentType.refund)
+        test_data = get_test_transactions(PaymentType.refund)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
@@ -230,7 +202,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
                     current_total_debit = 0
 
     def test_adi_refund_file_number_of_payment_rows_correct(self, mock_api_client):
-        test_data = get_adi_transactions(PaymentType.refund)
+        test_data = get_test_transactions(PaymentType.refund)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
@@ -263,7 +235,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         self.assertEqual(credit_rows, 1)
 
     def test_adi_refund_file_credit_sum_correct(self, mock_api_client):
-        test_data = get_adi_transactions(PaymentType.refund)
+        test_data = get_test_transactions(PaymentType.refund)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data

@@ -5,8 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from moj_auth.tests.utils import generate_tokens
 
-from .test_refund import REFUND_TRANSACTIONS, NO_TRANSACTIONS
-from .test_adi import get_adi_transactions
+from . import get_test_transactions, NO_TRANSACTIONS
+from .test_refund import REFUND_TRANSACTIONS
 from ..types import PaymentType
 
 
@@ -158,7 +158,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.return_value = get_adi_transactions(PaymentType.payment)
+        conn.get.return_value = get_test_transactions(PaymentType.payment)
 
         response = self.client.get(reverse('bank_admin:download_adi_payment_file'))
 
@@ -170,7 +170,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.return_value = get_adi_transactions(PaymentType.refund)
+        conn.get.return_value = get_test_transactions(PaymentType.refund)
 
         response = self.client.get(reverse('bank_admin:download_adi_refund_file'))
 

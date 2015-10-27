@@ -3,6 +3,7 @@ from unittest import mock
 from django.test import SimpleTestCase
 from django.conf import settings
 
+from . import NO_TRANSACTIONS
 from .. import refund, ACCESSPAY_LABEL
 from ..exceptions import EmptyFileError
 
@@ -34,8 +35,6 @@ REFUND_TRANSACTIONS = [
         }]
     },
 ]
-
-NO_TRANSACTIONS = {'count': 0, 'results': []}
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.refund.api_client')
