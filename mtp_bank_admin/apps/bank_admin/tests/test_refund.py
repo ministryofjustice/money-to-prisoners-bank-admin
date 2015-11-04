@@ -47,12 +47,16 @@ class ValidTransactionsTestCase(SimpleTestCase):
         conn.get.side_effect = REFUND_TRANSACTIONS
 
         refund_conn = mock_refund_api_client.get_connection().bank_admin.transactions
+        file_conn = mock_api_client.get_connection().files
 
         _, csvdata = refund.generate_refund_file(None)
 
         refund_conn.patch.assert_called_once_with([
             {'id': '3', 'refunded': True}, {'id': '4', 'refunded': True}
         ])
+        file_conn.post.assert_called_once_with(
+            {'file_type': 'ACCESSPAY', 'transactions': ['3', '4']}
+        )
         self.assertEqual(
             ('111111,22222222,John Doe,25.68,%(ref)s\r\n' +
              '999999,33333333,Joe Bloggs,18.72,%(ref)s\r\n')

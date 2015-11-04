@@ -5,12 +5,14 @@ from decimal import Decimal
 from django.conf import settings
 from openpyxl import load_workbook, styles
 from openpyxl.writer.excel import save_virtual_workbook
-from moj_auth import api_client
 
 from . import adi_config as config
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
-from .utils import retrieve_all_transactions
+from .utils import retrieve_all_transactions, post_new_file
+
+PAYMENT_FILE_TYPE = 'ADIPAYMENT'
+REFUND_FILE_TYPE = 'ADIREFUND'
 
 
 class AdiJournal(object):
@@ -123,7 +125,8 @@ class AdiJournal(object):
 def generate_adi_payment_file(request):
     journal = AdiJournal(PaymentType.payment)
 
-    new_transactions = retrieve_all_transactions(request, 'credited')
+    new_transactions = retrieve_all_transactions(request, 'credited',
+                                                 exclude_file_type=PAYMENT_FILE_TYPE)
 
     if len(new_transactions) == 0:
         raise EmptyFileError()
@@ -144,8 +147,7 @@ def generate_adi_payment_file(request):
                 credit_amount, RecordType.debit,
                 unique_id=settings.TRANSACTION_ID_BASE+int(transaction['id'])
             )
-            reconciled_transactions.append({'id': transaction['id'],
-                                            'reconciled': True})
+            reconciled_transactions.append(transaction['id'])
         journal.add_payment_row(
             credit_total, RecordType.credit,
             prison_ledger_code=transaction_list[0]['prison']['general_ledger_code'],
@@ -154,9 +156,8 @@ def generate_adi_payment_file(request):
         )
 
     created_journal = journal.create_file()
-    # update transactions after file created
-    client = api_client.get_connection(request)
-    client.bank_admin.transactions.patch(reconciled_transactions)
+    # create file record
+    post_new_file(request, PAYMENT_FILE_TYPE, reconciled_transactions)
 
     return created_journal
 
@@ -164,7 +165,8 @@ def generate_adi_payment_file(request):
 def generate_adi_refund_file(request):
     journal = AdiJournal(PaymentType.refund)
 
-    refunds = retrieve_all_transactions(request, 'refunded')
+    refunds = retrieve_all_transactions(request, 'refunded',
+                                        exclude_file_type=REFUND_FILE_TYPE)
 
     if len(refunds) == 0:
         raise EmptyFileError()
@@ -181,13 +183,11 @@ def generate_adi_refund_file(request):
             refund_amount, RecordType.debit,
             unique_id=settings.TRANSACTION_ID_BASE+int(refund['id'])
         )
-        reconciled_transactions.append({'id': refund['id'],
-                                        'reconciled': True})
+        reconciled_transactions.append(refund['id'])
     journal.add_payment_row(refund_total, RecordType.credit, date=today)
 
     created_journal = journal.create_file()
-    # update transactions after file created
-    client = api_client.get_connection(request)
-    client.bank_admin.transactions.patch(reconciled_transactions)
+    # create file record
+    post_new_file(request, REFUND_FILE_TYPE, reconciled_transactions)
 
     return created_journal

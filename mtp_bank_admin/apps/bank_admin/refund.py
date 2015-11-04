@@ -7,7 +7,7 @@ from django.conf import settings
 from moj_auth.backends import api_client
 
 from .exceptions import EmptyFileError
-from .utils import retrieve_all_transactions
+from .utils import retrieve_all_transactions, post_new_file
 
 
 def generate_refund_file(request):
@@ -25,7 +25,8 @@ def generate_refund_file(request):
                 '%.2f' % (Decimal(transaction['amount'])/100),
                 settings.REFUND_REFERENCE
             ])
-            refunded_transactions.append({'id': transaction['id'], 'refunded': True})
+            refunded_transactions.append({'id': transaction['id'],
+                                          'refunded': True})
 
         filedata = out.getvalue()
 
@@ -34,6 +35,9 @@ def generate_refund_file(request):
 
     client = api_client.get_connection(request)
     client.bank_admin.transactions.patch(refunded_transactions)
+
+    # create file record
+    post_new_file(request, 'ACCESSPAY', [t['id'] for t in refunded_transactions])
 
     return (settings.REFUND_OUTPUT_FILENAME % datetime.now().strftime('%Y-%m-%d'),
             filedata)
