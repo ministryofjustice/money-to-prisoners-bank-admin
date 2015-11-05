@@ -3,7 +3,7 @@ from unittest import mock
 from django.test import SimpleTestCase
 from django.conf import settings
 
-from .. import refund
+from .. import refund, ACCESSPAY_FILE_TYPE
 from ..exceptions import EmptyFileError
 
 REFUND_TRANSACTIONS = [
@@ -55,7 +55,7 @@ class ValidTransactionsTestCase(SimpleTestCase):
             {'id': '3', 'refunded': True}, {'id': '4', 'refunded': True}
         ])
         file_conn.post.assert_called_once_with(
-            {'file_type': 'ACCESSPAY', 'transactions': ['3', '4']}
+            {'file_type': ACCESSPAY_FILE_TYPE, 'transactions': ['3', '4']}
         )
         self.assertEqual(
             ('111111,22222222,John Doe,25.68,%(ref)s\r\n' +

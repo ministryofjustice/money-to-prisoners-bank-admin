@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 from django.test import SimpleTestCase
 from unittest import mock, skip
 
-from .. import adi, adi_config
+from .. import adi, adi_config, ADI_PAYMENT_FILE_TYPE, ADI_REFUND_FILE_TYPE
 from ..exceptions import EmptyFileError
 from ..types import PaymentType
 
@@ -91,7 +91,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         file_conn = mock_api_client.get_connection().files
         file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': 'ADIPAYMENT',
+            'file_type': ADI_PAYMENT_FILE_TYPE,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
@@ -121,7 +121,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         file_conn = mock_api_client.get_connection().files
         file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': 'ADIPAYMENT',
+            'file_type': ADI_PAYMENT_FILE_TYPE,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
@@ -154,7 +154,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         file_conn = mock_api_client.get_connection().files
         file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': 'ADIPAYMENT',
+            'file_type': ADI_PAYMENT_FILE_TYPE,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
@@ -207,7 +207,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
 
         file_conn = mock_api_client.get_connection().files
         file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': 'ADIREFUND',
+            'file_type': ADI_REFUND_FILE_TYPE,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
@@ -237,7 +237,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
 
         file_conn = mock_api_client.get_connection().files
         file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': 'ADIREFUND',
+            'file_type': ADI_REFUND_FILE_TYPE,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
@@ -270,7 +270,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
 
         file_conn = mock_api_client.get_connection().files
         file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': 'ADIREFUND',
+            'file_type': ADI_REFUND_FILE_TYPE,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
