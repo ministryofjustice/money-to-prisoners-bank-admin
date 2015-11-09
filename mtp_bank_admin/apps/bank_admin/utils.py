@@ -27,11 +27,11 @@ def retrieve_all_transactions(request, status, exclude_batch_label=''):
     return transactions
 
 
-def create_batch_record(request, label, transactions):
+def create_batch_record(request, label, transaction_ids):
     client = api_client.get_connection(request)
     client.batches.post({
         'label': label,
-        'transactions': transactions
+        'transactions': transaction_ids
     })
 
 

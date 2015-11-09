@@ -11,11 +11,11 @@ TEST_PRISONS = [
 NO_TRANSACTIONS = {'count': 0, 'results': []}
 
 
-def get_test_transactions(type, count=20):
+def get_test_transactions(trans_type=None, count=20):
     transactions = []
     for i in range(count):
         transaction = {'id': i}
-        if type == PaymentType.refund:
+        if trans_type == PaymentType.refund or trans_type is None and i % 5:
             transaction['refunded'] = True
         else:
             transaction['credited'] = True
@@ -29,3 +29,21 @@ def get_test_transactions(type, count=20):
         transaction['amount'] = random.randint(500, 5000)
         transactions.append(transaction)
     return {'count': count, 'results': transactions}
+
+
+class AssertCalledWithBatchRequest(object):
+
+    def __init__(self, test_case, expected):
+        self.called = False
+        self.test_case = test_case
+        self.expected = expected
+
+    def __call__(self, actual):
+        self.called = True
+        self.test_case.assertEqual(
+            actual['label'], self.expected['label']
+        )
+        self.test_case.assertEqual(
+            sorted(actual['transactions']),
+            sorted(self.expected['transactions'])
+        )

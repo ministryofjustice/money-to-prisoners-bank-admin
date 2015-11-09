@@ -5,7 +5,8 @@ from openpyxl import load_workbook
 from django.test import SimpleTestCase
 from unittest import mock, skip
 
-from . import TEST_PRISONS, NO_TRANSACTIONS, get_test_transactions
+from . import TEST_PRISONS, NO_TRANSACTIONS, get_test_transactions,\
+    AssertCalledWithBatchRequest
 from .. import adi, adi_config, ADI_PAYMENT_LABEL, ADI_REFUND_LABEL
 from ..exceptions import EmptyFileError
 from ..types import PaymentType
@@ -26,18 +27,6 @@ def get_cell_value(journal_ws, field, row):
         row
     )
     return journal_ws[cell].value
-
-
-def assert_called_with_batch_request(test_case, expected):
-        def is_equal(actual):
-            test_case.assertEqual(
-                actual['label'], expected['label']
-            )
-            test_case.assertEqual(
-                sorted(actual['transactions']),
-                sorted(expected['transactions'])
-            )
-        return is_equal
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
@@ -62,12 +51,14 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
-        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+        batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
             'label': ADI_PAYMENT_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
         filename, exceldata = adi.generate_adi_payment_file(None)
+
+        self.assertTrue(batch_conn.post.side_effect.called)
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
@@ -92,12 +83,14 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
-        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+        batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
             'label': ADI_PAYMENT_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
         filename, exceldata = adi.generate_adi_payment_file(None)
+
+        self.assertTrue(batch_conn.post.side_effect.called)
 
         debit_rows = 0
         credit_rows = 0
@@ -125,12 +118,14 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
-        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+        batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
             'label': ADI_PAYMENT_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
         filename, exceldata = adi.generate_adi_payment_file(None)
+
+        self.assertTrue(batch_conn.post.side_effect.called)
 
         prison_totals = {}
         for prison in TEST_PRISONS:
@@ -178,12 +173,14 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
-        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+        batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
             'label': ADI_REFUND_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
         filename, exceldata = adi.generate_adi_refund_file(None)
+
+        self.assertTrue(batch_conn.post.side_effect.called)
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
@@ -208,12 +205,14 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
-        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+        batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
             'label': ADI_REFUND_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
         filename, exceldata = adi.generate_adi_refund_file(None)
+
+        self.assertTrue(batch_conn.post.side_effect.called)
 
         debit_rows = 0
         credit_rows = 0
@@ -241,12 +240,14 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
-        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+        batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
             'label': ADI_REFUND_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
         filename, exceldata = adi.generate_adi_refund_file(None)
+
+        self.assertTrue(batch_conn.post.side_effect.called)
 
         refund_total = float(sum([t['amount'] for t in test_data['results']]))/100
         credit_checked = False
@@ -277,7 +278,7 @@ class NoTransactionsTestCase(SimpleTestCase):
             _, exceldata = adi.generate_adi_payment_file(None)
             self.fail('EmptyFileError expected')
         except EmptyFileError:
-            self.assertFalse(conn.patch.called)
+            pass
 
     def test_generate_adi_refund_file_raises_error(self, mock_api_client):
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -287,4 +288,4 @@ class NoTransactionsTestCase(SimpleTestCase):
             _, exceldata = adi.generate_adi_refund_file(None)
             self.fail('EmptyFileError expected')
         except EmptyFileError:
-            self.assertFalse(conn.patch.called)
+            pass
