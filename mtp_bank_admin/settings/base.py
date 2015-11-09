@@ -159,4 +159,11 @@ ADI_PAYMENT_OUTPUT_FILENAME = 'adi_payment_file_%Y-%m-%d.xlsx'
 ADI_REFUND_OUTPUT_FILENAME = 'adi_refund_file_%Y-%m-%d.xlsx'
 TRANSACTION_ID_BASE = os.environ.get('TRANSACTION_ID_BASE', 100000)
 
+BANK_STMT_SENDER_ID = os.environ.get('BANK_STMT_SENDER_ID', 'NWBKGB2L')
+BANK_STMT_RECEIVER_ID = os.environ.get('BANK_STMT_RECEIVER_ID', '391796')
+BANK_STMT_ACCOUNT_NUMBER = os.environ.get('BANK_STMT_ACCOUNT_NUMBER',
+                                          '10002383 607080')
+BANK_STMT_CURRENCY = os.environ.get('BANK_STMT_CURRENCY', 'GBP')
+BANK_STMT_OUTPUT_FILENAME = 'stmt_%s.bai'
+
 REQUEST_PAGE_SIZE = 500

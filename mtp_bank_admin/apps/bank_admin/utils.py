@@ -1,3 +1,5 @@
+import time
+
 from django.conf import settings
 
 from moj_auth import api_client
@@ -37,3 +39,7 @@ def create_batch_record(request, label, transaction_ids):
 
 def get_transaction_uid(transaction):
     return settings.TRANSACTION_ID_BASE+int(transaction['id'])
+
+
+def get_daily_file_uid():
+    int(time.time()) % 86400
