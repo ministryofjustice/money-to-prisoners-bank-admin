@@ -28,4 +28,11 @@
     </p>
   </section>
 
+  <section class="ContentBlock">
+    <h2>{% trans 'BAI2 Bank Statement' %}</h2>
+    <p>
+      <a href="{% url 'bank_admin:download_bank_statement' %}">{% trans 'Download file' %}</a>
+    </p>
+  </section>
+
 {% endblock %}

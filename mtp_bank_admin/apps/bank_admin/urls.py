@@ -14,5 +14,7 @@ urlpatterns = [
     url(r'^adi/payment/download/$', views.download_adi_payment_file,
         name='download_adi_payment_file'),
     url(r'^adi/refund/download/$', views.download_adi_refund_file,
-        name='download_adi_refund_file')
+        name='download_adi_refund_file'),
+    url(r'^bank_statement/download/$', views.download_bank_statement,
+        name='download_bank_statement')
 ]
