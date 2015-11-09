@@ -3,7 +3,7 @@ from unittest import mock
 from django.test import SimpleTestCase
 from django.conf import settings
 
-from .. import refund
+from .. import refund, ACCESSPAY_LABEL
 from ..exceptions import EmptyFileError
 
 REFUND_TRANSACTIONS = [
@@ -47,12 +47,16 @@ class ValidTransactionsTestCase(SimpleTestCase):
         conn.get.side_effect = REFUND_TRANSACTIONS
 
         refund_conn = mock_refund_api_client.get_connection().bank_admin.transactions
+        batch_conn = mock_api_client.get_connection().batches
 
         _, csvdata = refund.generate_refund_file(None)
 
         refund_conn.patch.assert_called_once_with([
             {'id': '3', 'refunded': True}, {'id': '4', 'refunded': True}
         ])
+        batch_conn.post.assert_called_once_with(
+            {'label': ACCESSPAY_LABEL, 'transactions': ['3', '4']}
+        )
         self.assertEqual(
             ('111111,22222222,John Doe,25.68,%(ref)s\r\n' +
              '999999,33333333,Joe Bloggs,18.72,%(ref)s\r\n')

@@ -3,11 +3,11 @@ from django.conf import settings
 from moj_auth import api_client
 
 
-def retrieve_all_transactions(request, status, reconciled=False):
+def retrieve_all_transactions(request, status, exclude_batch_label=''):
     client = api_client.get_connection(request)
     response = client.bank_admin.transactions.get(
         status=status,
-        reconciled=reconciled,
+        exclude_batch_label=exclude_batch_label,
         limit=settings.REQUEST_PAGE_SIZE
     )
     transactions = response.get('results', [])
@@ -17,7 +17,7 @@ def retrieve_all_transactions(request, status, reconciled=False):
     while len(transactions) < total_count:
         response = client.bank_admin.transactions.get(
             status=status,
-            reconciled=reconciled,
+            exclude_batch_label=exclude_batch_label,
             limit=settings.REQUEST_PAGE_SIZE,
             offset=settings.REQUEST_PAGE_SIZE*num_reqs
         )
@@ -25,3 +25,11 @@ def retrieve_all_transactions(request, status, reconciled=False):
         num_reqs += 1
 
     return transactions
+
+
+def create_batch_record(request, label, transactions):
+    client = api_client.get_connection(request)
+    client.batches.post({
+        'label': label,
+        'transactions': transactions
+    })
