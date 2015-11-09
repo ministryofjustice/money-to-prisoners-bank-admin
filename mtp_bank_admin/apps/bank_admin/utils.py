@@ -3,11 +3,11 @@ from django.conf import settings
 from moj_auth import api_client
 
 
-def retrieve_all_transactions(request, status, exclude_file_type=''):
+def retrieve_all_transactions(request, status, exclude_batch_label=''):
     client = api_client.get_connection(request)
     response = client.bank_admin.transactions.get(
         status=status,
-        exclude_file_type=exclude_file_type,
+        exclude_batch_label=exclude_batch_label,
         limit=settings.REQUEST_PAGE_SIZE
     )
     transactions = response.get('results', [])
@@ -17,7 +17,7 @@ def retrieve_all_transactions(request, status, exclude_file_type=''):
     while len(transactions) < total_count:
         response = client.bank_admin.transactions.get(
             status=status,
-            exclude_file_type=exclude_file_type,
+            exclude_batch_label=exclude_batch_label,
             limit=settings.REQUEST_PAGE_SIZE,
             offset=settings.REQUEST_PAGE_SIZE*num_reqs
         )
@@ -27,9 +27,9 @@ def retrieve_all_transactions(request, status, exclude_file_type=''):
     return transactions
 
 
-def post_new_file(request, file_type, transactions):
+def create_batch_record(request, label, transactions):
     client = api_client.get_connection(request)
-    client.files.post({
-        'file_type': file_type,
+    client.batches.post({
+        'label': label,
         'transactions': transactions
     })

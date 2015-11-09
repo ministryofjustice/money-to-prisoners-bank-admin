@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 from django.test import SimpleTestCase
 from unittest import mock, skip
 
-from .. import adi, adi_config, ADI_PAYMENT_FILE_TYPE, ADI_REFUND_FILE_TYPE
+from .. import adi, adi_config, ADI_PAYMENT_LABEL, ADI_REFUND_LABEL
 from ..exceptions import EmptyFileError
 from ..types import PaymentType
 
@@ -56,10 +56,10 @@ def get_cell_value(journal_ws, field, row):
     return journal_ws[cell].value
 
 
-def assert_called_with_file_request(test_case, expected):
+def assert_called_with_batch_request(test_case, expected):
         def is_equal(actual):
             test_case.assertEqual(
-                actual['file_type'], expected['file_type']
+                actual['label'], expected['label']
             )
             test_case.assertEqual(
                 sorted(actual['transactions']),
@@ -89,9 +89,9 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
-        file_conn = mock_api_client.get_connection().files
-        file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': ADI_PAYMENT_FILE_TYPE,
+        batch_conn = mock_api_client.get_connection().batches
+        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+            'label': ADI_PAYMENT_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
@@ -119,9 +119,9 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
-        file_conn = mock_api_client.get_connection().files
-        file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': ADI_PAYMENT_FILE_TYPE,
+        batch_conn = mock_api_client.get_connection().batches
+        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+            'label': ADI_PAYMENT_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
@@ -152,9 +152,9 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
-        file_conn = mock_api_client.get_connection().files
-        file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': ADI_PAYMENT_FILE_TYPE,
+        batch_conn = mock_api_client.get_connection().batches
+        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+            'label': ADI_PAYMENT_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
@@ -205,9 +205,9 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
-        file_conn = mock_api_client.get_connection().files
-        file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': ADI_REFUND_FILE_TYPE,
+        batch_conn = mock_api_client.get_connection().batches
+        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+            'label': ADI_REFUND_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
@@ -235,9 +235,9 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
-        file_conn = mock_api_client.get_connection().files
-        file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': ADI_REFUND_FILE_TYPE,
+        batch_conn = mock_api_client.get_connection().batches
+        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+            'label': ADI_REFUND_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 
@@ -268,9 +268,9 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
-        file_conn = mock_api_client.get_connection().files
-        file_conn.post.side_effect = assert_called_with_file_request(self, {
-            'file_type': ADI_REFUND_FILE_TYPE,
+        batch_conn = mock_api_client.get_connection().batches
+        batch_conn.post.side_effect = assert_called_with_batch_request(self, {
+            'label': ADI_REFUND_LABEL,
             'transactions': [t['id'] for t in test_data['results']]
         })
 

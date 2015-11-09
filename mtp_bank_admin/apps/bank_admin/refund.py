@@ -6,9 +6,9 @@ from decimal import Decimal
 from django.conf import settings
 from moj_auth.backends import api_client
 
-from . import ACCESSPAY_FILE_TYPE
+from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
-from .utils import retrieve_all_transactions, post_new_file
+from .utils import retrieve_all_transactions, create_batch_record
 
 
 def generate_refund_file(request):
@@ -34,12 +34,12 @@ def generate_refund_file(request):
     if len(refunded_transactions) == 0:
         raise EmptyFileError()
 
+    # mark transactions as refunded
     client = api_client.get_connection(request)
     client.bank_admin.transactions.patch(refunded_transactions)
 
-    # create file record
-    post_new_file(request, ACCESSPAY_FILE_TYPE,
-                  [t['id'] for t in refunded_transactions])
+    create_batch_record(request, ACCESSPAY_LABEL,
+                        [t['id'] for t in refunded_transactions])
 
     return (settings.REFUND_OUTPUT_FILENAME % datetime.now().strftime('%Y-%m-%d'),
             filedata)

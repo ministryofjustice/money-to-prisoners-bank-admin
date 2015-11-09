@@ -6,11 +6,11 @@ from django.conf import settings
 from openpyxl import load_workbook, styles
 from openpyxl.writer.excel import save_virtual_workbook
 
-from . import ADI_PAYMENT_FILE_TYPE, ADI_REFUND_FILE_TYPE
+from . import ADI_PAYMENT_LABEL, ADI_REFUND_LABEL
 from . import adi_config as config
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
-from .utils import retrieve_all_transactions, post_new_file
+from .utils import retrieve_all_transactions, create_batch_record
 
 
 class AdiJournal(object):
@@ -124,7 +124,7 @@ def generate_adi_payment_file(request):
     journal = AdiJournal(PaymentType.payment)
 
     new_transactions = retrieve_all_transactions(request, 'credited',
-                                                 exclude_file_type=ADI_PAYMENT_FILE_TYPE)
+                                                 exclude_batch_label=ADI_PAYMENT_LABEL)
 
     if len(new_transactions) == 0:
         raise EmptyFileError()
@@ -154,8 +154,7 @@ def generate_adi_payment_file(request):
         )
 
     created_journal = journal.create_file()
-    # create file record
-    post_new_file(request, ADI_PAYMENT_FILE_TYPE, reconciled_transactions)
+    create_batch_record(request, ADI_PAYMENT_LABEL, reconciled_transactions)
 
     return created_journal
 
@@ -164,7 +163,7 @@ def generate_adi_refund_file(request):
     journal = AdiJournal(PaymentType.refund)
 
     refunds = retrieve_all_transactions(request, 'refunded',
-                                        exclude_file_type=ADI_REFUND_FILE_TYPE)
+                                        exclude_batch_label=ADI_REFUND_LABEL)
 
     if len(refunds) == 0:
         raise EmptyFileError()
@@ -185,7 +184,6 @@ def generate_adi_refund_file(request):
     journal.add_payment_row(refund_total, RecordType.credit, date=today)
 
     created_journal = journal.create_file()
-    # create file record
-    post_new_file(request, ADI_REFUND_FILE_TYPE, reconciled_transactions)
+    create_batch_record(request, ADI_REFUND_LABEL, reconciled_transactions)
 
     return created_journal
