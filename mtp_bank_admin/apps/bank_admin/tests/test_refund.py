@@ -3,6 +3,7 @@ from unittest import mock
 from django.test import SimpleTestCase
 from django.conf import settings
 
+from . import NO_TRANSACTIONS
 from .. import refund, ACCESSPAY_LABEL
 from ..exceptions import EmptyFileError
 
@@ -34,8 +35,6 @@ REFUND_TRANSACTIONS = [
         }]
     },
 ]
-
-NO_TRANSACTIONS = {'count': 0, 'results': []}
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.refund.api_client')
@@ -73,8 +72,10 @@ class NoTransactionsTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = NO_TRANSACTIONS
 
+        refund_conn = mock_refund_api_client.get_connection().bank_admin.transactions
+
         try:
             _, csvdata = refund.generate_refund_file(None)
             self.fail('EmptyFileError expected')
         except EmptyFileError:
-            self.assertFalse(conn.patch.called)
+            self.assertFalse(refund_conn.patch.called)

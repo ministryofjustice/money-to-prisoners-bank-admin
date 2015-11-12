@@ -10,7 +10,8 @@ from . import ADI_PAYMENT_LABEL, ADI_REFUND_LABEL
 from . import adi_config as config
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
-from .utils import retrieve_all_transactions, create_batch_record
+from .utils import retrieve_all_transactions, create_batch_record,\
+    get_transaction_uid
 
 
 class AdiJournal(object):
@@ -143,7 +144,7 @@ def generate_adi_payment_file(request):
             credit_total += credit_amount
             journal.add_payment_row(
                 credit_amount, RecordType.debit,
-                unique_id=settings.TRANSACTION_ID_BASE+int(transaction['id'])
+                unique_id=get_transaction_uid(transaction)
             )
             reconciled_transactions.append(transaction['id'])
         journal.add_payment_row(
@@ -178,7 +179,7 @@ def generate_adi_refund_file(request):
         refund_total += refund_amount
         journal.add_payment_row(
             refund_amount, RecordType.debit,
-            unique_id=settings.TRANSACTION_ID_BASE+int(refund['id'])
+            unique_id=get_transaction_uid(refund)
         )
         reconciled_transactions.append(refund['id'])
     journal.add_payment_row(refund_total, RecordType.credit, date=today)
