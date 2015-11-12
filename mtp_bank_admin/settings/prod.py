@@ -7,7 +7,7 @@ from .base import *
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.environ.get('DEBUG') == 'True'
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -15,10 +15,15 @@ ALLOWED_HOSTS = [
     '.service.gov.uk'
 ]
 
-ADI_TEMPLATE_FILEPATH = '/var/local/adi_template.xlsx'
+OAUTHLIB_INSECURE_TRANSPORT = os.environ.get(
+    'OAUTHLIB_INSECURE_TRANSPORT') == 'True'
+if not OAUTHLIB_INSECURE_TRANSPORT:
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = ''
 
 # security tightening
 SECURE_SSL_REDIRECT = True  # also done at nginx level
 SECURE_HSTS_SECONDS = 300
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+ADI_TEMPLATE_FILEPATH = '/var/local/adi_template.xlsx'
