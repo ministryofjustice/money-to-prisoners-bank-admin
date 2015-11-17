@@ -62,6 +62,44 @@ class ValidTransactionsTestCase(SimpleTestCase):
             % {'ref': settings.REFUND_REFERENCE},
             csvdata)
 
+    def test_escaping_formulae_in_csv_export(self, mock_api_client, mock_refund_api_client):
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = {
+            'count': 2,
+            'results': [
+                {
+                    'id': '3',
+                    'amount': 2568,
+                    'sender_account_number': '22222222',
+                    'sender_sort_code': '111111',
+                    'sender_name': '=HYPERLINK("http://127.0.0.1/?value="&A1&A1, '
+                                   '"Error: please click for further information")',
+                    'reference': 'for birthday',
+                    'credited': False,
+                    'refunded': False
+                },
+                {
+                    'id': '4',
+                    'amount': 1872,
+                    'sender_account_number': '33333333',
+                    'sender_sort_code': '999999',
+                    'sender_name': '=1+2',
+                    'reference': 'A1234 22/03/66',
+                    'credited': False,
+                    'refunded': False
+                }
+            ]
+        }
+
+        _, csvdata = refund.generate_refund_file(None)
+
+        self.assertEqual(
+            ('''111111,22222222,"'=HYPERLINK(""http://127.0.0.1/?value=""&A1&A1, ''' +
+             '''""Error: please click for further information"")",25.68,%(ref)s\r\n''' +
+             '''999999,33333333,'=1+2,18.72,%(ref)s\r\n''')
+            % {'ref': settings.REFUND_REFERENCE},
+            csvdata)
+
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.refund.api_client')
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')

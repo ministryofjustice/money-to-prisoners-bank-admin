@@ -1,6 +1,7 @@
 import time
 
 from django.conf import settings
+import six
 
 from moj_auth import api_client
 
@@ -43,3 +44,14 @@ def get_transaction_uid(transaction):
 
 def get_daily_file_uid():
     int(time.time()) % 86400
+
+
+def escape_csv_formula(value):
+    """
+    Escapes formulae (strings that start with =) to prevent
+    spreadsheet software vulnerabilities being exploited
+    :param value: the value being added to a CSV cell
+    """
+    if isinstance(value, six.string_types) and value.startswith('='):
+        return "'" + value
+    return value
