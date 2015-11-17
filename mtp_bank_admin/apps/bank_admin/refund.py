@@ -8,7 +8,7 @@ from moj_auth.backends import api_client
 
 from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
-from .utils import retrieve_all_transactions, create_batch_record
+from .utils import retrieve_all_transactions, create_batch_record, escape_csv_formula
 
 
 def generate_refund_file(request):
@@ -19,13 +19,14 @@ def generate_refund_file(request):
 
         refunded_transactions = []
         for transaction in transactions_to_refund:
-            writer.writerow([
+            cells = map(escape_csv_formula, [
                 transaction['sender_sort_code'],
                 transaction['sender_account_number'],
                 transaction['sender_name'],
                 '%.2f' % (Decimal(transaction['amount'])/100),
                 settings.REFUND_REFERENCE
             ])
+            writer.writerow(list(cells))
             refunded_transactions.append({'id': transaction['id'],
                                           'refunded': True})
 
