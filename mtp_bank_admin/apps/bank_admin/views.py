@@ -26,10 +26,6 @@ def download_refund_file(request):
     except EmptyFileError:
         messages.add_message(request, messages.ERROR,
                              _('No new transactions available for refund'))
-    except Exception as e:
-        logger.exception(e)
-        messages.add_message(request, messages.ERROR,
-                             _('Could not download AccessPay file'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
 
@@ -50,10 +46,6 @@ def download_adi_file(payment_type, request):
     except EmptyFileError:
         messages.add_message(request, messages.ERROR,
                              _('No new transactions available for reconciliation'))
-    except Exception as e:
-        logger.exception(e)
-        messages.add_message(request, messages.ERROR,
-                             _('Could not download ADI file'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
 
@@ -79,8 +71,4 @@ def download_bank_statement(request):
     except EmptyFileError:
         messages.add_message(request, messages.ERROR,
                              _('No new transactions available on account'))
-    except Exception as e:
-        logger.exception(e)
-        messages.add_message(request, messages.ERROR,
-                             _('Could not download BAI2 bank statement'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
