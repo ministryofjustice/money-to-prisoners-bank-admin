@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from moj_auth.tests.utils import generate_tokens
+from moj_auth.exceptions import Unauthorized
 
 from . import get_test_transactions, NO_TRANSACTIONS
 from .test_refund import REFUND_TRANSACTIONS
@@ -125,13 +126,12 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.side_effect = Exception('Problem?')
+        conn.get.side_effect = Unauthorized()
 
         response = self.client.get(reverse('bank_admin:download_refund_file'),
-                                   follow=True)
+                                   follow=False)
 
-        self.assertContains(response, _('Could not download AccessPay file'),
-                            status_code=200)
+        self.assertRedirects(response, reverse('login'))
 
     def test_download_refund_file_no_transactions_error_message(self, mock_api_client):
         self.login()
@@ -190,25 +190,23 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.side_effect = Exception('Problem?')
+        conn.get.side_effect = Unauthorized()
 
         response = self.client.get(reverse('bank_admin:download_adi_payment_file'),
-                                   follow=True)
+                                   follow=False)
 
-        self.assertContains(response, _('Could not download ADI file'),
-                            status_code=200)
+        self.assertRedirects(response, reverse('login'))
 
     def test_download_adi_refund_file_general_error_message(self, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.side_effect = Exception('Problem?')
+        conn.get.side_effect = Unauthorized()
 
         response = self.client.get(reverse('bank_admin:download_adi_refund_file'),
-                                   follow=True)
+                                   follow=False)
 
-        self.assertContains(response, _('Could not download ADI file'),
-                            status_code=200)
+        self.assertRedirects(response, reverse('login'))
 
     def test_download_adi_payment_file_no_transactions_error_message(self, mock_api_client):
         self.login()
@@ -267,13 +265,12 @@ class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.side_effect = Exception('Problem?')
+        conn.get.side_effect = Unauthorized()
 
         response = self.client.get(reverse('bank_admin:download_bank_statement'),
-                                   follow=True)
+                                   follow=False)
 
-        self.assertContains(response, _('Could not download BAI2 bank statement'),
-                            status_code=200)
+        self.assertRedirects(response, reverse('login'))
 
     def test_download_bank_statement_no_transactions_error_message(self, mock_api_client):
         self.login()
