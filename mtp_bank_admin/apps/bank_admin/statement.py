@@ -70,12 +70,8 @@ def generate_bank_statement(request):
     group_header.as_of_date_modifier = constants.AsOfDateModifier.interim_same_day
     bai2_file.children.append(group)
 
-    # calculate balance values with reference to last created statement
+    # calculate balance values with reference to 0
     opening_balance = 0
-    conn = api_client.get_connection(request)
-    response = conn.batches.get(label=BAI2_STMT_LABEL, limit=1)
-    if len(response['results']) > 0:
-        opening_balance = int(response['results'][0]['closing_balance'])
     closing_balance = opening_balance + credit_total - debit_total
 
     account = models.Account()

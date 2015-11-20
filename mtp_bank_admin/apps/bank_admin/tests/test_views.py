@@ -249,9 +249,6 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = get_test_transactions()
 
-        balance_conn = mock_stmt_api_client.get_connection().batches
-        balance_conn.get.return_value = {'results': []}
-
         response = self.client.get(reverse('bank_admin:download_bank_statement'))
 
         self.assertEqual(200, response.status_code)

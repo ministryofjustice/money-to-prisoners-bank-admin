@@ -20,12 +20,6 @@ class BankStatementGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
-        test_balance = 16600
-        balance_conn = mock_stmt_api_client.get_connection().batches
-        balance_conn.get.return_value = {
-            'results': [{'closing_balance': test_balance}]
-        }
-
         batch_conn = mock_api_client.get_connection().batches
         batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
             'label': BAI2_STMT_LABEL,
@@ -49,12 +43,6 @@ class BankStatementGenerationTestCase(SimpleTestCase):
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
-
-        test_balance = 16600
-        balance_conn = mock_stmt_api_client.get_connection().batches
-        balance_conn.get.return_value = {
-            'results': [{'closing_balance': test_balance}]
-        }
 
         batch_conn = mock_api_client.get_connection().batches
         batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
@@ -85,10 +73,10 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             amount = None
             if summary.type_code == TypeCodes['010'] or\
                     summary.type_code == TypeCodes['040']:
-                amount = test_balance
+                amount = 0
             elif summary.type_code == TypeCodes['015'] or\
                     summary.type_code == TypeCodes['045']:
-                amount = test_balance + credit_total - debit_total
+                amount = credit_total - debit_total
             elif summary.type_code == TypeCodes['400']:
                 amount = debit_total
             elif summary.type_code == TypeCodes['100']:
