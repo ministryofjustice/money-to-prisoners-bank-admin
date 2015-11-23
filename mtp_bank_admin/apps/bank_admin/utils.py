@@ -1,4 +1,5 @@
 import time
+from datetime import timedelta
 
 from django.conf import settings
 import six
@@ -6,12 +7,16 @@ import six
 from moj_auth import api_client
 
 
-def retrieve_all_transactions(request, status, exclude_batch_label=''):
+def retrieve_all_transactions(request, status, receipt_date=None):
+    args = {'status': status}
+    if receipt_date:
+        args['received_at__gte'] = receipt_date.date()
+        args['received_at__lt'] = (receipt_date + timedelta(days=1)).date()
+
     client = api_client.get_connection(request)
     response = client.bank_admin.transactions.get(
-        status=status,
-        exclude_batch_label=exclude_batch_label,
-        limit=settings.REQUEST_PAGE_SIZE
+        limit=settings.REQUEST_PAGE_SIZE,
+        **args
     )
     transactions = response.get('results', [])
     total_count = response.get('count', 0)
@@ -19,10 +24,9 @@ def retrieve_all_transactions(request, status, exclude_batch_label=''):
     num_reqs = 1
     while len(transactions) < total_count:
         response = client.bank_admin.transactions.get(
-            status=status,
-            exclude_batch_label=exclude_batch_label,
             limit=settings.REQUEST_PAGE_SIZE,
-            offset=settings.REQUEST_PAGE_SIZE*num_reqs
+            offset=settings.REQUEST_PAGE_SIZE*num_reqs,
+            **args
         )
         transactions += response.get('results', [])
         num_reqs += 1

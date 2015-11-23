@@ -1,4 +1,5 @@
 import logging
+import datetime
 
 from unittest import mock
 from django.test import SimpleTestCase
@@ -101,8 +102,9 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
     def test_download_refund_file_requires_login(self):
         self.check_login_redirect(reverse('bank_admin:download_refund_file'))
 
+    @mock.patch('bank_admin.refund.api_client')
     @mock.patch('bank_admin.utils.api_client')
-    def test_download_refund_file(self, mock_api_client):
+    def test_download_refund_file(self, mock_api_client, mock_refund_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -171,6 +173,25 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         self.assertEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response['Content-Type'])
 
     @mock.patch('bank_admin.utils.api_client')
+    def test_payments_queries_by_date(self, mock_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = get_test_transactions(PaymentType.payment)
+
+        self.client.get(
+            reverse('bank_admin:download_adi_payment_file') +
+            '?receipt_date=2014-11-12'
+        )
+
+        conn.get.assert_called_with(
+            limit=settings.REQUEST_PAGE_SIZE,
+            status='credited',
+            received_at__gte=datetime.date(2014, 11, 12),
+            received_at__lt=datetime.date(2014, 11, 13)
+        )
+
+    @mock.patch('bank_admin.utils.api_client')
     def test_download_adi_refund_file(self, mock_api_client):
         self.login()
 
@@ -181,6 +202,25 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response['Content-Type'])
+
+    @mock.patch('bank_admin.utils.api_client')
+    def test_refunds_queries_by_date(self, mock_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = get_test_transactions(PaymentType.refund)
+
+        self.client.get(
+            reverse('bank_admin:download_adi_refund_file') +
+            '?receipt_date=2014-11-12'
+        )
+
+        conn.get.assert_called_with(
+            limit=settings.REQUEST_PAGE_SIZE,
+            status='refunded',
+            received_at__gte=datetime.date(2014, 11, 12),
+            received_at__lt=datetime.date(2014, 11, 13)
+        )
 
 
 @mock.patch('bank_admin.utils.api_client')
@@ -240,10 +280,8 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
     def test_download_adi_refund_file_requires_login(self):
         self.check_login_redirect(reverse('bank_admin:download_adi_refund_file'))
 
-    @mock.patch('bank_admin.statement.api_client')
     @mock.patch('bank_admin.utils.api_client')
-    def test_download_bank_statement(self, mock_api_client,
-                                     mock_stmt_api_client):
+    def test_download_bank_statement(self, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -253,6 +291,25 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/plain', response['Content-Type'])
+
+    @mock.patch('bank_admin.utils.api_client')
+    def test_bank_statement_queries_by_date(self, mock_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = get_test_transactions()
+
+        self.client.get(
+            reverse('bank_admin:download_bank_statement') +
+            '?receipt_date=2014-11-12'
+        )
+
+        conn.get.assert_called_with(
+            limit=settings.REQUEST_PAGE_SIZE,
+            status='credited,refunded',
+            received_at__gte=datetime.date(2014, 11, 12),
+            received_at__lt=datetime.date(2014, 11, 13)
+        )
 
 
 @mock.patch('bank_admin.utils.api_client')

@@ -2,6 +2,8 @@ import os
 from contextlib import contextmanager
 
 from openpyxl import load_workbook
+from django.test.client import RequestFactory
+from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
 from unittest import mock, skip
 
@@ -32,6 +34,15 @@ def get_cell_value(journal_ws, field, row):
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def get_request(self, **kwargs):
+        return self.factory.get(
+            reverse('bank_admin:download_adi_payment_file'),
+            **kwargs
+        )
+
     @skip('Enable to generate an example file for inspection')
     def test_adi_payment_file_generation(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.payment)
@@ -39,7 +50,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
-        filename, exceldata = adi.generate_adi_payment_file(None)
+        filename, exceldata = adi.generate_adi_payment_file(self.get_request())
 
         with open(filename, 'wb+') as f:
             f.write(exceldata)
@@ -56,7 +67,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_payment_file(None)
+        filename, exceldata = adi.generate_adi_payment_file(self.get_request())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -88,7 +99,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_payment_file(None)
+        filename, exceldata = adi.generate_adi_payment_file(self.get_request())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -123,7 +134,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_payment_file(None)
+        filename, exceldata = adi.generate_adi_payment_file(self.get_request())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -150,9 +161,28 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         self.assertEqual(credits_checked, len(TEST_PRISONS))
 
+    def test_no_transactions_raises_error(self, mock_api_client):
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = NO_TRANSACTIONS
+
+        try:
+            _, exceldata = adi.generate_adi_payment_file(self.get_request())
+            self.fail('EmptyFileError expected')
+        except EmptyFileError:
+            pass
+
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class AdiRefundFileGenerationTestCase(SimpleTestCase):
+
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def get_request(self, **kwargs):
+        return self.factory.get(
+            reverse('bank_admin:download_adi_payment_file'),
+            **kwargs
+        )
 
     @skip('Enable to generate an example file for inspection')
     def test_adi_refund_file_generation(self, mock_api_client):
@@ -161,7 +191,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
-        filename, exceldata = adi.generate_adi_refund_file(None)
+        filename, exceldata = adi.generate_adi_refund_file(self.get_request())
 
         with open(filename, 'wb+') as f:
             f.write(exceldata)
@@ -178,7 +208,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_refund_file(None)
+        filename, exceldata = adi.generate_adi_refund_file(self.get_request())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -210,7 +240,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_refund_file(None)
+        filename, exceldata = adi.generate_adi_refund_file(self.get_request())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -245,7 +275,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_refund_file(None)
+        filename, exceldata = adi.generate_adi_refund_file(self.get_request())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -266,26 +296,12 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
 
         self.assertTrue(credit_checked)
 
-
-@mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
-class NoTransactionsTestCase(SimpleTestCase):
-
-    def test_generate_adi_payment_file_raises_error(self, mock_api_client):
+    def test_no_transactions_raises_error(self, mock_api_client):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = NO_TRANSACTIONS
 
         try:
-            _, exceldata = adi.generate_adi_payment_file(None)
-            self.fail('EmptyFileError expected')
-        except EmptyFileError:
-            pass
-
-    def test_generate_adi_refund_file_raises_error(self, mock_api_client):
-        conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.return_value = NO_TRANSACTIONS
-
-        try:
-            _, exceldata = adi.generate_adi_refund_file(None)
+            _, exceldata = adi.generate_adi_refund_file(self.get_request())
             self.fail('EmptyFileError expected')
         except EmptyFileError:
             pass
