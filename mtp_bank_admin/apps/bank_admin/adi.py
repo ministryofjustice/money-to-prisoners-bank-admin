@@ -121,13 +121,9 @@ class AdiJournal(object):
                 save_virtual_workbook(self.wb))
 
 
-def generate_adi_payment_file(request):
+def generate_adi_payment_file(request, receipt_date=None):
     journal = AdiJournal(PaymentType.payment)
 
-    receipt_date = None
-    receipt_date_str = request.GET.get('receipt_date')
-    if receipt_date_str:
-        receipt_date = datetime.strptime(receipt_date_str, '%Y-%m-%d')
     new_transactions = retrieve_all_transactions(
         request,
         'credited',
@@ -167,13 +163,9 @@ def generate_adi_payment_file(request):
     return created_journal
 
 
-def generate_adi_refund_file(request):
+def generate_adi_refund_file(request, receipt_date=None):
     journal = AdiJournal(PaymentType.refund)
 
-    receipt_date = None
-    receipt_date_str = request.GET.get('receipt_date')
-    if receipt_date_str:
-        receipt_date = datetime.strptime(receipt_date_str, '%Y-%m-%d')
     refunds = retrieve_all_transactions(
         request,
         'refunded',

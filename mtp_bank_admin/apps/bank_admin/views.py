@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 from . import refund, adi, statement
+from .decorators import filter_by_receipt_date
 from .exceptions import EmptyFileError
 from .types import PaymentType
 
@@ -29,12 +30,12 @@ def download_refund_file(request):
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
 
-def download_adi_file(payment_type, request):
+def download_adi_file(payment_type, request, receipt_date):
     try:
         if payment_type == PaymentType.payment:
-            filename, filedata = adi.generate_adi_payment_file(request)
+            filename, filedata = adi.generate_adi_payment_file(request, receipt_date)
         else:
-            filename, filedata = adi.generate_adi_refund_file(request)
+            filename, filedata = adi.generate_adi_refund_file(request, receipt_date)
 
         response = HttpResponse(
             filedata,
@@ -50,19 +51,22 @@ def download_adi_file(payment_type, request):
 
 
 @login_required
-def download_adi_payment_file(request):
-    return download_adi_file(PaymentType.payment, request)
+@filter_by_receipt_date
+def download_adi_payment_file(request, receipt_date):
+    return download_adi_file(PaymentType.payment, request, receipt_date)
 
 
 @login_required
-def download_adi_refund_file(request):
-    return download_adi_file(PaymentType.refund, request)
+@filter_by_receipt_date
+def download_adi_refund_file(request, receipt_date):
+    return download_adi_file(PaymentType.refund, request, receipt_date)
 
 
 @login_required
-def download_bank_statement(request):
+@filter_by_receipt_date
+def download_bank_statement(request, receipt_date):
     try:
-        filename, bai2 = statement.generate_bank_statement(request)
+        filename, bai2 = statement.generate_bank_statement(request, receipt_date)
 
         response = HttpResponse(bai2, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="%s"' % filename

@@ -226,7 +226,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
 @mock.patch('bank_admin.utils.api_client')
 class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 
-    def test_download_adi_payment_file_general_error_message(self, mock_api_client):
+    def test_download_adi_payment_file_unauthorized(self, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -237,7 +237,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 
         self.assertRedirects(response, reverse('login'))
 
-    def test_download_adi_refund_file_general_error_message(self, mock_api_client):
+    def test_download_adi_refund_file_unauthorized(self, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -273,6 +273,30 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
         self.assertContains(response,
                             _('No new transactions available for reconciliation'),
                             status_code=200)
+
+    def test_download_adi_payment_invalid_receipt_date(self, mock_api_client):
+        self.login()
+
+        response = self.client.get(
+            reverse('bank_admin:download_adi_payment_file') + '?receipt_date=bleh',
+            follow=True
+        )
+
+        self.assertContains(response,
+                            _("Invalid format for receipt_date"),
+                            status_code=400)
+
+    def test_download_adi_refund_invalid_receipt_date(self, mock_api_client):
+        self.login()
+
+        response = self.client.get(
+            reverse('bank_admin:download_adi_refund_file') + '?receipt_date=bleh',
+            follow=True
+        )
+
+        self.assertContains(response,
+                            _("Invalid format for receipt_date"),
+                            status_code=400)
 
 
 class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
@@ -315,7 +339,7 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
 @mock.patch('bank_admin.utils.api_client')
 class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
 
-    def test_download_bank_statement_general_error_message(self, mock_api_client):
+    def test_download_bank_statement_unauthorized(self, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -336,5 +360,17 @@ class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
                                    follow=True)
 
         self.assertContains(response,
-                            _('No new transactions available on account'),
+                            _("No new transactions available on account"),
                             status_code=200)
+
+    def test_download_bank_statement_invalid_receipt_date(self, mock_api_client):
+        self.login()
+
+        response = self.client.get(
+            reverse('bank_admin:download_bank_statement') + '?receipt_date=bleh',
+            follow=True
+        )
+
+        self.assertContains(response,
+                            _("Invalid format for receipt_date"),
+                            status_code=400)
