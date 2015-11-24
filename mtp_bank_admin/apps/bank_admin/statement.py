@@ -2,7 +2,6 @@ import datetime
 
 from django.conf import settings
 from bai2 import bai2, models, constants
-from moj_auth import api_client
 
 from . import BAI2_STMT_LABEL
 from .exceptions import EmptyFileError
@@ -22,9 +21,12 @@ DEBIT_TOTAL_TYPE_CODE = '400'
 RECORD_LENGTH = 80
 
 
-def generate_bank_statement(request):
-    transactions = retrieve_all_transactions(request, 'credited,refunded',
-                                             exclude_batch_label=BAI2_STMT_LABEL)
+def generate_bank_statement(request, receipt_date=None):
+    transactions = retrieve_all_transactions(
+        request,
+        'credited,refunded',
+        receipt_date=receipt_date
+    )
 
     if len(transactions) == 0:
         raise EmptyFileError()
@@ -70,12 +72,8 @@ def generate_bank_statement(request):
     group_header.as_of_date_modifier = constants.AsOfDateModifier.interim_same_day
     bai2_file.children.append(group)
 
-    # calculate balance values with reference to last created statement
+    # calculate balance values with reference to 0
     opening_balance = 0
-    conn = api_client.get_connection(request)
-    response = conn.batches.get(label=BAI2_STMT_LABEL, limit=1)
-    if len(response['results']) > 0:
-        opening_balance = int(response['results'][0]['closing_balance'])
     closing_balance = opening_balance + credit_total - debit_total
 
     account = models.Account()

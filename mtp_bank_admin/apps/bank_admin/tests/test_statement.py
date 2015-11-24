@@ -1,6 +1,8 @@
 import mock
 
 from django.test import SimpleTestCase
+from django.test.client import RequestFactory
+from django.core.urlresolvers import reverse
 from bai2 import bai2
 from bai2.constants import TypeCodes
 
@@ -10,21 +12,23 @@ from ..statement import generate_bank_statement
 from ..exceptions import EmptyFileError
 
 
-@mock.patch('mtp_bank_admin.apps.bank_admin.statement.api_client')
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class BankStatementGenerationTestCase(SimpleTestCase):
 
-    def test_number_of_records_correct(self, mock_api_client, mock_stmt_api_client):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def get_request(self, **kwargs):
+        return self.factory.get(
+            reverse('bank_admin:download_bank_statement'),
+            **kwargs
+        )
+
+    def test_number_of_records_correct(self, mock_api_client):
         test_data = get_test_transactions()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
-
-        test_balance = 16600
-        balance_conn = mock_stmt_api_client.get_connection().batches
-        balance_conn.get.return_value = {
-            'results': [{'closing_balance': test_balance}]
-        }
 
         batch_conn = mock_api_client.get_connection().batches
         batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
@@ -32,7 +36,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        _, bai2_file = generate_bank_statement(None)
+        _, bai2_file = generate_bank_statement(self.get_request())
         self.assertTrue(batch_conn.post.side_effect.called)
 
         parsed_file = bai2.parse_from_string(bai2_file, check_integrity=True)
@@ -44,17 +48,11 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             len(test_data['results'])
         )
 
-    def test_control_totals_correct(self, mock_api_client, mock_stmt_api_client):
+    def test_control_totals_correct(self, mock_api_client):
         test_data = get_test_transactions()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
-
-        test_balance = 16600
-        balance_conn = mock_stmt_api_client.get_connection().batches
-        balance_conn.get.return_value = {
-            'results': [{'closing_balance': test_balance}]
-        }
 
         batch_conn = mock_api_client.get_connection().batches
         batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
@@ -62,7 +60,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        _, bai2_file = generate_bank_statement(None)
+        _, bai2_file = generate_bank_statement(self.get_request())
         self.assertTrue(batch_conn.post.side_effect.called)
 
         parsed_file = bai2.parse_from_string(bai2_file, check_integrity=True)
@@ -85,10 +83,10 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             amount = None
             if summary.type_code == TypeCodes['010'] or\
                     summary.type_code == TypeCodes['040']:
-                amount = test_balance
+                amount = 0
             elif summary.type_code == TypeCodes['015'] or\
                     summary.type_code == TypeCodes['045']:
-                amount = test_balance + credit_total - debit_total
+                amount = credit_total - debit_total
             elif summary.type_code == TypeCodes['400']:
                 amount = debit_total
             elif summary.type_code == TypeCodes['100']:
@@ -104,17 +102,24 @@ class BankStatementGenerationTestCase(SimpleTestCase):
         )
 
 
-@mock.patch('mtp_bank_admin.apps.bank_admin.statement.api_client')
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class NoTransactionsTestCase(SimpleTestCase):
 
-    def test_generate_bank_statement_raises_error(self, mock_api_client,
-                                                  mock_stmt_api_client):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def get_request(self, **kwargs):
+        return self.factory.get(
+            reverse('bank_admin:download_bank_statement'),
+            **kwargs
+        )
+
+    def test_generate_bank_statement_raises_error(self, mock_api_client):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = NO_TRANSACTIONS
 
         try:
-            generate_bank_statement(None)
+            generate_bank_statement(self.get_request())
             self.fail('EmptyFileError expected')
         except EmptyFileError:
             pass

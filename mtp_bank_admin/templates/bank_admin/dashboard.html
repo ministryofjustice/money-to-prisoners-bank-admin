@@ -1,38 +1,52 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n dates %}
 
 {% block content %}
-
+  {% get_preceding_days 5 offset=2 as preceding_days %}
   <h1>{% trans 'Download files' %}</h1>
 
   {% if perms.transaction.view_bank_details_transaction %}
     <section class="ContentBlock">
       <h2>{% trans 'AccessPay file - refunds' %}</h2>
       <p>
-        <a href="{% url 'bank_admin:download_refund_file' %}">{% trans 'Download file' %}</a>
+        <a href="{% url 'bank_admin:download_refund_file' %}">
+          {% blocktrans %}Download latest file{% endblocktrans %}
+        </a>
       </p>
     </section>
   {% endif %}
 
   <section class="ContentBlock">
     <h2>{% trans 'ADI Journal - refunds' %}</h2>
+    {% for day in preceding_days %}
     <p>
-      <a href="{% url 'bank_admin:download_adi_refund_file' %}">{% trans 'Download file' %}</a>
+      <a href="{% url 'bank_admin:download_adi_refund_file' %}?receipt_date={{ day }}">
+        {% blocktrans %}Download file - {{ day }}{% endblocktrans %}
+      </a>
     </p>
+    {% endfor %}
   </section>
 
   <section class="ContentBlock">
     <h2>{% trans 'ADI Journal - payments' %}</h2>
+    {% for day in preceding_days %}
     <p>
-      <a href="{% url 'bank_admin:download_adi_payment_file' %}">{% trans 'Download file' %}</a>
+      <a href="{% url 'bank_admin:download_adi_payment_file' %}?receipt_date={{ day }}">
+        {% blocktrans %}Download file - {{ day }}{% endblocktrans %}
+      </a>
     </p>
+    {% endfor %}
   </section>
 
   <section class="ContentBlock">
     <h2>{% trans 'BAI2 Bank Statement' %}</h2>
+    {% for day in preceding_days %}
     <p>
-      <a href="{% url 'bank_admin:download_bank_statement' %}">{% trans 'Download file' %}</a>
+      <a href="{% url 'bank_admin:download_bank_statement' %}?receipt_date={{ day }}">
+        {% blocktrans %}Download file - {{ day }}{% endblocktrans %}
+      </a>
     </p>
+    {% endfor %}
   </section>
 
 {% endblock %}

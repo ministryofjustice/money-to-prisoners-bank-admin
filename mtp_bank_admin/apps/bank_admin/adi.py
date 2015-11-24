@@ -121,11 +121,14 @@ class AdiJournal(object):
                 save_virtual_workbook(self.wb))
 
 
-def generate_adi_payment_file(request):
+def generate_adi_payment_file(request, receipt_date=None):
     journal = AdiJournal(PaymentType.payment)
 
-    new_transactions = retrieve_all_transactions(request, 'credited',
-                                                 exclude_batch_label=ADI_PAYMENT_LABEL)
+    new_transactions = retrieve_all_transactions(
+        request,
+        'credited',
+        receipt_date=receipt_date
+    )
 
     if len(new_transactions) == 0:
         raise EmptyFileError()
@@ -160,11 +163,14 @@ def generate_adi_payment_file(request):
     return created_journal
 
 
-def generate_adi_refund_file(request):
+def generate_adi_refund_file(request, receipt_date=None):
     journal = AdiJournal(PaymentType.refund)
 
-    refunds = retrieve_all_transactions(request, 'refunded',
-                                        exclude_batch_label=ADI_REFUND_LABEL)
+    refunds = retrieve_all_transactions(
+        request,
+        'refunded',
+        receipt_date=receipt_date
+    )
 
     if len(refunds) == 0:
         raise EmptyFileError()
