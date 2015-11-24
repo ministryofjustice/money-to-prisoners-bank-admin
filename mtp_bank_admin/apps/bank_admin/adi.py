@@ -84,17 +84,6 @@ class AdiJournal(object):
         self._add_column_sum('debit')
         self._add_column_sum('credit')
 
-        bold = {'font': {'bold': True}, 'alignment': {'horizontal': 'left'}}
-
-        self._next_row(increment=3)
-        self._set_field('description', 'UPLOADED BY:', style=bold)
-
-        self._next_row(increment=3)
-        self._set_field('description', 'CHECKED BY:', style=bold)
-
-        self._next_row(increment=3)
-        self._set_field('description', 'POSTED BY:', style=bold)
-
     def add_payment_row(self, amount, record_type, **kwargs):
         for field in config.ADI_JOURNAL_FIELDS:
             static_value = self._lookup(field, record_type, context=kwargs)
@@ -116,7 +105,6 @@ class AdiJournal(object):
             filename = settings.ADI_REFUND_OUTPUT_FILENAME
 
         today = datetime.now()
-        self.journal_ws[config.ADI_DATE_FIELD] = today.strftime('%d/%m/%Y')
         return (today.strftime(filename),
                 save_virtual_workbook(self.wb))
 
