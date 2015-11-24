@@ -2,11 +2,8 @@ from openpyxl import styles
 
 ADI_JOURNAL_SHEET = 'TEMPLATE'
 
-# general info
-ADI_DATE_FIELD = 'J9'
-
 # journal table
-ADI_JOURNAL_START_ROW = 16
+ADI_JOURNAL_START_ROW = 4
 
 _white_style = {
     'fill': {
@@ -79,8 +76,8 @@ ADI_JOURNAL_FIELDS = {
     'account': {
         'column': 'G',
         'value': {
-            'payment': {'debit': '8830', 'credit': '9400'},
-            'refund': {'debit': '8830', 'credit': '8830'},
+            'payment': {'debit': '08830', 'credit': '09400'},
+            'refund': {'debit': '08830', 'credit': '08830'},
         },
         'style': _white_style
     },
