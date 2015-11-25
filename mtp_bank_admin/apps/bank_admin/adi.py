@@ -109,7 +109,7 @@ class AdiJournal(object):
                 save_virtual_workbook(self.wb))
 
 
-def generate_adi_payment_file(request, receipt_date=None):
+def generate_adi_payment_file(request, receipt_date):
     journal = AdiJournal(PaymentType.payment)
 
     new_transactions = retrieve_all_transactions(
@@ -121,7 +121,7 @@ def generate_adi_payment_file(request, receipt_date=None):
     if len(new_transactions) == 0:
         raise EmptyFileError()
 
-    today = datetime.now().strftime('%d/%m/%Y')
+    journal_date = receipt_date.strftime('%d/%m/%Y')
     prison_payments = defaultdict(list)
     for transaction in new_transactions:
         prison_payments[transaction['prison']['nomis_id']].append(transaction)
@@ -142,7 +142,7 @@ def generate_adi_payment_file(request, receipt_date=None):
             credit_total, RecordType.credit,
             prison_ledger_code=transaction_list[0]['prison']['general_ledger_code'],
             prison_name=transaction_list[0]['prison']['name'],
-            date=today
+            date=journal_date
         )
 
     created_journal = journal.create_file()
@@ -151,7 +151,7 @@ def generate_adi_payment_file(request, receipt_date=None):
     return created_journal
 
 
-def generate_adi_refund_file(request, receipt_date=None):
+def generate_adi_refund_file(request, receipt_date):
     journal = AdiJournal(PaymentType.refund)
 
     refunds = retrieve_all_transactions(
@@ -163,7 +163,7 @@ def generate_adi_refund_file(request, receipt_date=None):
     if len(refunds) == 0:
         raise EmptyFileError()
 
-    today = datetime.now().strftime('%d/%m/%Y')
+    journal_date = receipt_date.strftime('%d/%m/%Y')
 
     # do refunds
     reconciled_transactions = []
@@ -176,7 +176,7 @@ def generate_adi_refund_file(request, receipt_date=None):
             unique_id=get_transaction_uid(refund)
         )
         reconciled_transactions.append(refund['id'])
-    journal.add_payment_row(refund_total, RecordType.credit, date=today)
+    journal.add_payment_row(refund_total, RecordType.credit, date=journal_date)
 
     created_journal = journal.create_file()
     create_batch_record(request, ADI_REFUND_LABEL, reconciled_transactions)
