@@ -21,7 +21,7 @@ DEBIT_TOTAL_TYPE_CODE = '400'
 RECORD_LENGTH = 80
 
 
-def generate_bank_statement(request, receipt_date=None):
+def generate_bank_statement(request, receipt_date):
     transactions = retrieve_all_transactions(
         request,
         'credited,refunded',

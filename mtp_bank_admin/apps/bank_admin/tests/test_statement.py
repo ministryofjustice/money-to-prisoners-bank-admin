@@ -1,4 +1,5 @@
 import mock
+from datetime import datetime
 
 from django.test import SimpleTestCase
 from django.test.client import RequestFactory
@@ -36,7 +37,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        _, bai2_file = generate_bank_statement(self.get_request())
+        _, bai2_file = generate_bank_statement(self.get_request(), datetime.now())
         self.assertTrue(batch_conn.post.side_effect.called)
 
         parsed_file = bai2.parse_from_string(bai2_file, check_integrity=True)
@@ -60,7 +61,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        _, bai2_file = generate_bank_statement(self.get_request())
+        _, bai2_file = generate_bank_statement(self.get_request(), datetime.now())
         self.assertTrue(batch_conn.post.side_effect.called)
 
         parsed_file = bai2.parse_from_string(bai2_file, check_integrity=True)
@@ -119,7 +120,7 @@ class NoTransactionsTestCase(SimpleTestCase):
         conn.get.return_value = NO_TRANSACTIONS
 
         try:
-            generate_bank_statement(self.get_request())
+            generate_bank_statement(self.get_request(), datetime.now())
             self.fail('EmptyFileError expected')
         except EmptyFileError:
             pass

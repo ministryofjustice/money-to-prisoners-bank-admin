@@ -167,7 +167,8 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = get_test_transactions(PaymentType.payment)
 
-        response = self.client.get(reverse('bank_admin:download_adi_payment_file'))
+        response = self.client.get(reverse('bank_admin:download_adi_payment_file') +
+                                   '?receipt_date=2014-12-11')
 
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response['Content-Type'])
@@ -198,7 +199,8 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = get_test_transactions(PaymentType.refund)
 
-        response = self.client.get(reverse('bank_admin:download_adi_refund_file'))
+        response = self.client.get(reverse('bank_admin:download_adi_refund_file') +
+                                   '?receipt_date=2014-12-11')
 
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response['Content-Type'])

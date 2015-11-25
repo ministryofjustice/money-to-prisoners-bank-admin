@@ -1,5 +1,6 @@
 import os
 from contextlib import contextmanager
+from datetime import datetime
 
 from openpyxl import load_workbook
 from django.test.client import RequestFactory
@@ -50,7 +51,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
-        filename, exceldata = adi.generate_adi_payment_file(self.get_request())
+        filename, exceldata = adi.generate_adi_payment_file(self.get_request(), datetime.now())
 
         with open(filename, 'wb+') as f:
             f.write(exceldata)
@@ -67,7 +68,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_payment_file(self.get_request())
+        filename, exceldata = adi.generate_adi_payment_file(self.get_request(), datetime.now())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -99,7 +100,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_payment_file(self.get_request())
+        filename, exceldata = adi.generate_adi_payment_file(self.get_request(), datetime.now())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -134,7 +135,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_payment_file(self.get_request())
+        filename, exceldata = adi.generate_adi_payment_file(self.get_request(), datetime.now())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -166,7 +167,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn.get.return_value = NO_TRANSACTIONS
 
         try:
-            _, exceldata = adi.generate_adi_payment_file(self.get_request())
+            _, exceldata = adi.generate_adi_payment_file(self.get_request(), datetime.now())
             self.fail('EmptyFileError expected')
         except EmptyFileError:
             pass
@@ -191,7 +192,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
-        filename, exceldata = adi.generate_adi_refund_file(self.get_request())
+        filename, exceldata = adi.generate_adi_refund_file(self.get_request(), datetime.now())
 
         with open(filename, 'wb+') as f:
             f.write(exceldata)
@@ -208,7 +209,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_refund_file(self.get_request())
+        filename, exceldata = adi.generate_adi_refund_file(self.get_request(), datetime.now())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -240,7 +241,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_refund_file(self.get_request())
+        filename, exceldata = adi.generate_adi_refund_file(self.get_request(), datetime.now())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -275,7 +276,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        filename, exceldata = adi.generate_adi_refund_file(self.get_request())
+        filename, exceldata = adi.generate_adi_refund_file(self.get_request(), datetime.now())
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -301,7 +302,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         conn.get.return_value = NO_TRANSACTIONS
 
         try:
-            _, exceldata = adi.generate_adi_refund_file(self.get_request())
+            _, exceldata = adi.generate_adi_refund_file(self.get_request(), datetime.now())
             self.fail('EmptyFileError expected')
         except EmptyFileError:
             pass
