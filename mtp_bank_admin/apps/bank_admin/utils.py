@@ -7,8 +7,10 @@ import six
 from moj_auth import api_client
 
 
-def retrieve_all_transactions(request, status, receipt_date=None):
-    args = {'status': status}
+def retrieve_all_transactions(request, status=None, receipt_date=None):
+    args = {}
+    if status:
+        args['status'] = status
     if receipt_date:
         args['received_at__gte'] = receipt_date
         args['received_at__lt'] = (receipt_date + timedelta(days=1))

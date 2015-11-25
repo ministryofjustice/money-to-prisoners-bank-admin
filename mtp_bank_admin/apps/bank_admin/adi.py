@@ -113,7 +113,7 @@ def generate_adi_payment_file(request, receipt_date):
     reconcile_for_date(request, receipt_date)
     new_transactions = retrieve_all_transactions(
         request,
-        'credited',
+        'credited,available,locked',
         receipt_date=receipt_date
     )
 
@@ -156,7 +156,7 @@ def generate_adi_refund_file(request, receipt_date):
     reconcile_for_date(request, receipt_date)
     refunds = retrieve_all_transactions(
         request,
-        'refunded',
+        'refunded,refund_pending',
         receipt_date=receipt_date
     )
 

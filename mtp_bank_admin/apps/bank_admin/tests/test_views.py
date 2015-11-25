@@ -190,7 +190,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
 
         conn.get.assert_called_with(
             limit=settings.REQUEST_PAGE_SIZE,
-            status='credited',
+            status='credited,available,locked',
             received_at__gte=datetime.date(2014, 11, 12),
             received_at__lt=datetime.date(2014, 11, 13)
         )
@@ -222,7 +222,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
 
         conn.get.assert_called_with(
             limit=settings.REQUEST_PAGE_SIZE,
-            status='refunded',
+            status='refunded,refund_pending',
             received_at__gte=datetime.date(2014, 11, 12),
             received_at__lt=datetime.date(2014, 11, 13)
         )
@@ -365,7 +365,6 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
 
         conn.get.assert_called_with(
             limit=settings.REQUEST_PAGE_SIZE,
-            status='credited,refunded',
             received_at__gte=datetime.date(2014, 11, 12),
             received_at__lt=datetime.date(2014, 11, 13)
         )

@@ -25,7 +25,7 @@ def generate_bank_statement(request, receipt_date):
     reconcile_for_date(request, receipt_date)
     transactions = retrieve_all_transactions(
         request,
-        'credited,refunded',
+        None,
         receipt_date=receipt_date
     )
 
@@ -39,10 +39,12 @@ def generate_bank_statement(request, receipt_date):
     debit_total = 0
     for transaction in transactions:
         transaction_record = models.TransactionDetail([])
-        if transaction.get('refunded', False):
+        # if no prison found, this is a refund
+        if transaction.get('prison') is None:
             transaction_record.type_code = constants.TypeCodes[DEBIT_TYPE_CODE]
             debit_num += 1
             debit_total += transaction['amount']
+        # else it is a valid credit
         else:
             transaction_record.type_code = constants.TypeCodes[CREDIT_TYPE_CODE]
             credit_num += 1
