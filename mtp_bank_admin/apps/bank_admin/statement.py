@@ -6,7 +6,7 @@ from bai2 import bai2, models, constants
 from . import BAI2_STMT_LABEL
 from .exceptions import EmptyFileError
 from .utils import retrieve_all_transactions, get_transaction_uid,\
-    create_batch_record, get_daily_file_uid
+    create_batch_record, get_daily_file_uid, reconcile_for_date
 
 
 CREDIT_TYPE_CODE = '399'
@@ -22,6 +22,7 @@ RECORD_LENGTH = 80
 
 
 def generate_bank_statement(request, receipt_date):
+    reconcile_for_date(request, receipt_date)
     transactions = retrieve_all_transactions(
         request,
         'credited,refunded',

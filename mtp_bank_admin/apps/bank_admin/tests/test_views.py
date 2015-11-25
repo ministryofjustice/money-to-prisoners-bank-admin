@@ -4,6 +4,7 @@ import datetime
 from unittest import mock
 from django.test import SimpleTestCase
 from django.core.urlresolvers import reverse
+from django.utils.encoding import escape_uri_path
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from moj_auth.tests.utils import generate_tokens
@@ -43,7 +44,7 @@ class BankAdminViewTestCase(SimpleTestCase):
         response = self.client.get(attempted_url)
         redirect_url = '%(login_url)s?next=%(attempted_url)s' % \
             {'login_url': reverse('login'),
-             'attempted_url': attempted_url}
+             'attempted_url': escape_uri_path(attempted_url)}
         self.assertRedirects(response, redirect_url)
 
 
@@ -155,10 +156,12 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         self.check_login_redirect(reverse('bank_admin:dashboard'))
 
     def test_download_adi_payment_file_requires_login(self):
-        self.check_login_redirect(reverse('bank_admin:download_adi_payment_file'))
+        self.check_login_redirect(reverse('bank_admin:download_adi_payment_file') +
+                                  '?receipt_date=2014-12-11')
 
     def test_download_adi_refund_file_requires_login(self):
-        self.check_login_redirect(reverse('bank_admin:download_adi_refund_file'))
+        self.check_login_redirect(reverse('bank_admin:download_adi_refund_file') +
+                                  '?receipt_date=2014-12-11')
 
     @mock.patch('bank_admin.utils.api_client')
     def test_download_adi_payment_file(self, mock_api_client):
@@ -234,7 +237,8 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.side_effect = Unauthorized()
 
-        response = self.client.get(reverse('bank_admin:download_adi_payment_file'),
+        response = self.client.get(reverse('bank_admin:download_adi_payment_file') +
+                                   '?receipt_date=2014-12-11',
                                    follow=False)
 
         self.assertRedirects(response, reverse('login'))
@@ -245,7 +249,8 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.side_effect = Unauthorized()
 
-        response = self.client.get(reverse('bank_admin:download_adi_refund_file'),
+        response = self.client.get(reverse('bank_admin:download_adi_refund_file') +
+                                   '?receipt_date=2014-12-11',
                                    follow=False)
 
         self.assertRedirects(response, reverse('login'))
@@ -256,7 +261,8 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = NO_TRANSACTIONS
 
-        response = self.client.get(reverse('bank_admin:download_adi_payment_file'),
+        response = self.client.get(reverse('bank_admin:download_adi_payment_file') +
+                                   '?receipt_date=2014-12-11',
                                    follow=True)
 
         self.assertContains(response,
@@ -269,7 +275,8 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = NO_TRANSACTIONS
 
-        response = self.client.get(reverse('bank_admin:download_adi_refund_file'),
+        response = self.client.get(reverse('bank_admin:download_adi_refund_file') +
+                                   '?receipt_date=2014-12-11',
                                    follow=True)
 
         self.assertContains(response,
@@ -300,11 +307,36 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
                             _("Invalid format for receipt_date"),
                             status_code=400)
 
+    def test_download_adi_payment_missing_receipt_date(self, mock_api_client):
+        self.login()
+
+        response = self.client.get(
+            reverse('bank_admin:download_adi_payment_file'),
+            follow=True
+        )
+
+        self.assertContains(response,
+                            _("'receipt_date' parameter required"),
+                            status_code=400)
+
+    def test_download_adi_refund_missing_receipt_date(self, mock_api_client):
+        self.login()
+
+        response = self.client.get(
+            reverse('bank_admin:download_adi_refund_file'),
+            follow=True
+        )
+
+        self.assertContains(response,
+                            _("'receipt_date' parameter required"),
+                            status_code=400)
+
 
 class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
 
-    def test_download_adi_refund_file_requires_login(self):
-        self.check_login_redirect(reverse('bank_admin:download_adi_refund_file'))
+    def test_download_bank_statement_requires_login(self):
+        self.check_login_redirect(reverse('bank_admin:download_adi_refund_file') +
+                                  '?receipt_date=2014-12-11')
 
     @mock.patch('bank_admin.utils.api_client')
     def test_download_bank_statement(self, mock_api_client):
@@ -313,7 +345,8 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = get_test_transactions()
 
-        response = self.client.get(reverse('bank_admin:download_bank_statement'))
+        response = self.client.get(reverse('bank_admin:download_bank_statement') +
+                                   '?receipt_date=2014-12-11')
 
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/plain', response['Content-Type'])
@@ -341,31 +374,33 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
 @mock.patch('bank_admin.utils.api_client')
 class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
 
-    def test_download_bank_statement_unauthorized(self, mock_api_client):
+    def test_unauthorized(self, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.side_effect = Unauthorized()
 
-        response = self.client.get(reverse('bank_admin:download_bank_statement'),
+        response = self.client.get(reverse('bank_admin:download_bank_statement') +
+                                   '?receipt_date=2014-12-11',
                                    follow=False)
 
         self.assertRedirects(response, reverse('login'))
 
-    def test_download_bank_statement_no_transactions_error_message(self, mock_api_client):
+    def test_no_transactions_returns_error_message(self, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = NO_TRANSACTIONS
 
-        response = self.client.get(reverse('bank_admin:download_bank_statement'),
+        response = self.client.get(reverse('bank_admin:download_bank_statement') +
+                                   '?receipt_date=2014-12-11',
                                    follow=True)
 
         self.assertContains(response,
                             _("No new transactions available on account"),
                             status_code=200)
 
-    def test_download_bank_statement_invalid_receipt_date(self, mock_api_client):
+    def test_invalid_receipt_date_returns_error(self, mock_api_client):
         self.login()
 
         response = self.client.get(
@@ -375,4 +410,16 @@ class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
 
         self.assertContains(response,
                             _("Invalid format for receipt_date"),
+                            status_code=400)
+
+    def test_missing_receipt_date_returns_error(self, mock_api_client):
+        self.login()
+
+        response = self.client.get(
+            reverse('bank_admin:download_bank_statement'),
+            follow=True
+        )
+
+        self.assertContains(response,
+                            _("'receipt_date' parameter required"),
                             status_code=400)

@@ -37,7 +37,8 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        _, bai2_file = generate_bank_statement(self.get_request(), datetime.now())
+        _, bai2_file = generate_bank_statement(self.get_request(),
+                                               datetime.now().date())
         self.assertTrue(batch_conn.post.side_effect.called)
 
         parsed_file = bai2.parse_from_string(bai2_file, check_integrity=True)
@@ -61,7 +62,8 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
-        _, bai2_file = generate_bank_statement(self.get_request(), datetime.now())
+        _, bai2_file = generate_bank_statement(self.get_request(),
+                                               datetime.now().date())
         self.assertTrue(batch_conn.post.side_effect.called)
 
         parsed_file = bai2.parse_from_string(bai2_file, check_integrity=True)
@@ -102,6 +104,24 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             expected_control_total
         )
 
+    def test_reconciles_date(self, mock_api_client):
+        test_data = get_test_transactions()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = test_data
+
+        batch_conn = mock_api_client.get_connection().batches
+        batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
+            'label': BAI2_STMT_LABEL,
+            'transactions': [t['id'] for t in test_data['results']]
+        })
+
+        _, bai2_file = generate_bank_statement(self.get_request(),
+                                               datetime.now().date())
+        self.assertTrue(batch_conn.post.side_effect.called)
+
+        conn.reconcile.post.assert_called_with({'date': datetime.now().date()})
+
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class NoTransactionsTestCase(SimpleTestCase):
@@ -120,7 +140,8 @@ class NoTransactionsTestCase(SimpleTestCase):
         conn.get.return_value = NO_TRANSACTIONS
 
         try:
-            generate_bank_statement(self.get_request(), datetime.now())
+            generate_bank_statement(self.get_request(),
+                                    datetime.now().date())
             self.fail('EmptyFileError expected')
         except EmptyFileError:
             pass

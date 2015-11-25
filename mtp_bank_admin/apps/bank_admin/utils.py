@@ -10,8 +10,8 @@ from moj_auth import api_client
 def retrieve_all_transactions(request, status, receipt_date=None):
     args = {'status': status}
     if receipt_date:
-        args['received_at__gte'] = receipt_date.date()
-        args['received_at__lt'] = (receipt_date + timedelta(days=1)).date()
+        args['received_at__gte'] = receipt_date
+        args['received_at__lt'] = (receipt_date + timedelta(days=1))
 
     client = api_client.get_connection(request)
     response = client.bank_admin.transactions.get(
@@ -40,6 +40,14 @@ def create_batch_record(request, label, transaction_ids):
         'label': label,
         'transactions': transaction_ids
     })
+
+
+def reconcile_for_date(request, date):
+    if date:
+        client = api_client.get_connection(request)
+        client.bank_admin.transactions.reconcile.post({
+            'date': date,
+        })
 
 
 def get_transaction_uid(transaction):
