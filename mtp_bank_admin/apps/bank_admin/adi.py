@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 from collections import defaultdict
 from decimal import Decimal
 
@@ -104,8 +104,7 @@ class AdiJournal(object):
         elif self.payment_type == PaymentType.refund:
             filename = settings.ADI_REFUND_OUTPUT_FILENAME
 
-        today = datetime.now()
-        return (today.strftime(filename),
+        return (date.today().strftime(filename),
                 save_virtual_workbook(self.wb))
 
 

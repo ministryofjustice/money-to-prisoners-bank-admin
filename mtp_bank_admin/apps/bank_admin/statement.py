@@ -118,6 +118,5 @@ def generate_bank_statement(request, receipt_date):
     create_batch_record(request, BAI2_STMT_LABEL,
                         [t['id'] for t in transactions])
 
-    return (settings.BANK_STMT_OUTPUT_FILENAME %
-            datetime.datetime.utcnow().strftime('%Y-%m-%d'),
+    return (datetime.date.today().strftime(settings.BANK_STMT_OUTPUT_FILENAME),
             output)

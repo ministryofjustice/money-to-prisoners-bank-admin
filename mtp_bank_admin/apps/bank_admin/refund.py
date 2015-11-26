@@ -1,6 +1,6 @@
 import csv
 import io
-from datetime import datetime
+from datetime import date
 from decimal import Decimal
 
 from django.conf import settings
@@ -45,5 +45,5 @@ def generate_refund_file(request):
     create_batch_record(request, ACCESSPAY_LABEL,
                         [t['id'] for t in refunded_transactions])
 
-    return (settings.REFUND_OUTPUT_FILENAME % datetime.now().strftime('%Y-%m-%d'),
+    return (date.today().strftime(settings.REFUND_OUTPUT_FILENAME),
             filedata)
