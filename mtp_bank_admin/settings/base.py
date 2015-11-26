@@ -129,7 +129,7 @@ REFUND_REFERENCE = 'Payment refunded'
 REFUND_OUTPUT_FILENAME = 'mtp_accesspay_%s.csv'
 
 ADI_TEMPLATE_FILEPATH = 'local_files/adi_template.xlsx'
-ADI_PAYMENT_OUTPUT_FILENAME = 'adi_payment_file_%Y-%m-%d.xlsx'
+ADI_PAYMENT_OUTPUT_FILENAME = 'adi_credit_file_%Y-%m-%d.xlsx'
 ADI_REFUND_OUTPUT_FILENAME = 'adi_refund_file_%Y-%m-%d.xlsx'
 TRANSACTION_ID_BASE = os.environ.get('TRANSACTION_ID_BASE', 100000)
 

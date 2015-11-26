@@ -27,7 +27,7 @@
   </section>
 
   <section class="ContentBlock">
-    <h2>{% trans 'ADI Journal - payments' %}</h2>
+    <h2>{% trans 'ADI Journal - credits' %}</h2>
     {% for day in preceding_days %}
     <p>
       <a href="{% url 'bank_admin:download_adi_payment_file' %}?receipt_date={{ day }}">
