@@ -349,7 +349,7 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
                                    '?receipt_date=2014-12-11')
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual('text/plain', response['Content-Type'])
+        self.assertEqual('application/octet-stream', response['Content-Type'])
 
     @mock.patch('bank_admin.utils.api_client')
     def test_bank_statement_queries_by_date(self, mock_api_client):

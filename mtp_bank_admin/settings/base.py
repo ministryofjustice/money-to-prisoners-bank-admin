@@ -138,6 +138,6 @@ BANK_STMT_RECEIVER_ID = os.environ.get('BANK_STMT_RECEIVER_ID', '391796')
 BANK_STMT_ACCOUNT_NUMBER = os.environ.get('BANK_STMT_ACCOUNT_NUMBER',
                                           '10002383 607080')
 BANK_STMT_CURRENCY = os.environ.get('BANK_STMT_CURRENCY', 'GBP')
-BANK_STMT_OUTPUT_FILENAME = 'stmt_%d%m%y.bai'
+BANK_STMT_OUTPUT_FILENAME = 'stmt_%d%m%y'
 
 REQUEST_PAGE_SIZE = 500
