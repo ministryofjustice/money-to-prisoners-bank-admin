@@ -2,7 +2,7 @@
 {% load i18n dates %}
 
 {% block content %}
-  {% get_preceding_days 5 offset=2 as preceding_days %}
+  {% get_preceding_days 5 offset=1 as preceding_days %}
   <h1>{% trans 'Download files' %}</h1>
 
   {% if perms.transaction.view_bank_details_transaction %}

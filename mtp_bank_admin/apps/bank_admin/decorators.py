@@ -12,8 +12,10 @@ def filter_by_receipt_date(view_func):
         receipt_date_str = request.GET.get('receipt_date')
         if receipt_date_str:
             try:
-                receipt_date = datetime.strptime(receipt_date_str, '%Y-%m-%d')
+                receipt_date = datetime.strptime(receipt_date_str, '%Y-%m-%d').date()
             except ValueError:
                 return HttpResponseBadRequest(_("Invalid format for receipt_date"))
+        else:
+            return HttpResponseBadRequest(_("'receipt_date' parameter required"))
         return view_func(request, receipt_date, *args, **kwargs)
     return wrapper
