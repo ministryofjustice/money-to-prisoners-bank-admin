@@ -10,8 +10,8 @@
  *
  */
 
-var testUsername = 'bank_admin';
-var testPassword = 'bank_admin';
+var testUsername = 'bank-admin';
+var testPassword = 'bank-admin';
 
 var SigninPage = function () {
   this.usernameField = '#id_username';

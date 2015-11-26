@@ -5,5 +5,5 @@ Feature: Signing in
 
   Scenario: Successful sign in
     Given I am on the "Sign in" page
-    When I sign in with "bank_admin" and "bank_admin"
+    When I sign in with "bank-admin" and "bank-admin"
     Then I should see "Logged in as Bank Admin"

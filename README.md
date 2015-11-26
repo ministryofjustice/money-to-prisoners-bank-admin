@@ -97,5 +97,5 @@ Make sure you have a version of the [API](https://github.com/ministryofjustice/m
 
 You should be able to log into the bank admin app using following credentials:
 
-- *bank_admin / bank_admin* for ADI downloads
-- *refund_bank_admin / refund_bank_admin* for refund downloads
+- *bank-admin / bank-admin* for ADI downloads
+- *refund-bank-admin / refund-bank-admin* for refund downloads
