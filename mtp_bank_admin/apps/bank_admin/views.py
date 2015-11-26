@@ -68,7 +68,7 @@ def download_bank_statement(request, receipt_date):
     try:
         filename, bai2 = statement.generate_bank_statement(request, receipt_date)
 
-        response = HttpResponse(bai2, content_type='text/plain')
+        response = HttpResponse(bai2, content_type='application/octet-stream')
         response['Content-Disposition'] = 'attachment; filename="%s"' % filename
 
         return response
