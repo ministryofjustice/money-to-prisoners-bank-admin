@@ -189,11 +189,12 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
+        today = datetime.now().date()
         filename, exceldata = adi.generate_adi_payment_file(self.get_request(),
-                                                            datetime.now().date())
+                                                            today)
 
         self.assertTrue(batch_conn.post.side_effect.called)
-        conn.reconcile.post.assert_called_with({'date': datetime.now().date()})
+        conn.reconcile.post.assert_called_with({'date': today.strftime('%Y-%m-%d')})
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
@@ -335,7 +336,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         except EmptyFileError:
             pass
 
-    def test_adi_payment_file_reconciles_date(self, mock_api_client):
+    def test_adi_refund_file_reconciles_date(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.refund)
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -347,8 +348,9 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
+        today = datetime.now().date()
         filename, exceldata = adi.generate_adi_refund_file(self.get_request(),
-                                                           datetime.now().date())
+                                                           today)
 
         self.assertTrue(batch_conn.post.side_effect.called)
-        conn.reconcile.post.assert_called_with({'date': datetime.now().date()})
+        conn.reconcile.post.assert_called_with({'date': today.strftime('%Y-%m-%d')})

@@ -116,11 +116,12 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             'transactions': [t['id'] for t in test_data['results']]
         })
 
+        today = datetime.now().date()
         _, bai2_file = generate_bank_statement(self.get_request(),
-                                               datetime.now().date())
+                                               today)
         self.assertTrue(batch_conn.post.side_effect.called)
 
-        conn.reconcile.post.assert_called_with({'date': datetime.now().date()})
+        conn.reconcile.post.assert_called_with({'date': today.strftime('%Y-%m-%d')})
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')

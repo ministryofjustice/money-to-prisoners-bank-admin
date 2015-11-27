@@ -48,7 +48,7 @@ def reconcile_for_date(request, date):
     if date:
         client = api_client.get_connection(request)
         client.bank_admin.transactions.reconcile.post({
-            'date': date,
+            'date': date.strftime('%Y-%m-%d'),
         })
 
 
