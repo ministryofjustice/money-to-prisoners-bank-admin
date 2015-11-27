@@ -54,10 +54,6 @@ def reconcile_for_date(request, date):
         })
 
 
-def get_transaction_uid(transaction):
-    return settings.TRANSACTION_ID_BASE+int(transaction['id'])
-
-
 def get_daily_file_uid():
     int(time.time()) % 86400
 

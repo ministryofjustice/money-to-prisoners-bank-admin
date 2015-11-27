@@ -5,7 +5,7 @@ from bai2 import bai2, models, constants
 
 from . import BAI2_STMT_LABEL
 from .exceptions import EmptyFileError
-from .utils import retrieve_all_transactions, get_transaction_uid,\
+from .utils import retrieve_all_transactions,\
     create_batch_record, get_daily_file_uid, reconcile_for_date
 
 
@@ -39,19 +39,17 @@ def generate_bank_statement(request, receipt_date):
     debit_total = 0
     for transaction in transactions:
         transaction_record = models.TransactionDetail([])
-        # if no prison found, this is a refund
-        if transaction.get('prison') is None:
+        if transaction['category'] == 'debit':
             transaction_record.type_code = constants.TypeCodes[DEBIT_TYPE_CODE]
             debit_num += 1
             debit_total += transaction['amount']
-        # else it is a valid credit
         else:
             transaction_record.type_code = constants.TypeCodes[CREDIT_TYPE_CODE]
+            transaction_record.text = str(transaction['ref_code'])
             credit_num += 1
             credit_total += transaction['amount']
 
         transaction_record.amount = transaction['amount']
-        transaction_record.text = str(get_transaction_uid(transaction))
         transaction_records.append(transaction_record)
 
     bai2_file = models.Bai2File()

@@ -11,7 +11,7 @@ from . import adi_config as config
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
 from .utils import retrieve_all_transactions, create_batch_record,\
-    get_transaction_uid, reconcile_for_date
+    reconcile_for_date
 
 
 class AdiJournal(object):
@@ -136,7 +136,7 @@ def generate_adi_payment_file(request, receipt_date):
             credit_total += credit_amount
             journal.add_payment_row(
                 credit_amount, RecordType.debit,
-                unique_id=get_transaction_uid(transaction)
+                unique_id=str(transaction['ref_code'])
             )
             reconciled_transactions.append(transaction['id'])
         journal.add_payment_row(
@@ -175,7 +175,7 @@ def generate_adi_refund_file(request, receipt_date):
         refund_total += refund_amount
         journal.add_payment_row(
             refund_amount, RecordType.debit,
-            unique_id=get_transaction_uid(refund)
+            unique_id=str(refund['ref_code'])
         )
         reconciled_transactions.append(refund['id'])
     journal.add_payment_row(refund_total, RecordType.credit, date=journal_date)
