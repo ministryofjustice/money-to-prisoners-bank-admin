@@ -37,6 +37,15 @@ def create_batch_record(request, label, transaction_ids):
     })
 
 
+def get_last_batch(request, label):
+    client = api_client.get_connection(request)
+    response = client.batches.get(limit=1, label=label)
+    if response.get('results'):
+        return response['results'][0]
+    else:
+        return None
+
+
 def reconcile_for_date(request, date):
     if date:
         client = api_client.get_connection(request)
