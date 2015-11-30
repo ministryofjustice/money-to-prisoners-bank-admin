@@ -7,7 +7,7 @@
 
   {% if perms.transaction.view_bank_details_transaction %}
   <section class="ContentBlock">
-    <h2>{% trans 'AccessPay file - refunds' %}</h2>
+    <h2>{% trans 'AccessPay file – refunds' %}</h2>
     <p>
       <a href="{% url 'bank_admin:download_refund_file' %}">
         {% blocktrans %}Download latest file{% endblocktrans %}
@@ -16,12 +16,12 @@
   </section>
   {% else %}
   <section class="ContentBlock">
-    <h3>{% trans 'ADI Journal - refunds' %}</h3>
+    <h3>{% trans 'ADI Journal – refunds' %}</h3>
     <ul>
       {% for day in preceding_days %}
       <li>
-        {% trans 'Transactions for' %} {{ day }} |
-        <a href="{% url 'bank_admin:download_adi_refund_file' %}?receipt_date={{ day }}">
+        {% blocktrans with date=day|date:'d/m/Y' %}Transactions for {{ date }}{% endblocktrans %} |
+        <a href="{% url 'bank_admin:download_adi_refund_file' %}?receipt_date={{ day|date:'Y-m-d' }}">
           {% trans 'Download file' %}
         </a>
       </li>
@@ -31,12 +31,12 @@
   </section>
 
   <section class="ContentBlock">
-    <h3>{% trans 'ADI Journal - credits' %}</h3>
+    <h3>{% trans 'ADI Journal – credits' %}</h3>
     <ul>
       {% for day in preceding_days %}
       <li>
-        {% trans 'Transactions for' %} {{ day }} |
-        <a href="{% url 'bank_admin:download_adi_payment_file' %}?receipt_date={{ day }}">
+        {% blocktrans with date=day|date:'d/m/Y' %}Transactions for {{ date }}{% endblocktrans %} |
+        <a href="{% url 'bank_admin:download_adi_payment_file' %}?receipt_date={{ day|date:'Y-m-d' }}">
           {% trans 'Download file' %}
         </a>
       </li>
@@ -50,8 +50,8 @@
     <ul>
       {% for day in preceding_days %}
       <li>
-        {% trans 'Transactions for' %} {{ day }} |
-        <a href="{% url 'bank_admin:download_bank_statement' %}?receipt_date={{ day }}">
+        {% blocktrans with date=day|date:'d/m/Y' %}Transactions for {{ date }}{% endblocktrans %} |
+        <a href="{% url 'bank_admin:download_bank_statement' %}?receipt_date={{ day|date:'Y-m-d' }}">
           {% trans 'Download file' %}
         </a>
       </li>
