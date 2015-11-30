@@ -133,7 +133,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
                                                today)
         self.assertTrue(batch_conn.post.side_effect.called)
 
-        conn.reconcile.post.assert_called_with({'date': today.strftime('%Y-%m-%d')})
+        conn.reconcile.post.assert_called_with({'date': today.isoformat()})
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
