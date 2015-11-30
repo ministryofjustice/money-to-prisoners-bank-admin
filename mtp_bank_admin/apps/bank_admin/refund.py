@@ -14,7 +14,7 @@ from .utils import retrieve_all_transactions, create_batch_record, escape_csv_fo
 def generate_refund_file(request):
     transactions_to_refund = retrieve_all_transactions(
         request,
-        'refund_pending'
+        dict(status='refund_pending')
     )
 
     with io.StringIO() as out:
