@@ -30,6 +30,21 @@ def download_refund_file(request):
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
 
+@login_required
+def download_previous_refund_file(request):
+    try:
+        filename, csvdata = refund.generate_previous_refund_file(request)
+
+        response = HttpResponse(csvdata, content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+
+        return response
+    except EmptyFileError:
+        messages.add_message(request, messages.ERROR,
+                             _('No previously refunded transactions found'))
+    return redirect(reverse_lazy('bank_admin:dashboard'))
+
+
 def download_adi_file(payment_type, request, receipt_date):
     try:
         if payment_type == PaymentType.payment:
