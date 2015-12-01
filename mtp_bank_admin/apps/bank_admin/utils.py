@@ -1,5 +1,6 @@
 import time
 
+from slumber.exceptions import HttpClientError
 from django.conf import settings
 import six
 
@@ -52,6 +53,25 @@ def reconcile_for_date(request, date):
         client.bank_admin.transactions.reconcile.post({
             'date': date.isoformat(),
         })
+
+
+def retrieve_last_balance(request, date):
+    client = api_client.get_connection(request)
+    response = client.balances.get(limit=1, date__lt=date.isoformat())
+    if response.get('results'):
+        return response['results'][0]
+    else:
+        return None
+
+
+def update_new_balance(request, date, closing_balance):
+    client = api_client.get_connection(request)
+    try:
+        client.balances.post({'date': date.isoformat(),
+                              'closing_balance': closing_balance})
+    except HttpClientError:
+        # this is probably fine, just means that balance exists
+        pass
 
 
 def get_daily_file_uid():

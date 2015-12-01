@@ -6,7 +6,8 @@ from bai2 import bai2, models, constants
 from . import BAI2_STMT_LABEL
 from .exceptions import EmptyFileError
 from .utils import retrieve_all_transactions,\
-    create_batch_record, get_daily_file_uid, reconcile_for_date
+    create_batch_record, get_daily_file_uid, reconcile_for_date,\
+    retrieve_last_balance, update_new_balance
 
 
 CREDIT_TYPE_CODE = '399'
@@ -75,6 +76,9 @@ def generate_bank_statement(request, receipt_date):
 
     # calculate balance values with reference to 0
     opening_balance = 0
+    last_balance = retrieve_last_balance(request, receipt_date)
+    if last_balance:
+        opening_balance = last_balance['closing_balance']
     closing_balance = opening_balance + credit_total - debit_total
 
     account = models.Account()
@@ -115,6 +119,7 @@ def generate_bank_statement(request, receipt_date):
     output = bai2.write(bai2_file, clock_format_for_intra_day=True)
     create_batch_record(request, BAI2_STMT_LABEL,
                         [t['id'] for t in transactions])
+    update_new_balance(request, receipt_date, closing_balance)
 
     return (datetime.date.today().strftime(settings.BANK_STMT_OUTPUT_FILENAME),
             output)
