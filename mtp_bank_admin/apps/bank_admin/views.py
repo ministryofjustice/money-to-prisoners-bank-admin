@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 @login_required
 def download_refund_file(request):
     try:
-        filename, csvdata = refund.generate_refund_file(request)
+        filename, csvdata = refund.generate_new_refund_file(request)
 
         response = HttpResponse(csvdata, content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="%s"' % filename
@@ -27,6 +27,21 @@ def download_refund_file(request):
     except EmptyFileError:
         messages.add_message(request, messages.ERROR,
                              _('No new transactions available for refund'))
+    return redirect(reverse_lazy('bank_admin:dashboard'))
+
+
+@login_required
+def download_previous_refund_file(request):
+    try:
+        filename, csvdata = refund.generate_previous_refund_file(request)
+
+        response = HttpResponse(csvdata, content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+
+        return response
+    except EmptyFileError:
+        messages.add_message(request, messages.ERROR,
+                             _('No previously refunded transactions found'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
 

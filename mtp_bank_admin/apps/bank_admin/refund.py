@@ -8,20 +8,52 @@ from moj_auth.backends import api_client
 
 from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
-from .utils import retrieve_all_transactions, create_batch_record, escape_csv_formula
+from .utils import retrieve_all_transactions, create_batch_record,\
+    escape_csv_formula, get_last_batch
 
 
-def generate_refund_file(request):
+def generate_previous_refund_file(request):
+    batch = get_last_batch(request, ACCESSPAY_LABEL)
+    if batch:
+        batched_transactions = retrieve_all_transactions(
+            request,
+            dict(batch=batch['id'])
+        )
+        return generate_refund_file(request, batched_transactions)
+    else:
+        raise EmptyFileError()
+
+
+def generate_new_refund_file(request):
     transactions_to_refund = retrieve_all_transactions(
         request,
-        'refund_pending'
+        dict(status='refund_pending')
     )
+
+    generated_data = generate_refund_file(request, transactions_to_refund)
+
+    refunded_transactions = [
+        {'id': t['id'], 'refunded': True} for t in transactions_to_refund
+    ]
+
+    # mark transactions as refunded
+    client = api_client.get_connection(request)
+    client.bank_admin.transactions.patch(refunded_transactions)
+
+    create_batch_record(request, ACCESSPAY_LABEL,
+                        [t['id'] for t in refunded_transactions])
+
+    return generated_data
+
+
+def generate_refund_file(request, transactions):
+    if len(transactions) == 0:
+        raise EmptyFileError()
 
     with io.StringIO() as out:
         writer = csv.writer(out)
 
-        refunded_transactions = []
-        for transaction in transactions_to_refund:
+        for transaction in transactions:
             cells = map(escape_csv_formula, [
                 transaction['sender_sort_code'],
                 transaction['sender_account_number'],
@@ -30,20 +62,8 @@ def generate_refund_file(request):
                 settings.REFUND_REFERENCE
             ])
             writer.writerow(list(cells))
-            refunded_transactions.append({'id': transaction['id'],
-                                          'refunded': True})
 
         filedata = out.getvalue()
-
-    if len(refunded_transactions) == 0:
-        raise EmptyFileError()
-
-    # mark transactions as refunded
-    client = api_client.get_connection(request)
-    client.bank_admin.transactions.patch(refunded_transactions)
-
-    create_batch_record(request, ACCESSPAY_LABEL,
-                        [t['id'] for t in refunded_transactions])
 
     return (date.today().strftime(settings.REFUND_OUTPUT_FILENAME),
             filedata)

@@ -11,6 +11,8 @@ urlpatterns = [
         name='dashboard'),
     url(r'^refund_pending/download/$', views.download_refund_file,
         name='download_refund_file'),
+    url(r'^previously_refunded/download/$', views.download_previous_refund_file,
+        name='download_previous_refund_file'),
     url(r'^adi/payment/download/$', views.download_adi_payment_file,
         name='download_adi_payment_file'),
     url(r'^adi/refund/download/$', views.download_adi_refund_file,

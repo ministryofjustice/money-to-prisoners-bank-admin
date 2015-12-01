@@ -13,6 +13,7 @@ from moj_auth.exceptions import Unauthorized
 from . import get_test_transactions, NO_TRANSACTIONS
 from .test_refund import REFUND_TRANSACTIONS
 from ..types import PaymentType
+from .. import ACCESSPAY_LABEL
 
 
 class BankAdminViewTestCase(SimpleTestCase):
@@ -112,6 +113,27 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
         conn.get.side_effect = REFUND_TRANSACTIONS
 
         response = self.client.get(reverse('bank_admin:download_refund_file'))
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/csv', response['Content-Type'])
+        self.assertEqual(
+            bytes(('111111,22222222,John Doe,25.68,%(ref)s\r\n' +
+                   '999999,33333333,Joe Bloggs,18.72,%(ref)s\r\n')
+                  % {'ref': settings.REFUND_REFERENCE}, 'utf8'),
+            response.content)
+
+    @mock.patch('bank_admin.refund.api_client')
+    @mock.patch('bank_admin.utils.api_client')
+    def test_download_previous_refund_file(self, mock_api_client, mock_refund_api_client):
+        self.login()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.side_effect = REFUND_TRANSACTIONS
+
+        get_batch_conn = mock_api_client.get_connection().batches
+        get_batch_conn.get().return_value = {'id': 1, 'label': ACCESSPAY_LABEL}
+
+        response = self.client.get(reverse('bank_admin:download_previous_refund_file'))
 
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/csv', response['Content-Type'])

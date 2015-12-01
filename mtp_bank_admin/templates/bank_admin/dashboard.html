@@ -13,6 +13,11 @@
         {% blocktrans %}Download latest file{% endblocktrans %}
       </a>
     </p>
+    <p>
+      <a href="{% url 'bank_admin:download_previous_refund_file' %}">
+        {% blocktrans %}Download previous file{% endblocktrans %}
+      </a>
+    </p>
   </section>
   {% else %}
   <section class="ContentBlock">
