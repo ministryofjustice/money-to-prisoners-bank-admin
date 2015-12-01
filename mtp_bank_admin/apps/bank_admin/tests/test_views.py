@@ -147,7 +147,8 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
 @mock.patch('bank_admin.utils.api_client')
 class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
 
-    def test_download_refund_file_general_error_message(self, mock_api_client):
+    @mock.patch('moj_auth.backends.api_client')
+    def test_download_refund_file_general_error_message(self, auth_api_client, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -253,7 +254,8 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
 @mock.patch('bank_admin.utils.api_client')
 class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 
-    def test_download_adi_payment_file_unauthorized(self, mock_api_client):
+    @mock.patch('moj_auth.backends.api_client')
+    def test_download_adi_payment_file_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -265,7 +267,8 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 
         self.assertRedirects(response, reverse('login'))
 
-    def test_download_adi_refund_file_unauthorized(self, mock_api_client):
+    @mock.patch('moj_auth.backends.api_client')
+    def test_download_adi_refund_file_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -395,7 +398,8 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
 @mock.patch('bank_admin.utils.api_client')
 class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
 
-    def test_unauthorized(self, mock_api_client):
+    @mock.patch('moj_auth.backends.api_client')
+    def test_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
