@@ -1,5 +1,6 @@
 import mock
 from datetime import datetime
+import random
 
 from django.test import SimpleTestCase
 from django.test.client import RequestFactory
@@ -11,6 +12,17 @@ from . import get_test_transactions, NO_TRANSACTIONS, AssertCalledWithBatchReque
 from .. import BAI2_STMT_LABEL
 from ..statement import generate_bank_statement
 from ..exceptions import EmptyFileError
+
+
+def get_test_transactions_for_stmt(count=20):
+    transactions = get_test_transactions(count=int(count*0.75))
+    for i in range(int(count*0.75), count):
+        transaction = {'id': i, 'category': 'credit'}
+        transaction['amount'] = random.randint(500, 5000)
+        transaction['ref_code'] = '9' + str(random.randint(0, 99999)).zfill(5)
+        transactions['results'].append(transaction)
+    transactions['count'] = count
+    return transactions
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
@@ -26,7 +38,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
         )
 
     def test_number_of_records_correct(self, mock_api_client):
-        test_data = get_test_transactions()
+        test_data = get_test_transactions_for_stmt()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
@@ -51,7 +63,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
         )
 
     def test_control_totals_correct(self, mock_api_client):
-        test_data = get_test_transactions()
+        test_data = get_test_transactions_for_stmt()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
@@ -73,7 +85,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
         debit_num = 0
         debit_total = 0
         for transaction in test_data['results']:
-            if transaction.get('refunded', False):
+            if transaction['category'] == 'debit':
                 debit_num += 1
                 debit_total += transaction['amount']
             else:
@@ -105,7 +117,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
         )
 
     def test_reconciles_date(self, mock_api_client):
-        test_data = get_test_transactions()
+        test_data = get_test_transactions_for_stmt()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
@@ -121,7 +133,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
                                                today)
         self.assertTrue(batch_conn.post.side_effect.called)
 
-        conn.reconcile.post.assert_called_with({'date': today.strftime('%Y-%m-%d')})
+        conn.reconcile.post.assert_called_with({'date': today.isoformat()})
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
