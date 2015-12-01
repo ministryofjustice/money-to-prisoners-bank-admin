@@ -43,6 +43,10 @@ class BankStatementGenerationTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
 
+        balance_conn = mock_api_client.get_connection().balances
+        balance_conn.get.return_value = {'count': 1,
+                                         'results': [{'closing_balance': 20000}]}
+
         batch_conn = mock_api_client.get_connection().batches
         batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
             'label': BAI2_STMT_LABEL,
@@ -67,6 +71,10 @@ class BankStatementGenerationTestCase(SimpleTestCase):
 
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = test_data
+
+        balance_conn = mock_api_client.get_connection().balances
+        balance_conn.get.return_value = {'count': 1,
+                                         'results': [{'closing_balance': 20000}]}
 
         batch_conn = mock_api_client.get_connection().batches
         batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
@@ -98,10 +106,10 @@ class BankStatementGenerationTestCase(SimpleTestCase):
             amount = None
             if summary.type_code == TypeCodes['010'] or\
                     summary.type_code == TypeCodes['040']:
-                amount = 0
+                amount = 20000
             elif summary.type_code == TypeCodes['015'] or\
                     summary.type_code == TypeCodes['045']:
-                amount = credit_total - debit_total
+                amount = 20000 + (credit_total - debit_total)
             elif summary.type_code == TypeCodes['400']:
                 amount = debit_total
             elif summary.type_code == TypeCodes['100']:
@@ -134,6 +142,30 @@ class BankStatementGenerationTestCase(SimpleTestCase):
         self.assertTrue(batch_conn.post.side_effect.called)
 
         conn.reconcile.post.assert_called_with({'date': today.isoformat()})
+
+    def test_posts_new_balance(self, mock_api_client):
+        test_data = get_test_transactions()
+
+        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn.get.return_value = test_data
+
+        balance_conn = mock_api_client.get_connection().balances
+        balance_conn.get.return_value = {'count': 1,
+                                         'results': [{'closing_balance': 20000}]}
+
+        today = datetime.now().date()
+        _, bai2_file = generate_bank_statement(self.get_request(),
+                                               today)
+
+        closing_balance = 20000
+        for transaction in test_data['results']:
+            if transaction['category'] == 'debit':
+                closing_balance -= transaction['amount']
+            else:
+                closing_balance += transaction['amount']
+
+        balance_conn.post.assert_called_with(
+            {'date': today.isoformat(), 'closing_balance': closing_balance})
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
