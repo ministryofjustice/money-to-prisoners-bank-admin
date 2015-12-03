@@ -76,8 +76,8 @@ ADI_JOURNAL_FIELDS = {
     'account': {
         'column': 'G',
         'value': {
-            'payment': {'debit': '08830', 'credit': '09400'},
-            'refund': {'debit': '08830', 'credit': '08830'},
+            'payment': {'debit': '08870', 'credit': '09400'},
+            'refund': {'debit': '08870', 'credit': '08870'},
         },
         'style': _white_style
     },
