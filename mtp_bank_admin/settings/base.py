@@ -34,6 +34,7 @@ PROJECT_APPS = (
     'moj_utils',
     'widget_tweaks',
     'bank_admin',
+    'zendesk_tickets'
 )
 INSTALLED_APPS += PROJECT_APPS
 
@@ -141,3 +142,19 @@ BANK_STMT_CURRENCY = os.environ.get('BANK_STMT_CURRENCY', 'GBP')
 BANK_STMT_OUTPUT_FILENAME = 'stmt_%d%m%y'
 
 REQUEST_PAGE_SIZE = 500
+
+ZENDESK_BASE_URL = 'https://ministryofjustice.zendesk.com'
+ZENDESK_API_USERNAME = os.environ.get('ZENDESK_API_USERNAME', '')
+ZENDESK_API_TOKEN = os.environ.get('ZENDESK_API_TOKEN', '')
+ZENDESK_REQUESTER_ID = os.environ.get('ZENDESK_REQUESTER_ID', '')
+ZENDESK_GROUP_ID = 26417927
+ZENDESK_CUSTOM_FIELDS = {
+    'referer': 26047167,
+    'username': 29241738,
+    'user_agent': 23791776
+}
+
+try:
+    from .local import *  # noqa
+except ImportError:
+    pass

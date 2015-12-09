@@ -14,4 +14,5 @@ urlpatterns = [
         }, name='logout'
     ),
     url(r'^', include('bank_admin.urls', namespace='bank_admin',)),
+    url(r'^', include('feedback.urls')),
 ]
