@@ -1,33 +1,14 @@
 import time
 
 from slumber.exceptions import HttpClientError
-from django.conf import settings
+from moj_utils import rest
+from moj_auth import api_client
 import six
 
-from moj_auth import api_client
 
-
-def retrieve_all_transactions(request, args={}):
-    client = api_client.get_connection(request)
-    response = client.bank_admin.transactions.get(
-        limit=settings.REQUEST_PAGE_SIZE,
-        **args
-    )
-    transactions = response.get('results', [])
-    total_count = response.get('count', 0)
-
-    num_reqs = 1
-    while len(transactions) < total_count:
-        response = client.bank_admin.transactions.get(
-            limit=settings.REQUEST_PAGE_SIZE,
-            offset=settings.REQUEST_PAGE_SIZE*num_reqs,
-            **args
-        )
-        transactions += response.get('results', [])
-        total_count = response.get('count', 0)
-        num_reqs += 1
-
-    return transactions
+def retrieve_all_transactions(request, **kwargs):
+    endpoint = api_client.get_connection(request).bank_admin.transactions.get
+    return rest.retrieve_all_pages(endpoint, **kwargs)
 
 
 def create_batch_record(request, label, transaction_ids):

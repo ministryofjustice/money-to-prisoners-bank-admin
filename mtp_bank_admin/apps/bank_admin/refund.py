@@ -17,7 +17,7 @@ def generate_previous_refund_file(request):
     if batch:
         batched_transactions = retrieve_all_transactions(
             request,
-            dict(batch=batch['id'])
+            batch=batch['id']
         )
         return generate_refund_file(request, batched_transactions)
     else:
@@ -27,7 +27,7 @@ def generate_previous_refund_file(request):
 def generate_new_refund_file(request):
     transactions_to_refund = retrieve_all_transactions(
         request,
-        dict(status='refund_pending')
+        status='refund_pending'
     )
 
     generated_data = generate_refund_file(request, transactions_to_refund)
