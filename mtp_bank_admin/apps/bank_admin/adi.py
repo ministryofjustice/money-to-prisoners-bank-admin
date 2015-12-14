@@ -112,9 +112,9 @@ def generate_adi_payment_file(request, receipt_date):
     reconcile_for_date(request, receipt_date)
     new_transactions = retrieve_all_transactions(
         request,
-        dict(status='credited,available,locked',
-             received_at__gte=receipt_date,
-             received_at__lt=(receipt_date + timedelta(days=1)))
+        status='credited,available,locked',
+        received_at__gte=receipt_date,
+        received_at__lt=(receipt_date + timedelta(days=1))
     )
 
     if len(new_transactions) == 0:
@@ -156,9 +156,9 @@ def generate_adi_refund_file(request, receipt_date):
     reconcile_for_date(request, receipt_date)
     refunds = retrieve_all_transactions(
         request,
-        dict(status='refunded,refund_pending',
-             received_at__gte=receipt_date,
-             received_at__lt=(receipt_date + timedelta(days=1)))
+        status='refunded,refund_pending',
+        received_at__gte=receipt_date,
+        received_at__lt=(receipt_date + timedelta(days=1))
     )
 
     if len(refunds) == 0:

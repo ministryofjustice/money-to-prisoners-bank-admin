@@ -26,8 +26,8 @@ def generate_bank_statement(request, receipt_date):
     reconcile_for_date(request, receipt_date)
     transactions = retrieve_all_transactions(
         request,
-        dict(received_at__gte=receipt_date,
-             received_at__lt=(receipt_date + datetime.timedelta(days=1)))
+        received_at__gte=receipt_date,
+        received_at__lt=(receipt_date + datetime.timedelta(days=1))
     )
 
     if len(transactions) == 0:
