@@ -7,19 +7,23 @@
 
   {% if perms.transaction.view_bank_details_transaction %}
   <section class="ContentBlock">
-    <h2>{% trans 'AccessPay file – refunds' %}</h2>
-    <p>
-      <a href="{% url 'bank_admin:download_refund_file' %}">
-        {% blocktrans %}Download latest file{% endblocktrans %}
-      </a>
-    </p>
-    <p>
-      <a href="{% url 'bank_admin:download_previous_refund_file' %}">
-        {% blocktrans %}Download previous file{% endblocktrans %}
-      </a>
-    </p>
+    <h3>{% trans 'AccessPay file – refunds' %}</h3>
+    <ul>
+      <li>
+        <a href="{% url 'bank_admin:download_refund_file' %}">
+          {% blocktrans %}Download latest file{% endblocktrans %}
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'bank_admin:download_previous_refund_file' %}">
+          {% blocktrans %}Download previous file{% endblocktrans %}
+        </a>
+      </li>
+    </ul>
+    <hr/>
   </section>
-  {% else %}
+  {% endif %}
+
   <section class="ContentBlock">
     <h3>{% trans 'ADI Journal – refunds' %}</h3>
     <ul>
@@ -64,6 +68,5 @@
     </ul>
     <hr/>
   </section>
-  {% endif %}
 
 {% endblock %}
