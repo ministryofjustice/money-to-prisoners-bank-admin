@@ -1,9 +1,9 @@
 import time
 
-from slumber.exceptions import HttpClientError
-from moj_utils import rest
 from moj_auth import api_client
+from moj_utils import rest
 import six
+from slumber.exceptions import HttpClientError
 
 
 def retrieve_all_transactions(request, **kwargs):
