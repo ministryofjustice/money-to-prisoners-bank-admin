@@ -5,6 +5,8 @@
   {% get_preceding_weekdays 5 offset=1 as preceding_days %}
   <h1>{% trans 'Download files' %}</h1>
 
+  {% include "includes/message_box.html" %}
+
   {% if perms.transaction.view_bank_details_transaction %}
   <section class="ContentBlock">
     <h3>{% trans 'AccessPay file – refunds' %}</h3>
