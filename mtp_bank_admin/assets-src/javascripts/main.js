@@ -11,11 +11,11 @@
       require('mojular-moj-elements'),
       require('dialog'),
       require('batch-validation'),
-      require('feature-tour'),
       require('messages'),
       require('print'),
       require('polyfills'),
-      require('unload')
+      require('unload'),
+      require('help-popup')
     ])
     .init();
 
