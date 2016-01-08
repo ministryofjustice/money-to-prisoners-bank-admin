@@ -10,7 +10,6 @@
       require('mojular-govuk-elements'),
       require('mojular-moj-elements'),
       require('dialog'),
-      require('batch-validation'),
       require('messages'),
       require('print'),
       require('polyfills'),
