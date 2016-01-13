@@ -2,10 +2,9 @@
 Django settings for mtp_bank_admin project.
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/1.8/ref/settings/
+https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 from functools import partial
-import json
 import os
 from os.path import abspath, dirname, join
 import sys
