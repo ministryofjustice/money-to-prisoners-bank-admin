@@ -1,6 +1,6 @@
-import mock
 from datetime import datetime
 import random
+from unittest import mock
 
 from django.test import SimpleTestCase
 from django.test.client import RequestFactory
