@@ -6,9 +6,6 @@
 django:
   build: .
   command: make start
-  volumes:
-    # - .:/app
-    - /tmp/pip_download_cache:/root/.cache/pip
   ports:
     - "8002:8002"
   environment:
