@@ -13,7 +13,7 @@ from .decorators import filter_by_receipt_date
 from .exceptions import EmptyFileError
 from .types import PaymentType
 
-logger = logging.getLogger()
+logger = logging.getLogger('mtp')
 
 
 @login_required
