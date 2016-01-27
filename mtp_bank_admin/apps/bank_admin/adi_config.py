@@ -30,8 +30,8 @@ ADI_JOURNAL_FIELDS = {
     'upload': {
         'column': 'B',
         'value': {
-            'payment': {'debit': 'O', 'credit': 'O'},
-            'refund': {'debit': 'O', 'credit': 'O'},
+            'payment': {'debit': 'o', 'credit': 'o'},
+            'refund': {'debit': 'o', 'credit': 'o'},
         },
         'style': dict(
             border={
