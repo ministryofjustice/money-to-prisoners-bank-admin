@@ -46,7 +46,8 @@ def generate_bank_statement(request, receipt_date):
             debit_total += transaction['amount']
         else:
             transaction_record.type_code = constants.TypeCodes[CREDIT_TYPE_CODE]
-            transaction_record.text = str(transaction['ref_code'])
+            if transaction.get('ref_code'):
+                transaction_record.text = str(transaction['ref_code'])
             credit_num += 1
             credit_total += transaction['amount']
 
