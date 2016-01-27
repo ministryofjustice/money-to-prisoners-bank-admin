@@ -2,7 +2,6 @@ import time
 
 from moj_auth import api_client
 from moj_utils import rest
-import six
 from slumber.exceptions import HttpClientError
 
 
@@ -65,6 +64,6 @@ def escape_csv_formula(value):
     spreadsheet software vulnerabilities being exploited
     :param value: the value being added to a CSV cell
     """
-    if isinstance(value, six.string_types) and value.startswith('='):
+    if isinstance(value, str) and value.startswith('='):
         return "'" + value
     return value
