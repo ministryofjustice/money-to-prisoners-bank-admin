@@ -68,8 +68,8 @@ def generate_bank_statement(request, receipt_date):
     group_header.ultimate_receiver_id = settings.BANK_STMT_RECEIVER_ID
     group_header.originator_id = settings.BANK_STMT_SENDER_ID
     group_header.group_status = constants.GroupStatus.update
-    group_header.as_of_date = datetime.date.today()
-    group_header.as_of_time = datetime.datetime.utcnow().time()
+    group_header.as_of_date = receipt_date
+    group_header.as_of_time = datetime.time.max
     group_header.currency = settings.BANK_STMT_CURRENCY
     group_header.as_of_date_modifier = constants.AsOfDateModifier.interim_same_day
     bai2_file.children.append(group)
