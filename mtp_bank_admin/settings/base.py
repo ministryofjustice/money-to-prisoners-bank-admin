@@ -209,10 +209,9 @@ ADI_TEMPLATE_FILEPATH = 'local_files/adi_template.xlsx'
 ADI_PAYMENT_OUTPUT_FILENAME = 'adi_credit_file_%d%m%y.xlsx'
 ADI_REFUND_OUTPUT_FILENAME = 'adi_refund_file_%d%m%y.xlsx'
 
-BANK_STMT_SENDER_ID = os.environ.get('BANK_STMT_SENDER_ID', 'NWBKGB2L')
-BANK_STMT_RECEIVER_ID = os.environ.get('BANK_STMT_RECEIVER_ID', '391796')
-BANK_STMT_ACCOUNT_NUMBER = os.environ.get('BANK_STMT_ACCOUNT_NUMBER',
-                                          '10002383 607080')
+BANK_STMT_SENDER_ID = os.environ.get('BANK_STMT_SENDER_ID', '')
+BANK_STMT_RECEIVER_ID = os.environ.get('BANK_STMT_RECEIVER_ID', '')
+BANK_STMT_ACCOUNT_NUMBER = os.environ.get('BANK_STMT_ACCOUNT_NUMBER', '')
 BANK_STMT_CURRENCY = os.environ.get('BANK_STMT_CURRENCY', 'GBP')
 BANK_STMT_OUTPUT_FILENAME = 'stmt_%d%m%y'
 
