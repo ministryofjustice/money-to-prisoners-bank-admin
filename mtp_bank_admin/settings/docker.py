@@ -26,5 +26,3 @@ if ENVIRONMENT != 'local':
     SECURE_HSTS_SECONDS = 300
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
-ADI_TEMPLATE_FILEPATH = '/var/local/adi_template.xlsx'
