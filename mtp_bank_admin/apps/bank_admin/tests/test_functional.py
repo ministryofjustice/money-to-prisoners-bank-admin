@@ -117,14 +117,36 @@ class DownloadPageTests(FunctionalTestCase):
 
     def setUp(self):
         super().setUp()
-        self.login('bank-admin', 'bank-admin')
+        self.login('refund-bank-admin', 'refund-bank-admin')
 
     def test_checking_download_page(self):
-        self.assertIn('Download files', self.driver.page_source)
+        self.driver.save_screenshot('screenshot.png')
+
+        self.assertIn('Access Pay file – refunds', self.driver.page_source)
+        self.assertIn('Download file', self.driver.page_source)
+        self.assertIn('Previous files', self.driver.page_source)
+        self.assertIn('ADI Journal – refunds', self.driver.page_source)
+        self.assertIn('Download transactions', self.driver.page_source)
+        self.assertIn('Previous ADI Journal – refunds', self.driver.page_source)
+        self.assertIn('ADI Journal – payments', self.driver.page_source)
+        self.assertIn('Bank statement', self.driver.page_source)
+        self.assertIn('Download transactions', self.driver.page_source)
+        self.assertIn('Previous bank statements', self.driver.page_source)
+
+    def test_open_foldout(self):
+        label = "Previous ADI Journal – refunds"
+        expand_button = self.driver.find_element_by_xpath('//*[text() = "' + label + '"]')
+        expand_box = self.driver.find_element_by_xpath(
+            '//*[text() = "' + label + '"]/following::div[contains(@class, "help-box-contents")]'
+        )
+        self.assertEqual('block', expand_box.value_of_css_property('display'))
 
     def test_checking_help_popup(self):
-        help_box_contents = self.driver.find_element_by_css_selector('.help-box-contents')
-        help_box_button = self.driver.find_element_by_css_selector('.help-box h3')
+        help_label = "Help with downloads"
+        help_box_button = self.driver.find_element_by_xpath('//*[text() = "' + help_label + '"]')
+        help_box_contents = self.driver.find_element_by_xpath(
+            '//*[text() = "' + help_label + '"]/following::div[contains(@class, "help-box-contents")]'
+        )
         self.assertEqual('none', help_box_contents.value_of_css_property('display'))
         help_box_button.click()
         self.assertEqual('block', help_box_contents.value_of_css_property('display'))
