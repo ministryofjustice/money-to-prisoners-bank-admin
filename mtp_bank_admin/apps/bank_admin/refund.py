@@ -59,7 +59,7 @@ def generate_refund_file(request, transactions):
                 transaction['sender_account_number'],
                 transaction['sender_name'],
                 '%.2f' % (Decimal(transaction['amount'])/100),
-                settings.REFUND_REFERENCE
+                refund_reference(transaction)
             ])
             writer.writerow(list(cells))
 
@@ -67,3 +67,9 @@ def generate_refund_file(request, transactions):
 
     return (date.today().strftime(settings.REFUND_OUTPUT_FILENAME),
             filedata)
+
+
+def refund_reference(transaction):
+    date_part = date.today().strftime('%d%m')
+    ref_part = transaction['ref_code'][1:]
+    return settings.REFUND_REFERENCE % (date_part, ref_part)
