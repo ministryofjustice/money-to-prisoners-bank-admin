@@ -9,12 +9,13 @@ TEST_PRISONS = [
 ]
 
 NO_TRANSACTIONS = {'count': 0, 'results': []}
+ORIGINAL_REF = 'original reference'
 
 
 def get_test_transactions(trans_type=None, count=20):
     transactions = []
     for i in range(count):
-        transaction = {'id': i, 'category': 'credit'}
+        transaction = {'id': i, 'category': 'credit', 'source': 'bank_transfer'}
         if trans_type == PaymentType.refund or trans_type is None and i % 5:
             transaction['refunded'] = True
         else:
@@ -28,6 +29,7 @@ def get_test_transactions(trans_type=None, count=20):
 
         transaction['amount'] = random.randint(500, 5000)
         transaction['ref_code'] = '9' + str(random.randint(0, 99999)).zfill(5)
+        transaction['reference'] = ORIGINAL_REF
         transactions.append(transaction)
     return {'count': count, 'results': transactions}
 

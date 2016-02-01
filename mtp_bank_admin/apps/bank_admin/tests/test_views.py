@@ -11,7 +11,7 @@ from moj_auth.tests.utils import generate_tokens
 from moj_auth.exceptions import Unauthorized
 
 from . import get_test_transactions, NO_TRANSACTIONS
-from .test_refund import REFUND_TRANSACTIONS
+from .test_refund import REFUND_TRANSACTIONS, get_base_ref
 from ..types import PaymentType
 from .. import ACCESSPAY_LABEL
 
@@ -117,9 +117,10 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/csv', response['Content-Type'])
         self.assertEqual(
-            bytes(('111111,22222222,John Doe,25.68,%(ref)s\r\n' +
-                   '999999,33333333,Joe Bloggs,18.72,%(ref)s\r\n')
-                  % {'ref': settings.REFUND_REFERENCE}, 'utf8'),
+            bytes(('111111,22222222,John Doe,25.68,%(ref_a)s\r\n' +
+                   '999999,33333333,Joe Bloggs,18.72,%(ref_b)s\r\n')
+                  % {'ref_a': get_base_ref() + '00001',
+                     'ref_b': get_base_ref() + '00002'}, 'utf8'),
             response.content)
 
     @mock.patch('bank_admin.refund.api_client')
@@ -138,9 +139,10 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/csv', response['Content-Type'])
         self.assertEqual(
-            bytes(('111111,22222222,John Doe,25.68,%(ref)s\r\n' +
-                   '999999,33333333,Joe Bloggs,18.72,%(ref)s\r\n')
-                  % {'ref': settings.REFUND_REFERENCE}, 'utf8'),
+            bytes(('111111,22222222,John Doe,25.68,%(ref_a)s\r\n' +
+                   '999999,33333333,Joe Bloggs,18.72,%(ref_b)s\r\n')
+                  % {'ref_a': get_base_ref() + '00001',
+                     'ref_b': get_base_ref() + '00002'}, 'utf8'),
             response.content)
 
 
