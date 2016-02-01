@@ -4,6 +4,7 @@ import os
 import socket
 from urllib.parse import urlparse
 import unittest
+import threading
 
 from django.conf import settings
 from django.test import LiveServerTestCase
@@ -11,7 +12,8 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
 logger = logging.getLogger('mtp')
-
+thread_local = threading.local()
+thread_local.reloaded_data = False
 
 @unittest.skipUnless('RUN_FUNCTIONAL_TESTS' in os.environ, 'functional tests are disabled')
 class FunctionalTestCase(LiveServerTestCase):
@@ -25,9 +27,16 @@ class FunctionalTestCase(LiveServerTestCase):
         return []
 
     def setUp(self):
+        if not thread_local.reloaded_data:
+            self.load_test_data()
+            thread_local.reloaded_data = True
         web_driver = os.environ.get('WEBDRIVER', 'phantomjs')
         if web_driver == 'firefox':
-            self.driver = webdriver.Firefox()
+            fp = webdriver.FirefoxProfile()
+            fp.set_preference('browser.startup.homepage', 'about:blank')
+            fp.set_preference('startup.homepage_welcome_url', 'about:blank')
+            fp.set_preference('startup.homepage_welcome_url.additional', 'about:blank')
+            self.driver = webdriver.Firefox(firefox_profile=fp)
         elif web_driver == 'chrome':
             paths = glob.glob('node_modules/selenium-standalone/.selenium/chromedriver/*-chromedriver')
             paths = filter(lambda path: os.path.isfile(path) and os.access(path, os.X_OK),
@@ -41,6 +50,7 @@ class FunctionalTestCase(LiveServerTestCase):
             self.driver = webdriver.PhantomJS(executable_path=path)
 
         self.driver.set_window_size(1000, 1000)
+        self.driver.set_window_position(0, 0)
 
     def tearDown(self):
         self.driver.quit()
@@ -67,10 +77,6 @@ class FunctionalTestCase(LiveServerTestCase):
         password_field = self.driver.find_element_by_id('id_password')
         password_field.send_keys(password + Keys.RETURN)
 
-    def login_and_go_to(self, link_text):
-        self.login('bank-admin', 'bank-admin')
-        self.driver.find_element_by_partial_link_text(link_text).click()
-
 
 class LoginTests(FunctionalTestCase):
     """
@@ -80,8 +86,8 @@ class LoginTests(FunctionalTestCase):
     def test_title(self):
         self.driver.get(self.live_server_url)
         heading = self.driver.find_element_by_tag_name('h1')
-        self.assertEquals('Bank Admin', heading.text)
-        self.assertEquals('48px', heading.value_of_css_property('font-size'))
+        self.assertEqual('Bank Admin', heading.text)
+        self.assertEqual('48px', heading.value_of_css_property('font-size'))
 
     def test_bad_login(self):
         self.login('bank-admin', 'bad-password')
@@ -90,7 +96,12 @@ class LoginTests(FunctionalTestCase):
 
     def test_good_login(self):
         self.login('bank-admin', 'bank-admin')
-        self.assertEquals(self.driver.current_url, self.live_server_url + '/')
+        self.assertEqual(self.driver.current_url, self.live_server_url + '/')
+        self.assertIn('Download files', self.driver.page_source)
+
+    def test_good_refund_login(self):
+        self.login('refund-bank-admin', 'refund-bank-admin')
+        self.assertEqual(self.driver.current_url, self.live_server_url + '/')
         self.assertIn('Download files', self.driver.page_source)
 
     def test_logout(self):
@@ -114,8 +125,8 @@ class DownloadPageTests(FunctionalTestCase):
     def test_checking_help_popup(self):
         help_box_contents = self.driver.find_element_by_css_selector('.help-box-contents')
         help_box_button = self.driver.find_element_by_css_selector('.help-box h3')
-        self.assertEquals('none', help_box_contents.value_of_css_property('display'))
+        self.assertEqual('none', help_box_contents.value_of_css_property('display'))
         help_box_button.click()
-        self.assertEquals('block', help_box_contents.value_of_css_property('display'))
+        self.assertEqual('block', help_box_contents.value_of_css_property('display'))
         help_box_button.click()
-        self.assertEquals('none', help_box_contents.value_of_css_property('display'))
+        self.assertEqual('none', help_box_contents.value_of_css_property('display'))
