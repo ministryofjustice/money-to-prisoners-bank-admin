@@ -5,9 +5,7 @@ from moj_auth import views
 from moj_irat.views import HealthcheckView, PingJsonView
 
 urlpatterns = [
-    url(r'^login/$', views.login, {
-            'template_name': 'mtp_auth/login.html',
-        }, name='login'),
+    url(r'^login/$', views.login, {'template_name': 'mtp_auth/login.html'}, name='login'),
     url(
         r'^logout/$', views.logout, {
             'template_name': 'mtp_auth/login.html',
