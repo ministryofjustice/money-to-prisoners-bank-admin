@@ -2,7 +2,7 @@
 {% load i18n dates %}
 
 {% block content %}
-  {% get_preceding_weekdays 5 offset=1 as preceding_days %}
+  {% get_preceding_weekdays 3 offset=1 as preceding_days %}
   <h1>{% trans 'Download files' %}</h1>
 
   {% include "includes/message_box.html" %}
@@ -43,46 +43,94 @@
 
   <section class="ContentBlock">
     <h3>{% trans 'ADI Journal – refunds' %}</h3>
-    <ul>
-      {% for day in preceding_days %}
-      <li>
-        {% blocktrans with date=day|date:'d/m/Y' %}Transactions for {{ date }}{% endblocktrans %} |
-        <a href="{% url 'bank_admin:download_adi_refund_file' %}?receipt_date={{ day|date:'Y-m-d' }}">
-          {% trans 'Download file' %}
+
+    {% url 'bank_admin:download_adi_refund_file' as base_download_url %}
+    {% for day in preceding_days %}
+      {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
+
+      {% if forloop.first %}
+        <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+          {{ download_label }}
         </a>
-      </li>
-      {% endfor %}
-    </ul>
+
+        <div class="help-box help-box-popup help-box-hidden">
+        <h3><div></div>{% trans 'Previous files' %}</h3>
+        <div class="help-box-contents">
+        <ul>
+      {% else %}
+        <li>
+          <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+            {{ download_label }}
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+        </ul>
+        </div>
+        </div>
+
     <hr/>
   </section>
 
   <section class="ContentBlock">
     <h3>{% trans 'ADI Journal – credits' %}</h3>
-    <ul>
-      {% for day in preceding_days %}
-      <li>
-        {% blocktrans with date=day|date:'d/m/Y' %}Transactions for {{ date }}{% endblocktrans %} |
-        <a href="{% url 'bank_admin:download_adi_payment_file' %}?receipt_date={{ day|date:'Y-m-d' }}">
-          {% trans 'Download file' %}
+
+    {% url 'bank_admin:download_adi_payment_file' as base_download_url %}
+    {% for day in preceding_days %}
+      {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
+
+      {% if forloop.first %}
+        <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+          {{ download_label }}
         </a>
-      </li>
-      {% endfor %}
-    </ul>
+
+        <div class="help-box help-box-popup help-box-hidden">
+        <h3><div></div>{% trans 'Previous files' %}</h3>
+        <div class="help-box-contents">
+        <ul>
+      {% else %}
+        <li>
+          <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+            {{ download_label }}
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+        </ul>
+        </div>
+        </div>
+
     <hr/>
   </section>
 
   <section class="ContentBlock">
     <h3>{% trans 'Bank statement' %}</h3>
-    <ul>
-      {% for day in preceding_days %}
-      <li>
-        {% blocktrans with date=day|date:'d/m/Y' %}Transactions for {{ date }}{% endblocktrans %} |
-        <a href="{% url 'bank_admin:download_bank_statement' %}?receipt_date={{ day|date:'Y-m-d' }}">
-          {% trans 'Download file' %}
+
+    {% url 'bank_admin:download_bank_statement' as base_download_url %}
+    {% for day in preceding_days %}
+      {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
+
+      {% if forloop.first %}
+        <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+          {{ download_label }}
         </a>
-      </li>
-      {% endfor %}
-    </ul>
+
+        <div class="help-box help-box-popup help-box-hidden">
+        <h3><div></div>{% trans 'Previous files' %}</h3>
+        <div class="help-box-contents">
+        <ul>
+      {% else %}
+        <li>
+          <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+            {{ download_label }}
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+        </ul>
+        </div>
+        </div>
+
     <hr/>
   </section>
 
