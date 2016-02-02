@@ -124,5 +124,5 @@ def generate_bank_statement(request, receipt_date):
                         [t['id'] for t in transactions])
     update_new_balance(request, receipt_date, closing_balance)
 
-    return (datetime.date.today().strftime(settings.BANK_STMT_OUTPUT_FILENAME),
+    return (receipt_date.strftime(settings.BANK_STMT_OUTPUT_FILENAME),
             output)
