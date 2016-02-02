@@ -8,10 +8,14 @@
   {% include "includes/message_box.html" %}
 
   <div class="help-box help-box-popup help-box-hidden">
-    <h3><div></div>Help with downloads</h3>
+    <h3><div></div>{% trans 'Help with downloads' %}</h3>
     <div class="help-box-contents">
       <ul>
-        <li>The file will download automatically when you click 'Download file'. Check your downloads folder for it.</li>
+        <li>
+          {% blocktrans trimmed %}
+            The file will download automatically when you click 'Download file'. Check your downloads folder for it.
+          {% endblocktrans %}
+        </li>
       </ul>
     </div>
   </div>
@@ -24,11 +28,11 @@
       {% blocktrans with date=today %}Download file for {{ date }}{% endblocktrans %}
     </a>
     <div class="help-box help-box-popup help-box-hidden">
-      <h3><div></div>Previous file</h3>
+      <h3><div></div>{% trans 'Previous file' %}</h3>
       <div class="help-box-contents">
         <ul>
           <li><a href="{% url 'bank_admin:download_previous_refund_file' %}">
-            {% trans 'Download previous file{% endblocktrans' %}
+            {% trans 'Download previous file' %}
           </a></li>
         </ul>
       </div>

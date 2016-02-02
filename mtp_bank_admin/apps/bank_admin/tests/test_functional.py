@@ -2,9 +2,9 @@ import glob
 import logging
 import os
 import socket
+import threading
 from urllib.parse import urlparse
 import unittest
-import threading
 
 from django.conf import settings
 from django.test import LiveServerTestCase
@@ -14,6 +14,7 @@ from selenium.webdriver.common.keys import Keys
 logger = logging.getLogger('mtp')
 thread_local = threading.local()
 thread_local.reloaded_data = False
+
 
 @unittest.skipUnless('RUN_FUNCTIONAL_TESTS' in os.environ, 'functional tests are disabled')
 class FunctionalTestCase(LiveServerTestCase):
