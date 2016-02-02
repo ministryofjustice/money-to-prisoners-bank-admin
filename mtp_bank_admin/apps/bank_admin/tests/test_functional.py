@@ -121,25 +121,25 @@ class DownloadPageTests(FunctionalTestCase):
         self.login('refund-bank-admin', 'refund-bank-admin')
 
     def test_checking_download_page(self):
-        self.driver.save_screenshot('screenshot.png')
-
         self.assertIn('Access Pay file – refunds', self.driver.page_source)
         self.assertIn('Download file', self.driver.page_source)
-        self.assertIn('Previous files', self.driver.page_source)
+        self.assertIn('Previous file', self.driver.page_source)
         self.assertIn('ADI Journal – refunds', self.driver.page_source)
         self.assertIn('Download transactions', self.driver.page_source)
-        self.assertIn('Previous ADI Journal – refunds', self.driver.page_source)
+        self.assertIn('Previous ADI Journals – refunds', self.driver.page_source)
         self.assertIn('ADI Journal – payments', self.driver.page_source)
         self.assertIn('Bank statement', self.driver.page_source)
         self.assertIn('Download transactions', self.driver.page_source)
         self.assertIn('Previous bank statements', self.driver.page_source)
 
     def test_open_foldout(self):
-        label = "Previous ADI Journal – refunds"
+        label = "Previous ADI Journals – refunds"
         expand_button = self.driver.find_element_by_xpath('//*[text() = "' + label + '"]')
         expand_box = self.driver.find_element_by_xpath(
             '//*[text() = "' + label + '"]/following::div[contains(@class, "help-box-contents")]'
         )
+        self.assertEqual('none', expand_box.value_of_css_property('display'))
+        expand_button.click()
         self.assertEqual('block', expand_box.value_of_css_property('display'))
 
     def test_checking_help_popup(self):
