@@ -1,6 +1,6 @@
 import csv
 import io
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from django.conf import settings
@@ -70,6 +70,10 @@ def generate_refund_file(request, transactions):
 
 
 def refund_reference(transaction):
-    date_part = date.today().strftime('%d%m')
-    ref_part = transaction['ref_code'][1:]
-    return settings.REFUND_REFERENCE % (date_part, ref_part)
+    if transaction.get('sender_roll_number'):
+        return transaction['sender_roll_number']
+    else:
+        receipt_date = datetime.strptime(transaction['received_at'][:10], '%Y-%m-%d')
+        date_part = receipt_date.strftime('%d%m')
+        ref_part = transaction['ref_code'][1:]
+        return settings.REFUND_REFERENCE % (date_part, ref_part)
