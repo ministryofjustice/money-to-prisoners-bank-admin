@@ -23,20 +23,19 @@
   {% if perms.transaction.view_bank_details_transaction %}
   <section class="ContentBlock">
     <h3>{% trans 'Access Pay file – refunds' %}</h3>
-    <a href="{% url 'bank_admin:download_refund_file' %}">
+    {% if request.GET.redownload_refunds %}
+      <div class="important">
+        <div class="icon"></div>
+        <div class="message">
+          <p><strong>{% trans 'The Access Pay file has already been downloaded' %}</strong></p>
+          <p>You can still download it but check that refunds are not processed twice</p>
+        </div>
+      </div>
+    {% endif %}
+    <a href="{% url 'bank_admin:download_refund_file' %}{% if request.GET.redownload_refunds %}?redownload_refunds=true{% endif %}">
       {% now 'd/m/Y' as today %}
       {% blocktrans with date=today %}Download file for {{ date }}{% endblocktrans %}
     </a>
-    <div class="help-box help-box-popup help-box-hidden">
-      <h3><div></div>{% trans 'Previous file' %}</h3>
-      <div class="help-box-contents">
-        <ul>
-          <li><a href="{% url 'bank_admin:download_previous_refund_file' %}">
-            {% trans 'Download previous file' %}
-          </a></li>
-        </ul>
-      </div>
-    </div>
     <hr/>
   </section>
   {% endif %}
