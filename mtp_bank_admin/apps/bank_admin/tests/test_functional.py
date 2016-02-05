@@ -123,11 +123,10 @@ class DownloadPageTests(FunctionalTestCase):
     def test_checking_download_page(self):
         self.assertIn('Access Pay file – refunds', self.driver.page_source)
         self.assertIn('Download file', self.driver.page_source)
-        self.assertIn('Previous file', self.driver.page_source)
         self.assertIn('ADI Journal – refunds', self.driver.page_source)
         self.assertIn('Download transactions', self.driver.page_source)
         self.assertIn('Previous ADI Journals – refunds', self.driver.page_source)
-        self.assertIn('ADI Journal – payments', self.driver.page_source)
+        self.assertIn('ADI Journal – credits', self.driver.page_source)
         self.assertIn('Bank statement', self.driver.page_source)
         self.assertIn('Download transactions', self.driver.page_source)
         self.assertIn('Previous bank statements', self.driver.page_source)
@@ -153,3 +152,14 @@ class DownloadPageTests(FunctionalTestCase):
         self.assertEqual('block', help_box_contents.value_of_css_property('display'))
         help_box_button.click()
         self.assertEqual('none', help_box_contents.value_of_css_property('display'))
+
+    def test_download_again(self):
+        download_refunds_link = self.driver.find_element_by_xpath('//a[contains(text(), "Download file")]')
+        download_refunds_link.click()
+        self.assertNotIn('The Access Pay file has already been downloaded', self.driver.page_source)
+        download_refunds_link.click()
+        self.assertIn('The Access Pay file has already been downloaded', self.driver.page_source)
+        self.assertEqual(self.driver.current_url, self.live_server_url + '/?redownload_refunds=true')
+        download_refunds_link = self.driver.find_element_by_xpath('//a[contains(text(), "Download file")]')
+        download_refunds_link.click()
+        self.assertIn('The Access Pay file has already been downloaded', self.driver.page_source)

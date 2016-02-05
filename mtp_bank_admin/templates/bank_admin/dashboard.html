@@ -24,7 +24,13 @@
   <section class="ContentBlock">
     <h3>{% trans 'Access Pay file – refunds' %}</h3>
     {% if request.GET.redownload_refunds %}
-      <p>{% trans 'No new transactions available for refund' %}</p>
+      <div class="important">
+        <div class="icon"></div>
+        <div class="message">
+          <p><strong>{% trans 'The Access Pay file has already been downloaded' %}</strong></p>
+          <p>You can still download it but check that refunds are not processed twice</p>
+        </div>
+      </div>
     {% endif %}
     <a href="{% url 'bank_admin:download_refund_file' %}{% if request.GET.redownload_refunds %}?redownload_refunds=true{% endif %}">
       {% now 'd/m/Y' as today %}

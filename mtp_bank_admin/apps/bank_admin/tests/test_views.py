@@ -172,7 +172,7 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
         )
 
         self.assertContains(response,
-                            _('No new transactions available for refund'),
+                            _('The Access Pay file has already been downloaded'),
                             status_code=200)
 
 
