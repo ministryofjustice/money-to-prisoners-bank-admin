@@ -30,8 +30,6 @@ def download_refund_file(request):
                     'username': request.user.username
                 })
             else:
-                messages.add_message(request, messages.ERROR,
-                                     _('No transactions available for refund'))
                 raise EmptyFileError
 
         response = HttpResponse(csvdata, content_type='text/csv')
@@ -39,7 +37,9 @@ def download_refund_file(request):
 
         return response
     except EmptyFileError:
-        pass
+        if redownload_refunds:
+            messages.add_message(request, messages.ERROR,
+                                 _('No transactions available for refund'))
 
     return redirect(reverse_lazy('bank_admin:dashboard') + '?redownload_refunds=true')
 
