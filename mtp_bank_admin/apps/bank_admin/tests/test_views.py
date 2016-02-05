@@ -29,7 +29,8 @@ class BankAdminViewTestCase(SimpleTestCase):
             'user_data': {
                 'first_name': 'Sam',
                 'last_name': 'Hall',
-                'username': 'shall'
+                'username': 'shall',
+                'permissions': ['transaction.view_bank_details_transaction']
             }
         }
 
@@ -127,12 +128,14 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.side_effect = REFUND_TRANSACTIONS
+        conn.get.side_effect = [NO_TRANSACTIONS] + REFUND_TRANSACTIONS
 
         get_batch_conn = mock_api_client.get_connection().batches
         get_batch_conn.get().return_value = {'id': 1, 'label': ACCESSPAY_LABEL}
 
-        response = self.client.get(reverse('bank_admin:download_previous_refund_file'))
+        response = self.client.get(
+            reverse('bank_admin:download_refund_file') + '?redownload_refunds=true'
+        )
 
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/csv', response['Content-Type'])
@@ -146,7 +149,7 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
 class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
 
     @mock.patch('moj_auth.backends.api_client')
-    def test_download_refund_file_general_error_message(self, auth_api_client, mock_api_client):
+    def test_download_refund_file_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
@@ -163,8 +166,10 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = NO_TRANSACTIONS
 
-        response = self.client.get(reverse('bank_admin:download_refund_file'),
-                                   follow=True)
+        response = self.client.get(
+            reverse('bank_admin:download_refund_file'),
+            follow=True
+        )
 
         self.assertContains(response,
                             _('No new transactions available for refund'),

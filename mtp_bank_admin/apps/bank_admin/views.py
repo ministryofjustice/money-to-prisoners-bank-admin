@@ -18,38 +18,30 @@ logger = logging.getLogger('mtp')
 
 @login_required
 def download_refund_file(request):
+    redownload_refunds = request.GET.get('redownload_refunds', False)
     try:
-        filename, csvdata = refund.generate_new_refund_file(request)
+        try:
+            filename, csvdata = refund.generate_new_refund_file(request)
+            logger.info('User "%s" is downloading latest refund file' % request.user.username)
+        except EmptyFileError:
+            if redownload_refunds:
+                filename, csvdata = refund.generate_previous_refund_file(request)
+                logger.info('User "%(username)s" is downloading previous refund file' % {
+                    'username': request.user.username
+                })
+            else:
+                messages.add_message(request, messages.ERROR,
+                                     _('No transactions available for refund'))
+                raise EmptyFileError
 
         response = HttpResponse(csvdata, content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="%s"' % filename
 
-        logger.info('User "%s" is downloading latest refund file' % request.user.username)
-
         return response
     except EmptyFileError:
-        messages.add_message(request, messages.ERROR,
-                             _('No new transactions available for refund'))
-    return redirect(reverse_lazy('bank_admin:dashboard'))
+        pass
 
-
-@login_required
-def download_previous_refund_file(request):
-    try:
-        filename, csvdata = refund.generate_previous_refund_file(request)
-
-        response = HttpResponse(csvdata, content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="%s"' % filename
-
-        logger.info('User "%(username)s" is downloading previous refund file' % {
-            'username': request.user.username
-        })
-
-        return response
-    except EmptyFileError:
-        messages.add_message(request, messages.ERROR,
-                             _('No previously refunded transactions found'))
-    return redirect(reverse_lazy('bank_admin:dashboard'))
+    return redirect(reverse_lazy('bank_admin:dashboard') + '?redownload_refunds=true')
 
 
 def download_adi_file(payment_type, request, receipt_date):
