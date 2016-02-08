@@ -203,8 +203,8 @@ OAUTHLIB_INSECURE_TRANSPORT = True
 
 GOOGLE_ANALYTICS_ID = os.environ.get('GOOGLE_ANALYTICS_ID', None)
 
-REFUND_REFERENCE = 'Refund %s_%s'
-REFUND_OUTPUT_FILENAME = 'mtp_accesspay_%d%m%y.csv'
+REFUND_REFERENCE = 'Refund %s %s'
+REFUND_OUTPUT_FILENAME = 'mtp_accesspay_%d%m%y.txt'
 
 ADI_TEMPLATE_FILEPATH = 'local_files/adi_template.xlsx'
 ADI_PAYMENT_OUTPUT_FILENAME = 'adi_credit_file_%y%m%d.xlsx'

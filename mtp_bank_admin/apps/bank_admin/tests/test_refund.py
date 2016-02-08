@@ -65,7 +65,7 @@ def expected_output():
 
 
 def get_base_ref():
-    return datetime.now().strftime('Refund %d%m_')
+    return datetime.now().strftime('Refund %d%m ')
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.refund.api_client')
