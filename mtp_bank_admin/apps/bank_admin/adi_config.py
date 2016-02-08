@@ -92,8 +92,8 @@ ADI_JOURNAL_FIELDS = {
     'analysis': {
         'column': 'I',
         'value': {
-            'payment': {'debit': '000000', 'credit': '000000'},
-            'refund': {'debit': '000000', 'credit': '000000'},
+            'payment': {'debit': '00000', 'credit': '00000'},
+            'refund': {'debit': '00000', 'credit': '00000'},
         },
         'style': _white_style
     },
