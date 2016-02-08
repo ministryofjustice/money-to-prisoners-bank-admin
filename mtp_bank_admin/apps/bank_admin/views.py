@@ -32,7 +32,7 @@ def download_refund_file(request):
             else:
                 raise EmptyFileError
 
-        response = HttpResponse(csvdata, content_type='text/csv')
+        response = HttpResponse(csvdata, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="%s"' % filename
 
         return response

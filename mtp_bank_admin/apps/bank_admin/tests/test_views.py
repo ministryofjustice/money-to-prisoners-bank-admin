@@ -116,7 +116,7 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
         response = self.client.get(reverse('bank_admin:download_refund_file'))
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual('text/csv', response['Content-Type'])
+        self.assertEqual('text/plain', response['Content-Type'])
         self.assertEqual(
             bytes(expected_output(), 'utf8'),
             response.content
@@ -138,7 +138,7 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual('text/csv', response['Content-Type'])
+        self.assertEqual('text/plain', response['Content-Type'])
         self.assertEqual(
             bytes(expected_output(), 'utf8'),
             response.content
