@@ -13,7 +13,6 @@ from moj_auth.exceptions import Unauthorized
 from . import get_test_transactions, NO_TRANSACTIONS
 from .test_refund import REFUND_TRANSACTIONS, expected_output
 from ..types import PaymentType
-from .. import ACCESSPAY_LABEL
 
 
 class BankAdminViewTestCase(SimpleTestCase):
@@ -113,7 +112,8 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.side_effect = REFUND_TRANSACTIONS
 
-        response = self.client.get(reverse('bank_admin:download_refund_file'))
+        response = self.client.get(reverse('bank_admin:download_refund_file') +
+                                   '?receipt_date=2014-12-11')
 
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/plain', response['Content-Type'])
@@ -124,24 +124,37 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
 
     @mock.patch('bank_admin.refund.api_client')
     @mock.patch('bank_admin.utils.api_client')
-    def test_download_previous_refund_file(self, mock_api_client, mock_refund_api_client):
+    def test_accesspay_queries_by_date(self, mock_api_client, mock_refund_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.side_effect = [NO_TRANSACTIONS] + REFUND_TRANSACTIONS
+        conn.get.side_effect = {
+            'count': 1,
+            'results': [{
+                'id': '3',
+                'amount': 2568,
+                'sender_account_number': '22222222',
+                'sender_sort_code': '111111',
+                'sender_name': 'John Doe',
+                'ref_code': '900001',
+                'reference': 'for birthday',
+                'credited': False,
+                'refunded': False,
+                'received_at': '2014-11-12'
+            }]
+        },
 
-        get_batch_conn = mock_api_client.get_connection().batches
-        get_batch_conn.get().return_value = {'id': 1, 'label': ACCESSPAY_LABEL}
-
-        response = self.client.get(
-            reverse('bank_admin:download_refund_file') + '?redownload_refunds=true'
+        self.client.get(
+            reverse('bank_admin:download_refund_file') +
+            '?receipt_date=2014-11-12'
         )
 
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/plain', response['Content-Type'])
-        self.assertEqual(
-            bytes(expected_output(), 'utf8'),
-            response.content
+        conn.get.assert_called_with(
+            limit=settings.REQUEST_PAGE_SIZE,
+            offset=0,
+            status='refund_pending,refunded',
+            received_at__gte=datetime.date(2014, 11, 12),
+            received_at__lt=datetime.date(2014, 11, 13)
         )
 
 
@@ -155,7 +168,8 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.side_effect = Unauthorized()
 
-        response = self.client.get(reverse('bank_admin:download_refund_file'),
+        response = self.client.get(reverse('bank_admin:download_refund_file') +
+                                   '?receipt_date=2014-12-11',
                                    follow=False)
 
         self.assertRedirects(response, reverse('login'))
@@ -167,12 +181,12 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
         conn.get.return_value = NO_TRANSACTIONS
 
         response = self.client.get(
-            reverse('bank_admin:download_refund_file'),
+            reverse('bank_admin:download_refund_file') + '?receipt_date=2014-12-11',
             follow=True
         )
 
         self.assertContains(response,
-                            _('The Access Pay file has already been downloaded'),
+                            _('No transactions available for refund'),
                             status_code=200)
 
 
@@ -296,7 +310,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
                                    follow=True)
 
         self.assertContains(response,
-                            _('No new transactions available for reconciliation'),
+                            _('No transactions available for reconciliation'),
                             status_code=200)
 
     def test_download_adi_refund_file_no_transactions_error_message(self, mock_api_client):
@@ -310,7 +324,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
                                    follow=True)
 
         self.assertContains(response,
-                            _('No new transactions available for reconciliation'),
+                            _('No transactions available for reconciliation'),
                             status_code=200)
 
     def test_download_adi_payment_invalid_receipt_date(self, mock_api_client):
@@ -428,7 +442,7 @@ class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
                                    follow=True)
 
         self.assertContains(response,
-                            _("No new transactions available on account"),
+                            _("No transactions available on account"),
                             status_code=200)
 
     def test_invalid_receipt_date_returns_error(self, mock_api_client):

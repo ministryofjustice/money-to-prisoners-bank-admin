@@ -1,5 +1,5 @@
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, date
 from unittest import mock
 
 from django.test import SimpleTestCase
@@ -72,14 +72,14 @@ def get_base_ref():
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class ValidTransactionsTestCase(SimpleTestCase):
 
-    def test_generate_new_refund_file(self, mock_api_client, mock_refund_api_client):
+    def test_generate_refund_file(self, mock_api_client, mock_refund_api_client):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.side_effect = REFUND_TRANSACTIONS
 
         refund_conn = mock_refund_api_client.get_connection().bank_admin.transactions
         batch_conn = mock_api_client.get_connection().batches
 
-        _, csvdata = refund.generate_new_refund_file(None)
+        _, csvdata = refund.generate_refund_file_for_date(None, date.today())
 
         refund_conn.patch.assert_called_once_with([
             {'id': '3', 'refunded': True},
@@ -89,23 +89,6 @@ class ValidTransactionsTestCase(SimpleTestCase):
         batch_conn.post.assert_called_once_with(
             {'label': ACCESSPAY_LABEL, 'transactions': ['3', '4', '5']}
         )
-
-        self.assertEqual(expected_output(), csvdata)
-
-    def test_generate_previous_refund_file(self, mock_api_client, mock_refund_api_client):
-        conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.side_effect = REFUND_TRANSACTIONS
-
-        get_batch_conn = mock_api_client.get_connection().batches
-        get_batch_conn.get().return_value = {'id': 1, 'label': ACCESSPAY_LABEL}
-
-        refund_conn = mock_refund_api_client.get_connection().bank_admin.transactions
-        batch_conn = mock_api_client.get_connection().batches
-
-        _, csvdata = refund.generate_previous_refund_file(None)
-
-        self.assertFalse(refund_conn.patch.called)
-        self.assertFalse(batch_conn.post.called)
 
         self.assertEqual(expected_output(), csvdata)
 
@@ -120,7 +103,7 @@ class ValidTransactionsTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.side_effect = naughty_transactions
 
-        _, csvdata = refund.generate_new_refund_file(None)
+        _, csvdata = refund.generate_refund_file_for_date(None, date.today())
 
         self.assertEqual(
             ('''111111,22222222,"'=HYPERLINK(""http://127.0.0.1/?value=""&A1&A1, '''
@@ -144,7 +127,7 @@ class NoTransactionsTestCase(SimpleTestCase):
         refund_conn = mock_refund_api_client.get_connection().bank_admin.transactions
 
         try:
-            _, csvdata = refund.generate_new_refund_file(None)
+            _, csvdata = refund.generate_refund_file_for_date(None, date.today())
             self.fail('EmptyFileError expected')
         except EmptyFileError:
             self.assertFalse(refund_conn.patch.called)

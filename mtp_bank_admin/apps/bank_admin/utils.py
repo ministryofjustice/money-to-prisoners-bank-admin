@@ -1,3 +1,4 @@
+from datetime import timedelta
 import time
 
 from moj_auth import api_client
@@ -56,6 +57,13 @@ def update_new_balance(request, date, closing_balance):
 
 def get_daily_file_uid():
     int(time.time()) % 86400
+
+
+def get_next_weekday(date):
+    next_weekday = date + timedelta(days=1)
+    while next_weekday.weekday() >= 5:
+        next_weekday += timedelta(days=1)
+    return next_weekday
 
 
 def escape_csv_formula(value):
