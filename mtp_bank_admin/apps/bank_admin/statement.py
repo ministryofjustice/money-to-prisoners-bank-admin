@@ -49,7 +49,7 @@ def generate_bank_statement(request, receipt_date):
         else:
             transaction_record.type_code = constants.TypeCodes[CREDIT_TYPE_CODE]
             if transaction.get('ref_code'):
-                transaction_record.text = str(transaction['ref_code'])
+                transaction_record.text = 'BGC ' + str(transaction['ref_code'])
             credit_num += 1
             credit_total += transaction['amount']
 
