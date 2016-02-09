@@ -1,6 +1,6 @@
 import csv
 import io
-from datetime import date, datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.conf import settings
@@ -8,32 +8,23 @@ from moj_auth.backends import api_client
 
 from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
-from .utils import retrieve_all_transactions, create_batch_record,\
-    escape_csv_formula, get_last_batch
+from .utils import (
+    retrieve_all_transactions, create_batch_record, escape_csv_formula, get_next_weekday
+)
 
 
-def generate_previous_refund_file(request):
-    batch = get_last_batch(request, ACCESSPAY_LABEL)
-    if batch:
-        batched_transactions = retrieve_all_transactions(
-            request,
-            batch=batch['id']
-        )
-        return generate_refund_file(request, batched_transactions)
-    else:
-        raise EmptyFileError()
-
-
-def generate_new_refund_file(request):
+def generate_refund_file_for_date(request, receipt_date):
     transactions_to_refund = retrieve_all_transactions(
         request,
-        status='refund_pending'
+        status='refund_pending,refunded',
+        received_at__gte=receipt_date,
+        received_at__lt=(receipt_date + timedelta(days=1))
     )
 
-    generated_data = generate_refund_file(request, transactions_to_refund)
+    filedata = generate_refund_file(request, transactions_to_refund)
 
     refunded_transactions = [
-        {'id': t['id'], 'refunded': True} for t in transactions_to_refund
+        {'id': t['id'], 'refunded': True} for t in transactions_to_refund if not t['refunded']
     ]
 
     # mark transactions as refunded
@@ -41,9 +32,10 @@ def generate_new_refund_file(request):
     client.bank_admin.transactions.patch(refunded_transactions)
 
     create_batch_record(request, ACCESSPAY_LABEL,
-                        [t['id'] for t in refunded_transactions])
+                        [t['id'] for t in transactions_to_refund])
 
-    return generated_data
+    return (get_next_weekday(receipt_date).strftime(settings.REFUND_OUTPUT_FILENAME),
+            filedata)
 
 
 def generate_refund_file(request, transactions):
@@ -63,10 +55,7 @@ def generate_refund_file(request, transactions):
             ])
             writer.writerow(list(cells))
 
-        filedata = out.getvalue()
-
-    return (date.today().strftime(settings.REFUND_OUTPUT_FILENAME),
-            filedata)
+        return out.getvalue()
 
 
 def refund_reference(transaction):

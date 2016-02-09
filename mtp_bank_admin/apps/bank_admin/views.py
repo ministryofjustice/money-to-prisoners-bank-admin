@@ -17,31 +17,24 @@ logger = logging.getLogger('mtp')
 
 
 @login_required
-def download_refund_file(request):
-    redownload_refunds = request.GET.get('redownload_refunds', False)
+@filter_by_receipt_date
+def download_refund_file(request, receipt_date):
     try:
-        try:
-            filename, csvdata = refund.generate_new_refund_file(request)
-            logger.info('User "%s" is downloading latest refund file' % request.user.username)
-        except EmptyFileError:
-            if redownload_refunds:
-                filename, csvdata = refund.generate_previous_refund_file(request)
-                logger.info('User "%(username)s" is downloading previous refund file' % {
-                    'username': request.user.username
-                })
-            else:
-                raise EmptyFileError
+        filename, csvdata = refund.generate_refund_file_for_date(request, receipt_date)
+        logger.info('User "%(username)s" is downloading AccessPay file for %(date)s' % {
+            'username': request.user.username,
+            'date': date_format(receipt_date, 'Y-m-d'),
+        })
 
         response = HttpResponse(csvdata, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="%s"' % filename
 
         return response
     except EmptyFileError:
-        if redownload_refunds:
-            messages.add_message(request, messages.ERROR,
-                                 _('No transactions available for refund'))
+        messages.add_message(request, messages.ERROR,
+                             _('No transactions available for refund'))
 
-    return redirect(reverse_lazy('bank_admin:dashboard') + '?redownload_refunds=true')
+    return redirect(reverse_lazy('bank_admin:dashboard'))
 
 
 def download_adi_file(payment_type, request, receipt_date):
@@ -68,7 +61,7 @@ def download_adi_file(payment_type, request, receipt_date):
         return response
     except EmptyFileError:
         messages.add_message(request, messages.ERROR,
-                             _('No new transactions available for reconciliation'))
+                             _('No transactions available for reconciliation'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
 
@@ -101,5 +94,5 @@ def download_bank_statement(request, receipt_date):
         return response
     except EmptyFileError:
         messages.add_message(request, messages.ERROR,
-                             _('No new transactions available on account'))
+                             _('No transactions available on account'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
