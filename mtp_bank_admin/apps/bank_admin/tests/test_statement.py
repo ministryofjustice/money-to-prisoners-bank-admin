@@ -14,7 +14,6 @@ from . import (
 )
 from .. import BAI2_STMT_LABEL
 from ..statement import generate_bank_statement
-from ..exceptions import EmptyFileError
 
 
 def get_test_transactions_for_stmt(count=20):
@@ -188,13 +187,15 @@ class NoTransactionsTestCase(SimpleTestCase):
             **kwargs
         )
 
-    def test_generate_bank_statement_raises_error(self, mock_api_client):
+    def test_empty_statement_generated(self, mock_api_client):
         conn = mock_api_client.get_connection().bank_admin.transactions
         conn.get.return_value = NO_TRANSACTIONS
+        mock_balance(mock_api_client)
 
-        try:
-            generate_bank_statement(self.get_request(),
-                                    datetime.now().date())
-            self.fail('EmptyFileError expected')
-        except EmptyFileError:
-            pass
+        today = datetime.now().date()
+        _, bai2_file = generate_bank_statement(self.get_request(),
+                                               today)
+
+        parsed_file = bai2.parse_from_string(bai2_file, check_integrity=True)
+        account = parsed_file.children[0].children[0]
+        self.assertEqual(len(account.children), 0)

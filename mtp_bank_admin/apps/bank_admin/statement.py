@@ -4,7 +4,6 @@ from django.conf import settings
 from bai2 import bai2, models, constants
 
 from . import BAI2_STMT_LABEL
-from .exceptions import EmptyFileError
 from .utils import retrieve_all_transactions,\
     create_batch_record, get_daily_file_uid, reconcile_for_date,\
     retrieve_last_balance, update_new_balance
@@ -29,9 +28,6 @@ def generate_bank_statement(request, receipt_date):
         received_at__gte=receipt_date,
         received_at__lt=(receipt_date + datetime.timedelta(days=1))
     )
-
-    if len(transactions) == 0:
-        raise EmptyFileError()
 
     transaction_records = []
     credit_num = 0
@@ -120,9 +116,10 @@ def generate_bank_statement(request, receipt_date):
     group.children.append(account)
 
     output = bai2.write(bai2_file, clock_format_for_intra_day=True)
-    create_batch_record(request, BAI2_STMT_LABEL,
-                        [t['id'] for t in transactions])
     update_new_balance(request, receipt_date, closing_balance)
+    if len(transactions) > 0:
+        create_batch_record(request, BAI2_STMT_LABEL,
+                            [t['id'] for t in transactions])
 
     return (receipt_date.strftime(settings.BANK_STMT_OUTPUT_FILENAME),
             output)
