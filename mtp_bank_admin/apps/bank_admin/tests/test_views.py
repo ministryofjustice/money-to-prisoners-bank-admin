@@ -431,20 +431,6 @@ class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
 
         self.assertRedirects(response, reverse('login'))
 
-    def test_no_transactions_returns_error_message(self, mock_api_client):
-        self.login()
-
-        conn = mock_api_client.get_connection().bank_admin.transactions
-        conn.get.return_value = NO_TRANSACTIONS
-
-        response = self.client.get(reverse('bank_admin:download_bank_statement') +
-                                   '?receipt_date=2014-12-11',
-                                   follow=True)
-
-        self.assertContains(response,
-                            _("No transactions available on account"),
-                            status_code=200)
-
     def test_invalid_receipt_date_returns_error(self, mock_api_client):
         self.login()
 
