@@ -130,6 +130,12 @@ class DownloadPageTests(FunctionalTestCase):
         self.assertIn('Bank statement', self.driver.page_source)
         self.assertIn('Download transactions', self.driver.page_source)
         self.assertIn('Previous bank statements', self.driver.page_source)
+        page_heading_1 = self.driver.find_element_by_xpath('//h1')
+        self.assertEqual('28px', page_heading_1.value_of_css_property('font-size'))
+        page_heading_2 = self.driver.find_element_by_xpath('//h2')
+        self.assertEqual('19px', page_heading_2.value_of_css_property('font-size'))
+        file_link = self.driver.find_element_by_css_selector('div.mtp-filelink')
+        self.assertEqual('22px', file_link.value_of_css_property('margin-top'))
 
     def test_open_foldout(self):
         label = "Previous ADI Journals – refunds"

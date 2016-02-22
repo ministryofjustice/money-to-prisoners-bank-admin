@@ -2,140 +2,128 @@
 {% load i18n dates %}
 
 {% block content %}
-  {% get_preceding_weekdays 3 offset=1 as preceding_days %}
-  <h1>{% trans 'Download files' %}</h1>
+  <div class="mtp-compact">
+    {% get_preceding_weekdays 3 offset=1 as preceding_days %}
+    <h1>{% trans 'Download files' %}</h1>
 
-  {% include "includes/message_box.html" %}
+    {% include "includes/message_box.html" %}
 
-  <div class="help-box help-box-popup help-box-hidden">
-    <h3><div></div>{% trans 'Help with downloads' %}</h3>
-    <div class="help-box-contents">
-      <ul>
-        <li>
-          {% blocktrans trimmed %}
-            The file will download automatically when you click 'Download file'. Check your downloads folder for it.
-          {% endblocktrans %}
-        </li>
-      </ul>
-    </div>
+    {% if perms.transaction.view_bank_details_transaction %}
+    <section class="ContentBlock">
+      <h2>{% trans 'Access Pay file – refunds' %}</h2>
+      {% url 'bank_admin:download_refund_file' as base_download_url %}
+      {% for day in preceding_days %}
+        {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download file for {{ date }}{% endblocktrans %}
+
+        {% if forloop.first %}
+      <div class="mtp-filelink"><a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+        {{ download_label }}
+      </a></div>
+
+      <div class="help-box help-box-popup help-box-hidden">
+        <h3><div></div>{% trans 'Previous AccessPay refund files' %}</h3>
+        <div class="help-box-contents">
+          <ul>
+        {% else %}
+            <li>
+              <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+                {{ download_label }}
+              </a>
+            </li>
+        {% endif %}
+      {% endfor %}
+          </ul>
+        </div>
+      </div>
+      <hr/>
+    </section>
+    {% endif %}
+
+    <section class="ContentBlock">
+      <h2>{% trans 'ADI Journal – refunds' %}</h2>
+      {% url 'bank_admin:download_adi_refund_file' as base_download_url %}
+      {% for day in preceding_days %}
+        {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
+
+        {% if forloop.first %}
+      <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+        {{ download_label }}
+      </a>
+
+      <div class="help-box help-box-popup help-box-hidden">
+        <h2><div></div>{% trans 'Previous ADI Journals – refunds' %}</h2>
+        <div class="help-box-contents">
+          <ul>
+        {% else %}
+            <li>
+              <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+                {{ download_label }}
+              </a>
+            </li>
+        {% endif %}
+      {% endfor %}
+          </ul>
+        </div>
+      </div>
+      <hr/>
+    </section>
+
+    <section class="ContentBlock">
+      <h2>{% trans 'ADI Journal – credits' %}</h2>
+      {% url 'bank_admin:download_adi_payment_file' as base_download_url %}
+      {% for day in preceding_days %}
+        {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
+
+        {% if forloop.first %}
+      <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+        {{ download_label }}
+      </a>
+
+      <div class="help-box help-box-popup help-box-hidden">
+        <h2><div></div>{% trans 'Previous ADI Journals – credits' %}</h2>
+        <div class="help-box-contents">
+          <ul>
+        {% else %}
+            <li>
+              <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+                {{ download_label }}
+              </a>
+            </li>
+        {% endif %}
+      {% endfor %}
+          </ul>
+        </div>
+      </div>
+      <hr/>
+    </section>
+
+    <section class="ContentBlock">
+      <h2>{% trans 'Bank statement' %}</h2>
+
+      {% url 'bank_admin:download_bank_statement' as base_download_url %}
+      {% for day in preceding_days %}
+        {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
+
+        {% if forloop.first %}
+      <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+        {{ download_label }}
+      </a>
+
+      <div class="help-box help-box-popup help-box-hidden">
+        <h2><div></div>{% trans 'Previous bank statements' %}</h2>
+        <div class="help-box-contents">
+          <ul>
+        {% else %}
+            <li>
+              <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+                {{ download_label }}
+              </a>
+            </li>
+        {% endif %}
+      {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </section>
   </div>
-
-  {% if perms.transaction.view_bank_details_transaction %}
-  <section class="ContentBlock">
-    <h3>{% trans 'Access Pay file – refunds' %}</h3>
-    {% url 'bank_admin:download_refund_file' as base_download_url %}
-    {% for day in preceding_days %}
-      {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
-
-      {% if forloop.first %}
-    <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-      {{ download_label }}
-    </a>
-
-    <div class="help-box help-box-popup help-box-hidden">
-      <h3><div></div>{% trans 'Previous AccessPay refund files' %}</h3>
-      <div class="help-box-contents">
-        <ul>
-      {% else %}
-          <li>
-            <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-              {{ download_label }}
-            </a>
-          </li>
-      {% endif %}
-    {% endfor %}
-        </ul>
-      </div>
-    </div>
-    <hr/>
-  </section>
-  {% endif %}
-
-  <section class="ContentBlock">
-    <h3>{% trans 'ADI Journal – refunds' %}</h3>
-    {% url 'bank_admin:download_adi_refund_file' as base_download_url %}
-    {% for day in preceding_days %}
-      {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
-
-      {% if forloop.first %}
-    <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-      {{ download_label }}
-    </a>
-
-    <div class="help-box help-box-popup help-box-hidden">
-      <h3><div></div>{% trans 'Previous ADI Journals – refunds' %}</h3>
-      <div class="help-box-contents">
-        <ul>
-      {% else %}
-          <li>
-            <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-              {{ download_label }}
-            </a>
-          </li>
-      {% endif %}
-    {% endfor %}
-        </ul>
-      </div>
-    </div>
-    <hr/>
-  </section>
-
-  <section class="ContentBlock">
-    <h3>{% trans 'ADI Journal – credits' %}</h3>
-    {% url 'bank_admin:download_adi_payment_file' as base_download_url %}
-    {% for day in preceding_days %}
-      {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
-
-      {% if forloop.first %}
-    <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-      {{ download_label }}
-    </a>
-
-    <div class="help-box help-box-popup help-box-hidden">
-      <h3><div></div>{% trans 'Previous ADI Journals – credits' %}</h3>
-      <div class="help-box-contents">
-        <ul>
-      {% else %}
-          <li>
-            <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-              {{ download_label }}
-            </a>
-          </li>
-      {% endif %}
-    {% endfor %}
-        </ul>
-      </div>
-    </div>
-    <hr/>
-  </section>
-
-  <section class="ContentBlock">
-    <h3>{% trans 'Bank statement' %}</h3>
-
-    {% url 'bank_admin:download_bank_statement' as base_download_url %}
-    {% for day in preceding_days %}
-      {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
-
-      {% if forloop.first %}
-    <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-      {{ download_label }}
-    </a>
-
-    <div class="help-box help-box-popup help-box-hidden">
-      <h3><div></div>{% trans 'Previous bank statements' %}</h3>
-      <div class="help-box-contents">
-        <ul>
-      {% else %}
-          <li>
-            <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-              {{ download_label }}
-            </a>
-          </li>
-      {% endif %}
-    {% endfor %}
-        </ul>
-      </div>
-    </div>
-  </section>
-
 {% endblock %}
