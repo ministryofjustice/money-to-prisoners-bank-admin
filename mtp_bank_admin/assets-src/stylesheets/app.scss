@@ -15,3 +15,12 @@ li {
   list-style-type: none;
   margin-bottom: .2em;
 }
+
+// Dashboard design makes page shorter so the whole page fits
+// on a typical user screen
+.mtp-compact {
+  h1 { font-size: 28px; }
+  h2 { font-size: 19px; }
+  h3 { margin: 1em 0 1em 0 }
+  .mtp-filelink { margin-top: 1.2em; }
+}
