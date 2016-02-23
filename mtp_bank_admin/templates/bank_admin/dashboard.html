@@ -16,9 +16,11 @@
         {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download file for {{ date }}{% endblocktrans %}
 
         {% if forloop.first %}
-      <div class="mtp-filelink"><a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+      <div class="mtp-filelink">
+        <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
         {{ download_label }}
-      </a></div>
+        </a>
+      </div>
 
       <div class="help-box help-box-popup help-box-hidden">
         <h3><div></div>{% trans 'Previous AccessPay refund files' %}</h3>
@@ -46,12 +48,14 @@
         {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
 
         {% if forloop.first %}
-      <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-        {{ download_label }}
-      </a>
+      <div class="mtp-filelink">
+        <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+          {{ download_label }}
+        </a>
+      </div>
 
       <div class="help-box help-box-popup help-box-hidden">
-        <h2><div></div>{% trans 'Previous ADI Journals – refunds' %}</h2>
+        <h3><div></div>{% trans 'Previous ADI Journals – refunds' %}</h3>
         <div class="help-box-contents">
           <ul>
         {% else %}
@@ -75,12 +79,14 @@
         {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
 
         {% if forloop.first %}
-      <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+      <div class="mtp-filelink">
+        <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
         {{ download_label }}
-      </a>
+        </a>
+      </div>
 
       <div class="help-box help-box-popup help-box-hidden">
-        <h2><div></div>{% trans 'Previous ADI Journals – credits' %}</h2>
+        <h3><div></div>{% trans 'Previous ADI Journals – credits' %}</h3>
         <div class="help-box-contents">
           <ul>
         {% else %}
@@ -105,12 +111,14 @@
         {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
 
         {% if forloop.first %}
-      <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+      <div class="mtp-filelink">
+        <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
         {{ download_label }}
-      </a>
+        </a>
+      </div>
 
       <div class="help-box help-box-popup help-box-hidden">
-        <h2><div></div>{% trans 'Previous bank statements' %}</h2>
+        <h3><div></div>{% trans 'Previous bank statements' %}</h3>
         <div class="help-box-contents">
           <ul>
         {% else %}
