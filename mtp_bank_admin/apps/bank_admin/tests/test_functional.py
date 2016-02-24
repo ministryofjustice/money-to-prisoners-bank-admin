@@ -125,11 +125,11 @@ class DownloadPageTests(FunctionalTestCase):
         self.assertIn('Download file', self.driver.page_source)
         self.assertIn('ADI Journal – refunds', self.driver.page_source)
         self.assertIn('Download transactions', self.driver.page_source)
-        self.assertIn('Previous ADI Journals – refunds', self.driver.page_source)
+        self.assertIn('<a href="#">Previous ADI Journals – refunds</a>', self.driver.page_source)
         self.assertIn('ADI Journal – credits', self.driver.page_source)
         self.assertIn('Bank statement', self.driver.page_source)
         self.assertIn('Download transactions', self.driver.page_source)
-        self.assertIn('Previous bank statements', self.driver.page_source)
+        self.assertIn('<a href="#">Previous bank statements</a>', self.driver.page_source)
         page_heading_1 = self.driver.find_element_by_xpath('//h1')
         self.assertEqual('28px', page_heading_1.value_of_css_property('font-size'))
         page_heading_2 = self.driver.find_element_by_xpath('//h2')
@@ -146,15 +146,3 @@ class DownloadPageTests(FunctionalTestCase):
         self.assertEqual('none', expand_box.value_of_css_property('display'))
         expand_button.click()
         self.assertEqual('block', expand_box.value_of_css_property('display'))
-
-    def test_checking_help_popup(self):
-        help_label = "Help with downloads"
-        help_box_button = self.driver.find_element_by_xpath('//*[text() = "' + help_label + '"]')
-        help_box_contents = self.driver.find_element_by_xpath(
-            '//*[text() = "' + help_label + '"]/following::div[contains(@class, "help-box-contents")]'
-        )
-        self.assertEqual('none', help_box_contents.value_of_css_property('display'))
-        help_box_button.click()
-        self.assertEqual('block', help_box_contents.value_of_css_property('display'))
-        help_box_button.click()
-        self.assertEqual('none', help_box_contents.value_of_css_property('display'))
