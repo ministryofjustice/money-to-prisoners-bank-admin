@@ -4,9 +4,6 @@ $images-dir: '/static/images/';
 
 @import 'mtp';
 
-section {
-  width: 60%;
-}
 ul {
   padding: 0;
 }
@@ -20,7 +17,15 @@ li {
 // on a typical user screen
 .mtp-compact {
   h1 { font-size: 28px; }
-  h2 { font-size: 19px; }
+  h2 {
+    margin: 0;
+    font-size: 19px;
+  }
   h3 { margin: 1em 0 1em 0 }
   .mtp-filelink { margin-top: 1.2em; }
+  .grid-row.second {
+    padding-top: 2em;
+    border-top: 1px solid $panel-colour;
+  }
+  section { margin-bottom: 2em; }
 }
