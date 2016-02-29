@@ -130,6 +130,8 @@ class DownloadPageTests(FunctionalTestCase):
         self.assertIn('Bank statement', self.driver.page_source)
         self.assertIn('Download transactions', self.driver.page_source)
         self.assertIn('<a href="#">Previous bank statements</a>', self.driver.page_source)
+        first_section = self.driver.find_element_by_xpath('//section')
+        self.assertEqual('inline-block', first_section.value_of_css_property('display'))
         page_heading_1 = self.driver.find_element_by_xpath('//h1')
         self.assertEqual('28px', page_heading_1.value_of_css_property('font-size'))
         page_heading_2 = self.driver.find_element_by_xpath('//h2')
