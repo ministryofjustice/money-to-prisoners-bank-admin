@@ -23,9 +23,13 @@ li {
   }
   h3 { margin: 1em 0 1em 0 }
   .mtp-filelink { margin-top: 1.2em; }
-  .grid-row.second {
-    padding-top: 2em;
-    border-top: 1px solid $panel-colour;
+  section {
+    display: inline-block;
+    width: 470px;
   }
-  section { margin-bottom: 2em; }
+  .mtp-compact-row-1 {
+    margin-bottom: 2em;
+    padding-bottom: 1em;
+    border-bottom: 1px solid $panel-colour;
+  }
 }
