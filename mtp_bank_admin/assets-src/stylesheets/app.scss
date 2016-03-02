@@ -4,15 +4,6 @@ $images-dir: '/static/images/';
 
 @import 'mtp';
 
-ul {
-  padding: 0;
-}
-
-li {
-  list-style-type: none;
-  margin-bottom: .2em;
-}
-
 // Dashboard design makes page shorter so the whole page fits
 // on a typical user screen
 .mtp-compact {
