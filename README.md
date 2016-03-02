@@ -1,8 +1,5 @@
 # Money to Prisoners Bank Admin
 
-[![Dependency Status](https://img.shields.io/david/ministryofjustice/money-to-prisoners-bank-admin.svg?style=flat-square&label=NPM%20deps)](https://david-dm.org/ministryofjustice/money-to-prisoners-bank-admin)
-[![devDependency Status](https://img.shields.io/david/dev/ministryofjustice/money-to-prisoners-bank-admin.svg?style=flat-square&label=NPM%20devDeps)](https://david-dm.org/ministryofjustice/money-to-prisoners-bank-admin#info=devDependencies)
-
 The Bank Admin UI for the Money to Prisoners Project
 
 
