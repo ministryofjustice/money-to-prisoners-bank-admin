@@ -9,11 +9,13 @@ from moj_auth.backends import api_client
 from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
 from .utils import (
-    retrieve_all_transactions, create_batch_record, escape_csv_formula, get_next_weekday
+    retrieve_all_transactions, create_batch_record, escape_csv_formula,
+    get_next_weekday, reconcile_for_date
 )
 
 
 def generate_refund_file_for_date(request, receipt_date):
+    reconcile_for_date(request, receipt_date)
     transactions_to_refund = retrieve_all_transactions(
         request,
         status='refund_pending,refunded',
