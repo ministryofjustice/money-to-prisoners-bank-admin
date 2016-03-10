@@ -81,6 +81,9 @@ class ValidTransactionsTestCase(SimpleTestCase):
 
         _, csvdata = refund.generate_refund_file_for_date(None, date.today())
 
+        conn.reconcile.post.assert_called_with(
+            {'date': date.today().isoformat()}
+        )
         refund_conn.patch.assert_called_once_with([
             {'id': '3', 'refunded': True},
             {'id': '4', 'refunded': True},
