@@ -2,13 +2,13 @@ from datetime import timedelta
 import time
 
 from moj_auth import api_client
-from moj_utils import rest
+from mtp_utils.api import retrieve_all_pages
 from slumber.exceptions import HttpClientError
 
 
 def retrieve_all_transactions(request, **kwargs):
     endpoint = api_client.get_connection(request).bank_admin.transactions.get
-    return rest.retrieve_all_pages(endpoint, **kwargs)
+    return retrieve_all_pages(endpoint, **kwargs)
 
 
 def create_batch_record(request, label, transaction_ids):
