@@ -69,10 +69,13 @@ class DownloadPageTests(BankAdminTestCase):
 
     def test_open_foldout(self):
         label = "Previous ADI Journals – refunds"
-        expand_button = self.driver.find_element_by_xpath('//*[text() = "' + label + '"]')
+        expand_button = self.driver.find_element_by_xpath('//h3[a[contains(text(),"' + label + '")]]')
+        expand_button_link = expand_button.find_element_by_tag_name('a')
         expand_box = self.driver.find_element_by_xpath(
             '//*[text() = "' + label + '"]/following::div[contains(@class, "help-box-contents")]'
         )
         self.assertEqual('none', expand_box.value_of_css_property('display'))
-        expand_button.click()
+        self.assertEqual('false', expand_button.get_attribute('aria-expanded'))
+        expand_button_link.click()
         self.assertEqual('block', expand_box.value_of_css_property('display'))
+        self.assertEqual('true', expand_button.get_attribute('aria-expanded'))

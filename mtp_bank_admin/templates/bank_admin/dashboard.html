@@ -25,9 +25,11 @@
               </a>
           </div>
 
-          <div class="help-box help-box-popup help-box-hidden">
-            <h3><div></div><a href="#">{% trans 'Previous AccessPay refund files' %}</a></h3>
-            <div class="help-box-contents">
+          <div class="help-box">
+            <h3 aria-controls="previous-ap-refunds" aria-expanded="true">
+              <div></div><a href="#">{% trans 'Previous AccessPay refund files' %}</a>
+            </h3>
+            <div id="previous-ap-refunds" class="help-box-contents">
               <ul>
               {% else %}
                 <li>
@@ -56,9 +58,11 @@
             </a>
           </div>
 
-          <div class="help-box help-box-popup help-box-hidden">
-            <h3><div></div><a href="#">{% trans 'Previous ADI Journals – refunds' %}</a></h3>
-            <div class="help-box-contents">
+          <div class="help-box">
+            <h3 aria-controls="previous-adi-refunds" aria-expanded="true">
+              <div></div><a href="#">{% trans 'Previous ADI Journals – refunds' %}</a>
+            </h3>
+            <div  id="previous-adi-refunds" class="help-box-contents">
               <ul>
               {% else %}
                 <li>
@@ -87,9 +91,11 @@
             </a>
           </div>
 
-          <div class="help-box help-box-popup help-box-hidden">
-            <h3><div></div><a href="#">{% trans 'Previous ADI Journals – credits' %}</a></h3>
-            <div class="help-box-contents">
+          <div class="help-box">
+            <h3 aria-controls="previous-adi-journals" aria-expanded="true">
+              <div></div><a href="#">{% trans 'Previous ADI Journals – credits' %}</a>
+            </h3>
+            <div id="previous-adi-journals" class="help-box-contents">
               <ul>
               {% else %}
                 <li>
@@ -118,9 +124,11 @@
               </a>
           </div>
 
-          <div class="help-box help-box-popup help-box-hidden">
-              <h3><div></div><a href="#">{% trans 'Previous bank statements' %}</a></h3>
-              <div class="help-box-contents" style="display:none">
+          <div class="help-box">
+              <h3 aria-controls="previous-statements" aria-expanded="true">
+                <div></div><a href="#">{% trans 'Previous bank statements' %}</a>
+              </h3>
+              <div id="previous-statements" class="help-box-contents">
               <ul>
               {% else %}
                   <li>
