@@ -26,9 +26,9 @@
           </div>
 
           <div class="help-box">
-            <h3 aria-controls="previous-ap-refunds" aria-expanded="true">
+            <div aria-controls="previous-ap-refunds" aria-expanded="true">
               <div></div><a href="#">{% trans 'Previous AccessPay refund files' %}</a>
-            </h3>
+            </div>
             <div id="previous-ap-refunds" class="help-box-contents">
               <ul>
               {% else %}
@@ -59,10 +59,10 @@
           </div>
 
           <div class="help-box">
-            <h3 aria-controls="previous-adi-refunds" aria-expanded="true">
+            <div class="help-box-title" aria-controls="previous-adi-refunds" aria-expanded="true">
               <div></div><a href="#">{% trans 'Previous ADI Journals – refunds' %}</a>
-            </h3>
-            <div  id="previous-adi-refunds" class="help-box-contents">
+            </div>
+            <div class="help-box-contents" id="previous-adi-refunds">
               <ul>
               {% else %}
                 <li>
@@ -92,10 +92,10 @@
           </div>
 
           <div class="help-box">
-            <h3 aria-controls="previous-adi-journals" aria-expanded="true">
+            <div class="help-box-title" aria-controls="previous-adi-journals" aria-expanded="true">
               <div></div><a href="#">{% trans 'Previous ADI Journals – credits' %}</a>
-            </h3>
-            <div id="previous-adi-journals" class="help-box-contents">
+            </div>
+            <div class="help-box-contents" id="previous-adi-journals">
               <ul>
               {% else %}
                 <li>
@@ -119,27 +119,27 @@
 
               {% if forloop.first %}
           <div class="mtp-filelink">
-              <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-              {{ download_label }}
-              </a>
+            <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+            {{ download_label }}
+            </a>
           </div>
 
           <div class="help-box">
-              <h3 aria-controls="previous-statements" aria-expanded="true">
-                <div></div><a href="#">{% trans 'Previous bank statements' %}</a>
-              </h3>
-              <div id="previous-statements" class="help-box-contents">
+            <div class="help-box-title" aria-controls="previous-statements" aria-expanded="true">
+              <div></div><a href="#">{% trans 'Previous bank statements' %}</a>
+            </div>
+            <div class="help-box-contents" id="previous-statements">
               <ul>
-              {% else %}
-                  <li>
+                {% else %}
+                <li>
                   <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-                      {{ download_label }}
+                    {{ download_label }}
                   </a>
-                  </li>
-              {% endif %}
-          {% endfor %}
+                </li>
+                {% endif %}
+            {% endfor %}
               </ul>
-              </div>
+            </div>
           </div>
         </section>
       </div>
