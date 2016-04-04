@@ -156,24 +156,6 @@ class BankStatementGenerationTestCase(SimpleTestCase):
 
         conn.reconcile.post.assert_called_with({'date': today.isoformat()})
 
-    def test_posts_new_balance(self, mock_api_client):
-        _, test_data = mock_test_transactions(mock_api_client)
-        balance_conn = mock_balance(mock_api_client)
-
-        today = datetime.now().date()
-        _, bai2_file = generate_bank_statement(self.get_request(),
-                                               today)
-
-        closing_balance = 20000
-        for transaction in test_data['results']:
-            if transaction['category'] == 'debit':
-                closing_balance -= transaction['amount']
-            else:
-                closing_balance += transaction['amount']
-
-        balance_conn.post.assert_called_with(
-            {'date': today.isoformat(), 'closing_balance': closing_balance})
-
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class NoTransactionsTestCase(SimpleTestCase):
