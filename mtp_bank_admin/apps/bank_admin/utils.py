@@ -3,7 +3,6 @@ import time
 
 from moj_auth import api_client
 from mtp_utils.api import retrieve_all_pages
-from slumber.exceptions import HttpClientError
 
 
 def retrieve_all_transactions(request, **kwargs):
@@ -43,16 +42,6 @@ def retrieve_last_balance(request, date):
         return response['results'][0]
     else:
         return None
-
-
-def update_new_balance(request, date, closing_balance):
-    client = api_client.get_connection(request)
-    try:
-        client.balances.post({'date': date.isoformat(),
-                              'closing_balance': closing_balance})
-    except HttpClientError:
-        # this is probably fine, just means that balance exists
-        pass
 
 
 def get_daily_file_uid():

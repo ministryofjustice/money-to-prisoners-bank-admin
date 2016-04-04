@@ -4,9 +4,10 @@ from django.conf import settings
 from bai2 import bai2, models, constants
 
 from . import BAI2_STMT_LABEL
-from .utils import retrieve_all_transactions,\
-    create_batch_record, get_daily_file_uid, reconcile_for_date,\
-    retrieve_last_balance, update_new_balance
+from .utils import (
+    retrieve_all_transactions, create_batch_record, get_daily_file_uid,
+    reconcile_for_date, retrieve_last_balance
+)
 
 
 CREDIT_TYPE_CODE = '399'
@@ -116,7 +117,6 @@ def generate_bank_statement(request, receipt_date):
     group.children.append(account)
 
     output = bai2.write(bai2_file, clock_format_for_intra_day=True)
-    update_new_balance(request, receipt_date, closing_balance)
     if len(transactions) > 0:
         create_batch_record(request, BAI2_STMT_LABEL,
                             [t['id'] for t in transactions])
