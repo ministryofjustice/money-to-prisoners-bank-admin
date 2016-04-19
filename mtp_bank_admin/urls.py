@@ -26,6 +26,19 @@ urlpatterns = [
             'template_name': 'auth/password_change_done.html'
         }, name='password_change_done'
     ),
+    url(
+        r'^reset-password/$', views.reset_password, {
+            'template_name': 'auth/reset-password.html',
+            'cancel_url': reverse_lazy('bank_admin:dashboard'),
+        }, name='reset_password'
+    ),
+    url(
+        r'^reset-password-done/$', views.reset_password_done, {
+            'template_name': 'auth/reset-password-done.html',
+            'cancel_url': reverse_lazy('bank_admin:dashboard'),
+        }, name='reset_password_done'
+    ),
+
     url(r'^', include('bank_admin.urls', namespace='bank_admin',)),
     url(r'^', include('feedback.urls')),
 
