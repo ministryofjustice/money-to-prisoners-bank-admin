@@ -12,7 +12,7 @@
 
       <div class="mtp-compact-row-1">
         {% if perms.transaction.view_bank_details_transaction %}
-        <section class="ContentBlock">
+        <section>
           <h2>{% trans 'Access Pay file – refunds' %}</h2>
           {% url 'bank_admin:download_refund_file' as base_download_url %}
           {% for day in preceding_days %}
@@ -26,10 +26,10 @@
           </div>
 
           <div class="help-box">
-            <div aria-controls="previous-ap-refunds" aria-expanded="true">
+            <div class="help-box-title" aria-controls="previous-ap-refunds" aria-expanded="true" role="heading">
               <div></div><a href="#">{% trans 'Previous AccessPay refund files' %}</a>
             </div>
-            <div id="previous-ap-refunds" class="help-box-contents">
+            <div  class="panel-indent help-box-contents" id="previous-ap-refunds">
               <ul>
               {% else %}
                 <li>
@@ -45,7 +45,7 @@
         </section>
         {% endif %}
 
-        <section class="ContentBlock">
+        <section>
           <h2>{% trans 'ADI Journal – refunds' %}</h2>
           {% url 'bank_admin:download_adi_refund_file' as base_download_url %}
           {% for day in preceding_days %}
@@ -59,10 +59,10 @@
           </div>
 
           <div class="help-box">
-            <div class="help-box-title" aria-controls="previous-adi-refunds" aria-expanded="true">
+            <div class="help-box-title" aria-controls="previous-adi-refunds" aria-expanded="true" role="heading">
               <div></div><a href="#">{% trans 'Previous ADI Journals – refunds' %}</a>
             </div>
-            <div class="help-box-contents" id="previous-adi-refunds">
+            <div class="panel-indent help-box-contents" id="previous-adi-refunds">
               <ul>
               {% else %}
                 <li>
@@ -78,7 +78,7 @@
         </section>
       </div>
       <div class="mtp-compact-row-2">
-        <section class="ContentBlock">
+        <section>
           <h2>{% trans 'ADI Journal – credits' %}</h2>
           {% url 'bank_admin:download_adi_payment_file' as base_download_url %}
           {% for day in preceding_days %}
@@ -92,10 +92,10 @@
           </div>
 
           <div class="help-box">
-            <div class="help-box-title" aria-controls="previous-adi-journals" aria-expanded="true">
+            <div class="help-box-title" aria-controls="previous-adi-journals" aria-expanded="true" role="heading">
               <div></div><a href="#">{% trans 'Previous ADI Journals – credits' %}</a>
             </div>
-            <div class="help-box-contents" id="previous-adi-journals">
+            <div class="panel-indent help-box-contents" id="previous-adi-journals">
               <ul>
               {% else %}
                 <li>
@@ -110,7 +110,7 @@
           </div>
         </section>
 
-        <section class="ContentBlock">
+        <section>
           <h2>{% trans 'Bank statement' %}</h2>
 
           {% url 'bank_admin:download_bank_statement' as base_download_url %}
@@ -125,10 +125,10 @@
           </div>
 
           <div class="help-box">
-            <div class="help-box-title" aria-controls="previous-statements" aria-expanded="true">
+            <div class="help-box-title" aria-controls="previous-statements" aria-expanded="true" role="heading">
               <div></div><a href="#">{% trans 'Previous bank statements' %}</a>
             </div>
-            <div class="help-box-contents" id="previous-statements">
+            <div class="panel-indent help-box-contents" id="previous-statements">
               <ul>
                 {% else %}
                 <li>
