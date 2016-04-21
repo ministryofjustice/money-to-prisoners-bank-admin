@@ -28,13 +28,13 @@ urlpatterns = [
     ),
     url(
         r'^reset-password/$', views.reset_password, {
-            'template_name': 'auth/reset-password.html',
+            'template_name': 'mtp_common/auth/reset-password.html',
             'cancel_url': reverse_lazy('bank_admin:dashboard'),
         }, name='reset_password'
     ),
     url(
         r'^reset-password-done/$', views.reset_password_done, {
-            'template_name': 'auth/reset-password-done.html',
+            'template_name': 'mtp_common/auth/reset-password-done.html',
             'cancel_url': reverse_lazy('bank_admin:dashboard'),
         }, name='reset_password_done'
     ),

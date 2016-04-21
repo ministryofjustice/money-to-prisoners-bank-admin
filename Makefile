@@ -23,12 +23,12 @@ install-common:
 	@$(PYTHON_BIN)pip install money-to-prisoners-common
 	@$(eval export PYTHON_LIBS=$(shell $(PYTHON_BIN)python find_common.py))
 
-$(NODE_MODULES):
+$(MTP_COMMON):
 	@npm install
 	@npm install `cat $(PYTHON_LIBS)/mtp_common/npm_requirements.txt`
 	@echo Copying mtp_common assets to node_modules
 	@mkdir $(MTP_COMMON)
 	@cp -R $(PYTHON_LIBS)/mtp_common/assets $(MTP_COMMON)
 
-%: install-common $(NODE_MODULES)
+%: install-common $(MTP_COMMON)
 	@$(MAKE) -f $(PYTHON_LIBS)/mtp_common/Makefile app=$(app) port=$(port) browsersync_port=$(browsersync_port) browsersync_ui_port=$(browsersync_ui_port) $@
