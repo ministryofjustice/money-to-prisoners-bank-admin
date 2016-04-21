@@ -2,7 +2,7 @@ from datetime import timedelta
 import time
 
 from moj_auth import api_client
-from mtp_utils.api import retrieve_all_pages
+from mtp_common.api import retrieve_all_pages
 
 
 def retrieve_all_transactions(request, **kwargs):
