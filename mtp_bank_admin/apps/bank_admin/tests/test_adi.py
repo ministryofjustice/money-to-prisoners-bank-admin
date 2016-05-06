@@ -48,7 +48,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
     def test_adi_payment_file_generation(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.payment)
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = test_data
 
         filename, exceldata = adi.generate_adi_payment_file(self.get_request(),
@@ -60,7 +60,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
     def test_adi_payment_file_debits_match_credit(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.payment)
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
@@ -93,7 +93,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
     def test_adi_payment_file_number_of_payment_rows_correct(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.payment)
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
@@ -129,7 +129,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
     def test_adi_payment_file_credit_sum_correct(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.payment)
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
@@ -167,7 +167,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         self.assertEqual(credits_checked, len(TEST_PRISONS))
 
     def test_no_transactions_raises_error(self, mock_api_client):
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = NO_TRANSACTIONS
 
         try:
@@ -180,7 +180,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
     def test_adi_payment_file_reconciles_date(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.payment)
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
@@ -213,7 +213,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
     def test_adi_refund_file_generation(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.refund)
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = test_data
 
         filename, exceldata = adi.generate_adi_refund_file(self.get_request(),
@@ -225,7 +225,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
     def test_adi_refund_file_debits_match_credit(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.refund)
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
@@ -258,7 +258,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
     def test_adi_refund_file_number_of_payment_rows_correct(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.refund)
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
@@ -294,7 +294,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
     def test_adi_refund_file_credit_sum_correct(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.refund)
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches
@@ -326,7 +326,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
         self.assertTrue(credit_checked)
 
     def test_no_transactions_raises_error(self, mock_api_client):
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = NO_TRANSACTIONS
 
         try:
@@ -339,7 +339,7 @@ class AdiRefundFileGenerationTestCase(SimpleTestCase):
     def test_adi_refund_file_reconciles_date(self, mock_api_client):
         test_data = get_test_transactions(PaymentType.refund)
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = test_data
 
         batch_conn = mock_api_client.get_connection().batches

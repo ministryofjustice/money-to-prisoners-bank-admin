@@ -29,7 +29,7 @@ def get_test_transactions_for_stmt(count=20):
 
 def mock_test_transactions(mock_api_client):
     test_data = get_test_transactions_for_stmt()
-    conn = mock_api_client.get_connection().bank_admin.transactions
+    conn = mock_api_client.get_connection().transactions
     conn.get.return_value = test_data
 
     return conn, test_data
@@ -170,7 +170,7 @@ class NoTransactionsTestCase(SimpleTestCase):
         )
 
     def test_empty_statement_generated(self, mock_api_client):
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = NO_TRANSACTIONS
         mock_balance(mock_api_client)
 

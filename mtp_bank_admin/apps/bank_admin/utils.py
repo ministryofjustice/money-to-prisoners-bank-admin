@@ -6,7 +6,7 @@ from mtp_common.api import retrieve_all_pages
 
 
 def retrieve_all_transactions(request, **kwargs):
-    endpoint = api_client.get_connection(request).bank_admin.transactions.get
+    endpoint = api_client.get_connection(request).transactions.get
     return retrieve_all_pages(endpoint, **kwargs)
 
 
@@ -30,7 +30,7 @@ def get_last_batch(request, label):
 def reconcile_for_date(request, date):
     if date:
         client = api_client.get_connection(request)
-        client.bank_admin.transactions.reconcile.post({
+        client.transactions.reconcile.post({
             'date': date.isoformat(),
         })
 
