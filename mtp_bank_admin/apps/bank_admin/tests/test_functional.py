@@ -21,7 +21,7 @@ class LoginTests(BankAdminTestCase):
 
     def test_bad_login(self):
         self.login('bank-admin', 'bad-password')
-        self.assertInSource('There was a problem submitting the form')
+        self.assertInSource('There was a problem')
 
     def test_good_login(self):
         self.login('bank-admin', 'bank-admin')

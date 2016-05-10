@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.conf import settings
-from moj_auth.backends import api_client
+from mtp_common.auth.backends import api_client
 
 from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
