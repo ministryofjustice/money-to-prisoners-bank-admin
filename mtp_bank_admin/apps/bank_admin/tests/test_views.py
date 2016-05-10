@@ -7,8 +7,8 @@ from django.core.urlresolvers import reverse
 from django.utils.encoding import escape_uri_path
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
-from moj_auth.tests.utils import generate_tokens
-from moj_auth.exceptions import Unauthorized
+from mtp_common.auth.exceptions import Unauthorized
+from mtp_common.auth.test_utils import generate_tokens
 
 from . import get_test_transactions, NO_TRANSACTIONS
 from .test_refund import REFUND_TRANSACTIONS, expected_output
@@ -20,7 +20,7 @@ class BankAdminViewTestCase(SimpleTestCase):
     def setUp(self):
         logging.disable(logging.CRITICAL)
 
-    @mock.patch('moj_auth.backends.api_client')
+    @mock.patch('mtp_common.auth.backends.api_client')
     def login(self, mock_api_client):
         mock_api_client.authenticate.return_value = {
             'pk': 5,
@@ -51,7 +51,7 @@ class BankAdminViewTestCase(SimpleTestCase):
 
 class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
 
-    @mock.patch('moj_auth.backends.api_client')
+    @mock.patch('mtp_common.auth.backends.api_client')
     def test_can_see_refund_download_with_perm(self, mock_api_client):
         mock_api_client.authenticate.return_value = {
             'pk': 5,
@@ -73,7 +73,7 @@ class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse('bank_admin:download_refund_file'))
 
-    @mock.patch('moj_auth.backends.api_client')
+    @mock.patch('mtp_common.auth.backends.api_client')
     def test_cannot_see_refund_download_without_perm(self, mock_api_client):
         mock_api_client.authenticate.return_value = {
             'pk': 5,
@@ -161,7 +161,7 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
 @mock.patch('bank_admin.utils.api_client')
 class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
 
-    @mock.patch('moj_auth.backends.api_client')
+    @mock.patch('mtp_common.auth.backends.api_client')
     def test_download_refund_file_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
@@ -273,7 +273,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
 @mock.patch('bank_admin.utils.api_client')
 class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 
-    @mock.patch('moj_auth.backends.api_client')
+    @mock.patch('mtp_common.auth.backends.api_client')
     def test_download_adi_payment_file_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
@@ -286,7 +286,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 
         self.assertRedirects(response, reverse('login'))
 
-    @mock.patch('moj_auth.backends.api_client')
+    @mock.patch('mtp_common.auth.backends.api_client')
     def test_download_adi_refund_file_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
@@ -418,7 +418,7 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
 @mock.patch('bank_admin.utils.api_client')
 class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
 
-    @mock.patch('moj_auth.backends.api_client')
+    @mock.patch('mtp_common.auth.backends.api_client')
     def test_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
