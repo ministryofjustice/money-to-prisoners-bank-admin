@@ -185,8 +185,7 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
             follow=True
         )
 
-        self.assertContains(response,
-                            _('No transactions available for refund'),
+        self.assertContains(response, _('No transactions available'),
                             status_code=200)
 
 
@@ -309,8 +308,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
                                    '?receipt_date=2014-12-11',
                                    follow=True)
 
-        self.assertContains(response,
-                            _('No transactions available for reconciliation'),
+        self.assertContains(response, _('No transactions available'),
                             status_code=200)
 
     def test_download_adi_refund_file_no_transactions_error_message(self, mock_api_client):
@@ -323,8 +321,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
                                    '?receipt_date=2014-12-11',
                                    follow=True)
 
-        self.assertContains(response,
-                            _('No transactions available for reconciliation'),
+        self.assertContains(response, _('No transactions available'),
                             status_code=200)
 
     def test_download_adi_payment_invalid_receipt_date(self, mock_api_client):
