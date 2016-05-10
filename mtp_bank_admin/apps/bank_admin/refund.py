@@ -18,7 +18,7 @@ def generate_refund_file_for_date(request, receipt_date):
     reconcile_for_date(request, receipt_date)
     transactions_to_refund = retrieve_all_transactions(
         request,
-        status='refund_pending,refunded',
+        status='refundable',
         received_at__gte=receipt_date,
         received_at__lt=(receipt_date + timedelta(days=1))
     )
@@ -31,7 +31,7 @@ def generate_refund_file_for_date(request, receipt_date):
 
     # mark transactions as refunded
     client = api_client.get_connection(request)
-    client.bank_admin.transactions.patch(refunded_transactions)
+    client.transactions.patch(refunded_transactions)
 
     create_batch_record(request, ACCESSPAY_LABEL,
                         [t['id'] for t in transactions_to_refund])

@@ -109,7 +109,7 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
     def test_download_refund_file(self, mock_api_client, mock_refund_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.side_effect = REFUND_TRANSACTIONS
 
         response = self.client.get(reverse('bank_admin:download_refund_file') +
@@ -127,7 +127,7 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
     def test_accesspay_queries_by_date(self, mock_api_client, mock_refund_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.side_effect = {
             'count': 1,
             'results': [{
@@ -152,7 +152,7 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
         conn.get.assert_called_with(
             limit=settings.REQUEST_PAGE_SIZE,
             offset=0,
-            status='refund_pending,refunded',
+            status='refundable',
             received_at__gte=datetime.date(2014, 11, 12),
             received_at__lt=datetime.date(2014, 11, 13)
         )
@@ -165,7 +165,7 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
     def test_download_refund_file_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.side_effect = Unauthorized()
 
         response = self.client.get(reverse('bank_admin:download_refund_file') +
@@ -177,7 +177,7 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
     def test_download_refund_file_no_transactions_error_message(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = NO_TRANSACTIONS
 
         response = self.client.get(
@@ -207,7 +207,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
     def test_download_adi_payment_file(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = get_test_transactions(PaymentType.payment)
 
         response = self.client.get(reverse('bank_admin:download_adi_payment_file') +
@@ -220,7 +220,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
     def test_payments_queries_by_date(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = get_test_transactions(PaymentType.payment)
 
         self.client.get(
@@ -231,7 +231,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         conn.get.assert_called_with(
             limit=settings.REQUEST_PAGE_SIZE,
             offset=0,
-            status='credited,available,locked',
+            status='creditable',
             received_at__gte=datetime.date(2014, 11, 12),
             received_at__lt=datetime.date(2014, 11, 13)
         )
@@ -240,7 +240,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
     def test_download_adi_refund_file(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = get_test_transactions(PaymentType.refund)
 
         response = self.client.get(reverse('bank_admin:download_adi_refund_file') +
@@ -253,7 +253,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
     def test_refunds_queries_by_date(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = get_test_transactions(PaymentType.refund)
 
         self.client.get(
@@ -264,7 +264,7 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         conn.get.assert_called_with(
             limit=settings.REQUEST_PAGE_SIZE,
             offset=0,
-            status='refunded,refund_pending',
+            status='refundable',
             received_at__gte=datetime.date(2014, 11, 12),
             received_at__lt=datetime.date(2014, 11, 13)
         )
@@ -277,7 +277,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
     def test_download_adi_payment_file_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.side_effect = Unauthorized()
 
         response = self.client.get(reverse('bank_admin:download_adi_payment_file') +
@@ -290,7 +290,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
     def test_download_adi_refund_file_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.side_effect = Unauthorized()
 
         response = self.client.get(reverse('bank_admin:download_adi_refund_file') +
@@ -302,7 +302,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
     def test_download_adi_payment_file_no_transactions_error_message(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = NO_TRANSACTIONS
 
         response = self.client.get(reverse('bank_admin:download_adi_payment_file') +
@@ -316,7 +316,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
     def test_download_adi_refund_file_no_transactions_error_message(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = NO_TRANSACTIONS
 
         response = self.client.get(reverse('bank_admin:download_adi_refund_file') +
@@ -386,7 +386,7 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
     def test_download_bank_statement(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = get_test_transactions()
 
         response = self.client.get(reverse('bank_admin:download_bank_statement') +
@@ -399,7 +399,7 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
     def test_bank_statement_queries_by_date(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = get_test_transactions()
 
         self.client.get(
@@ -422,7 +422,7 @@ class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
     def test_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.side_effect = Unauthorized()
 
         response = self.client.get(reverse('bank_admin:download_bank_statement') +

@@ -73,10 +73,10 @@ def get_base_ref():
 class ValidTransactionsTestCase(SimpleTestCase):
 
     def test_generate_refund_file(self, mock_api_client, mock_refund_api_client):
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.side_effect = REFUND_TRANSACTIONS
 
-        refund_conn = mock_refund_api_client.get_connection().bank_admin.transactions
+        refund_conn = mock_refund_api_client.get_connection().transactions
         batch_conn = mock_api_client.get_connection().batches
 
         _, csvdata = refund.generate_refund_file_for_date(None, date.today())
@@ -103,7 +103,7 @@ class ValidTransactionsTestCase(SimpleTestCase):
         )
         naughty_transactions[1]['results'][0]['sender_name'] = ('=1+2')
 
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.side_effect = naughty_transactions
 
         _, csvdata = refund.generate_refund_file_for_date(None, date.today())
@@ -124,10 +124,10 @@ class NoTransactionsTestCase(SimpleTestCase):
 
     def test_generate_refund_file_raises_error(self, mock_api_client,
                                                mock_refund_api_client):
-        conn = mock_api_client.get_connection().bank_admin.transactions
+        conn = mock_api_client.get_connection().transactions
         conn.get.return_value = NO_TRANSACTIONS
 
-        refund_conn = mock_refund_api_client.get_connection().bank_admin.transactions
+        refund_conn = mock_refund_api_client.get_connection().transactions
 
         try:
             _, csvdata = refund.generate_refund_file_for_date(None, date.today())
