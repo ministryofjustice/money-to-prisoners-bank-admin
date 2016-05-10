@@ -31,8 +31,7 @@ def download_refund_file(request, receipt_date):
 
         return response
     except EmptyFileError:
-        messages.add_message(request, messages.ERROR,
-                             _('No transactions available for refund'))
+        messages.add_message(request, messages.ERROR, _('No transactions available'))
 
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
@@ -60,8 +59,7 @@ def download_adi_file(payment_type, request, receipt_date):
 
         return response
     except EmptyFileError:
-        messages.add_message(request, messages.ERROR,
-                             _('No transactions available for reconciliation'))
+        messages.add_message(request, messages.ERROR, _('No transactions available'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
 
@@ -93,6 +91,5 @@ def download_bank_statement(request, receipt_date):
 
         return response
     except EmptyFileError:
-        messages.add_message(request, messages.ERROR,
-                             _('No transactions available on account'))
+        messages.add_message(request, messages.ERROR, _('No transactions available'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
