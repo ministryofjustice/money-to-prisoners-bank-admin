@@ -4,11 +4,10 @@ var webpack = require('webpack');
 
 module.exports = {
   entry: {
-    app: './mtp_bank_admin/assets-src/javascripts/main.js',
-    polyfills: ['JSON2', 'html5shiv']
+    app: './mtp_bank_admin/assets-src/javascripts/main.js'
   },
   output: {
-    path: './mtp_bank_admin/assets/scripts',
+    path: './mtp_bank_admin/assets/javascripts',
     filename: '[name].bundle.js'
   },
   module: {
@@ -21,8 +20,7 @@ module.exports = {
   },
   resolve: {
     root: [
-      __dirname + '/node_modules',
-      __dirname + '/node_modules/mojular-moj-elements/node_modules'
+      __dirname + '/node_modules'
     ],
     modulesDirectories: [
       'node_modules',
