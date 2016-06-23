@@ -29,6 +29,7 @@ class BankAdminViewTestCase(SimpleTestCase):
                 'first_name': 'Sam',
                 'last_name': 'Hall',
                 'username': 'shall',
+                'applications': ['bank-admin'],
                 'permissions': ['transaction.view_bank_details_transaction']
             }
         }
@@ -50,6 +51,27 @@ class BankAdminViewTestCase(SimpleTestCase):
 
 
 class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
+    @mock.patch('mtp_common.auth.backends.api_client')
+    def test_cannot_login_without_app_access(self, mock_api_client):
+        mock_api_client.authenticate.return_value = {
+            'pk': 5,
+            'token': generate_tokens(),
+            'user_data': {
+                'first_name': 'Sam',
+                'last_name': 'Hall',
+                'username': 'shall',
+                'permissions': ['transaction.view_bank_details_transaction']
+            }
+        }
+
+        response = self.client.post(
+            reverse('login'),
+            data={'username': 'shall', 'password': 'pass'},
+            follow=True
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['form'].is_valid())
 
     @mock.patch('mtp_common.auth.backends.api_client')
     def test_can_see_refund_download_with_perm(self, mock_api_client):
@@ -60,6 +82,7 @@ class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
                 'first_name': 'Sam',
                 'last_name': 'Hall',
                 'username': 'shall',
+                'applications': ['bank-admin'],
                 'permissions': ['transaction.view_bank_details_transaction']
             }
         }
@@ -82,6 +105,7 @@ class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
                 'first_name': 'Sam',
                 'last_name': 'Hall',
                 'username': 'shall',
+                'applications': ['bank-admin'],
                 'permissions': []
             }
         }
