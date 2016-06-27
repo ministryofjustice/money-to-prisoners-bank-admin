@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 from django.utils.encoding import escape_uri_path
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
-from mtp_common.auth.exceptions import Unauthorized
+from mtp_common.auth.exceptions import Unauthorized, Forbidden
 from mtp_common.auth.test_utils import generate_tokens
 
 from . import get_test_transactions, NO_TRANSACTIONS
@@ -53,16 +53,7 @@ class BankAdminViewTestCase(SimpleTestCase):
 class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
     @mock.patch('mtp_common.auth.backends.api_client')
     def test_cannot_login_without_app_access(self, mock_api_client):
-        mock_api_client.authenticate.return_value = {
-            'pk': 5,
-            'token': generate_tokens(),
-            'user_data': {
-                'first_name': 'Sam',
-                'last_name': 'Hall',
-                'username': 'shall',
-                'permissions': ['transaction.view_bank_details_transaction']
-            }
-        }
+        mock_api_client.authenticate.side_effect = Forbidden
 
         response = self.client.post(
             reverse('login'),

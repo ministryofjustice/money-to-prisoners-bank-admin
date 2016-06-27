@@ -10,7 +10,6 @@ urlpatterns = [
     url(
         r'^login/$', auth_views.login, {
             'template_name': 'mtp_auth/login.html',
-            'restrict_applications': (settings.API_CLIENT_ID,),
         }, name='login'
     ),
     url(
