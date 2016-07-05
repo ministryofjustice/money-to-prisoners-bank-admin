@@ -1,6 +1,8 @@
 from datetime import timedelta
+import math
 import time
 
+from django.conf import settings
 from mtp_common.api import retrieve_all_pages
 from mtp_common.auth import api_client
 
@@ -12,19 +14,20 @@ def retrieve_all_transactions(request, **kwargs):
 
 def create_batch_record(request, label, transaction_ids):
     client = api_client.get_connection(request)
-    client.batches.post({
+    response = client.batches.post({
         'label': label,
-        'transactions': transaction_ids
+        'transactions': transaction_ids[:settings.REQUEST_PAGE_SIZE]
     })
-
-
-def get_last_batch(request, label):
-    client = api_client.get_connection(request)
-    response = client.batches.get(limit=1, label=label)
-    if response.get('results'):
-        return response['results'][0]
-    else:
-        return None
+    t_count = len(transaction_ids)
+    if t_count > settings.REQUEST_PAGE_SIZE:
+        batch_id = response['id']
+        number_of_requests = math.ceil(len(transaction_ids)/settings.REQUEST_PAGE_SIZE)
+        for i in range(1, number_of_requests):
+            offset_start = i*settings.REQUEST_PAGE_SIZE
+            offset_end = (i+1)*settings.REQUEST_PAGE_SIZE
+            client.batches(batch_id).patch(
+                {'transactions': transaction_ids[offset_start:offset_end]}
+            )
 
 
 def reconcile_for_date(request, date):
