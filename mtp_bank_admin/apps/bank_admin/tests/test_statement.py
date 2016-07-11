@@ -1,12 +1,14 @@
 from datetime import datetime
+import math
 import random
 from unittest import mock
 
-from django.test import SimpleTestCase
-from django.test.client import RequestFactory
-from django.core.urlresolvers import reverse
 from bai2 import bai2
 from bai2.constants import TypeCodes
+from django.conf import settings
+from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
+from django.test.client import RequestFactory
 
 from . import (
     get_test_transactions, NO_TRANSACTIONS, ORIGINAL_REF,
@@ -24,11 +26,12 @@ def get_test_transactions_for_stmt(count=20):
         transaction['reference'] = ORIGINAL_REF
         transactions['results'].append(transaction)
     transactions['count'] = count
+    transactions['results'] = sorted(transactions['results'], key=lambda t: t['id'])
     return transactions
 
 
-def mock_test_transactions(mock_api_client):
-    test_data = get_test_transactions_for_stmt()
+def mock_test_transactions(mock_api_client, count=20):
+    test_data = get_test_transactions_for_stmt(count)
     conn = mock_api_client.get_connection().transactions
     conn.get.return_value = test_data
 
@@ -44,10 +47,12 @@ def mock_balance(mock_api_client):
 
 
 def mock_batch(test_case, mock_api_client, test_data):
+    t_ids = [t['id'] for t in test_data['results']]
+
     batch_conn = mock_api_client.get_connection().batches
     batch_conn.post.side_effect = AssertCalledWithBatchRequest(test_case, {
         'label': BAI2_STMT_LABEL,
-        'transactions': [t['id'] for t in test_data['results']]
+        'transactions': t_ids[:settings.REQUEST_PAGE_SIZE]
     })
 
     return batch_conn
@@ -155,6 +160,29 @@ class BankStatementGenerationTestCase(SimpleTestCase):
                                                today)
 
         conn.reconcile.post.assert_called_with({'date': today.isoformat()})
+
+    def test_batch_creation_batched_correctly(self, mock_api_client):
+        _, test_data = mock_test_transactions(mock_api_client, count=1050)
+        mock_balance(mock_api_client)
+        batch_conn = mock_batch(self, mock_api_client, test_data)
+
+        _, bai2_file = generate_bank_statement(self.get_request(),
+                                               datetime.now().date())
+        self.assertTrue(batch_conn.post.side_effect.called)
+
+        t_ids = [t['id'] for t in test_data['results']]
+        batch_conn.assert_called_with(1)
+        expected_calls = []
+        number_of_requests = math.ceil(len(t_ids)/settings.REQUEST_PAGE_SIZE)
+        for i in range(1, number_of_requests):
+            offset_start = i*settings.REQUEST_PAGE_SIZE
+            offset_end = (i+1)*settings.REQUEST_PAGE_SIZE
+            expected_calls.append(
+                mock.call({'transactions': t_ids[offset_start:offset_end]})
+            )
+        batch_conn(1).patch.assert_has_calls(
+            expected_calls
+        )
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')

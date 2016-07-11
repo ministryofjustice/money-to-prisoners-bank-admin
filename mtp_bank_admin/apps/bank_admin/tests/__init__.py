@@ -31,7 +31,7 @@ def get_test_transactions(trans_type=None, count=20):
         transaction['ref_code'] = '9' + str(random.randint(0, 99999)).zfill(5)
         transaction['reference'] = ORIGINAL_REF
         transactions.append(transaction)
-    return {'count': count, 'results': transactions}
+    return {'count': count, 'results': sorted(transactions, key=lambda t: t['id'])}
 
 
 class AssertCalledWithBatchRequest(object):
@@ -50,3 +50,4 @@ class AssertCalledWithBatchRequest(object):
             sorted(actual['transactions']),
             sorted(self.expected['transactions'])
         )
+        return {'id': 1}
