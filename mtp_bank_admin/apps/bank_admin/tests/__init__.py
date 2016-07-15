@@ -16,9 +16,9 @@ def get_test_transactions(trans_type=None, count=20):
     transactions = []
     for i in range(count):
         transaction = {'id': i, 'category': 'credit', 'source': 'bank_transfer'}
-        if trans_type == PaymentType.refund or trans_type is None and i % 5:
+        if trans_type == PaymentType.refund or trans_type is None and i % 5 == 0:
             transaction['refunded'] = True
-        else:
+        elif trans_type == PaymentType.payment or trans_type is None and i % 12:
             transaction['credited'] = True
             if i % 2:
                 transaction['prison'] = TEST_PRISONS[0]

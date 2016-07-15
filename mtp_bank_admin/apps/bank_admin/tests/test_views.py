@@ -206,144 +206,109 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
 
 class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
 
+    def _set_returned_transactions(self, mock_api_client):
+        creditable_transactions = get_test_transactions(PaymentType.payment, 20)
+        refundable_transactions = get_test_transactions(PaymentType.refund, 5)
+        rejected_transactions = get_test_transactions(PaymentType.reject, 2)
+
+        conn = mock_api_client.get_connection().transactions
+        conn.get.side_effect = [
+            creditable_transactions,
+            refundable_transactions,
+            rejected_transactions
+        ]
+
+        return conn
+
     def test_dashboard_requires_login(self):
         self.check_login_redirect(reverse('bank_admin:dashboard'))
 
-    def test_download_adi_payment_file_requires_login(self):
-        self.check_login_redirect(reverse('bank_admin:download_adi_payment_file') +
-                                  '?receipt_date=2014-12-11')
-
-    def test_download_adi_refund_file_requires_login(self):
-        self.check_login_redirect(reverse('bank_admin:download_adi_refund_file') +
+    def test_download_adi_journal_requires_login(self):
+        self.check_login_redirect(reverse('bank_admin:download_adi_journal') +
                                   '?receipt_date=2014-12-11')
 
     @mock.patch('bank_admin.utils.api_client')
-    def test_download_adi_payment_file(self, mock_api_client):
+    def test_download_adi_journal(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.return_value = get_test_transactions(PaymentType.payment)
+        self._set_returned_transactions(mock_api_client)
 
-        response = self.client.get(reverse('bank_admin:download_adi_payment_file') +
+        response = self.client.get(reverse('bank_admin:download_adi_journal') +
                                    '?receipt_date=2014-12-11')
 
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response['Content-Type'])
 
     @mock.patch('bank_admin.utils.api_client')
-    def test_payments_queries_by_date(self, mock_api_client):
+    def test_adi_journal_queries_by_date(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.return_value = get_test_transactions(PaymentType.payment)
+        conn = self._set_returned_transactions(mock_api_client)
 
         self.client.get(
-            reverse('bank_admin:download_adi_payment_file') +
+            reverse('bank_admin:download_adi_journal') +
             '?receipt_date=2014-11-12'
         )
 
-        conn.get.assert_called_with(
-            limit=settings.REQUEST_PAGE_SIZE,
-            offset=0,
-            status='creditable',
-            received_at__gte=datetime.date(2014, 11, 12),
-            received_at__lt=datetime.date(2014, 11, 13)
-        )
-
-    @mock.patch('bank_admin.utils.api_client')
-    def test_download_adi_refund_file(self, mock_api_client):
-        self.login()
-
-        conn = mock_api_client.get_connection().transactions
-        conn.get.return_value = get_test_transactions(PaymentType.refund)
-
-        response = self.client.get(reverse('bank_admin:download_adi_refund_file') +
-                                   '?receipt_date=2014-12-11')
-
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response['Content-Type'])
-
-    @mock.patch('bank_admin.utils.api_client')
-    def test_refunds_queries_by_date(self, mock_api_client):
-        self.login()
-
-        conn = mock_api_client.get_connection().transactions
-        conn.get.return_value = get_test_transactions(PaymentType.refund)
-
-        self.client.get(
-            reverse('bank_admin:download_adi_refund_file') +
-            '?receipt_date=2014-11-12'
-        )
-
-        conn.get.assert_called_with(
-            limit=settings.REQUEST_PAGE_SIZE,
-            offset=0,
-            status='refundable',
-            received_at__gte=datetime.date(2014, 11, 12),
-            received_at__lt=datetime.date(2014, 11, 13)
-        )
+        conn.get.assert_has_calls([
+            mock.call(
+                limit=settings.REQUEST_PAGE_SIZE,
+                offset=0,
+                status='creditable',
+                received_at__gte=datetime.date(2014, 11, 12),
+                received_at__lt=datetime.date(2014, 11, 13)
+            ),
+            mock.call(
+                limit=settings.REQUEST_PAGE_SIZE,
+                offset=0,
+                status='refundable',
+                received_at__gte=datetime.date(2014, 11, 12),
+                received_at__lt=datetime.date(2014, 11, 13)
+            ),
+            mock.call(
+                limit=settings.REQUEST_PAGE_SIZE,
+                offset=0,
+                status='unidentified',
+                received_at__gte=datetime.date(2014, 11, 12),
+                received_at__lt=datetime.date(2014, 11, 13)
+            )
+        ])
 
 
 @mock.patch('bank_admin.utils.api_client')
 class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 
     @mock.patch('mtp_common.auth.backends.api_client')
-    def test_download_adi_payment_file_unauthorized(self, auth_api_client, mock_api_client):
+    def test_download_adi_journal_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().transactions
         conn.get.side_effect = Unauthorized()
 
-        response = self.client.get(reverse('bank_admin:download_adi_payment_file') +
+        response = self.client.get(reverse('bank_admin:download_adi_journal') +
                                    '?receipt_date=2014-12-11',
                                    follow=False)
 
         self.assertRedirects(response, reverse('login'))
 
-    @mock.patch('mtp_common.auth.backends.api_client')
-    def test_download_adi_refund_file_unauthorized(self, auth_api_client, mock_api_client):
+    def test_download_adi_journal_no_transactions_error_message(self, mock_api_client):
         self.login()
 
         conn = mock_api_client.get_connection().transactions
-        conn.get.side_effect = Unauthorized()
+        conn.get.side_effect = [NO_TRANSACTIONS, NO_TRANSACTIONS, NO_TRANSACTIONS]
 
-        response = self.client.get(reverse('bank_admin:download_adi_refund_file') +
-                                   '?receipt_date=2014-12-11',
-                                   follow=False)
-
-        self.assertRedirects(response, reverse('login'))
-
-    def test_download_adi_payment_file_no_transactions_error_message(self, mock_api_client):
-        self.login()
-
-        conn = mock_api_client.get_connection().transactions
-        conn.get.return_value = NO_TRANSACTIONS
-
-        response = self.client.get(reverse('bank_admin:download_adi_payment_file') +
+        response = self.client.get(reverse('bank_admin:download_adi_journal') +
                                    '?receipt_date=2014-12-11',
                                    follow=True)
 
         self.assertContains(response, _('No transactions available'),
                             status_code=200)
 
-    def test_download_adi_refund_file_no_transactions_error_message(self, mock_api_client):
-        self.login()
-
-        conn = mock_api_client.get_connection().transactions
-        conn.get.return_value = NO_TRANSACTIONS
-
-        response = self.client.get(reverse('bank_admin:download_adi_refund_file') +
-                                   '?receipt_date=2014-12-11',
-                                   follow=True)
-
-        self.assertContains(response, _('No transactions available'),
-                            status_code=200)
-
-    def test_download_adi_payment_invalid_receipt_date(self, mock_api_client):
+    def test_download_adi_journal_invalid_receipt_date(self, mock_api_client):
         self.login()
 
         response = self.client.get(
-            reverse('bank_admin:download_adi_payment_file') + '?receipt_date=bleh',
+            reverse('bank_admin:download_adi_journal') + '?receipt_date=bleh',
             follow=True
         )
 
@@ -351,35 +316,11 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
                             _("Invalid format for receipt_date"),
                             status_code=400)
 
-    def test_download_adi_refund_invalid_receipt_date(self, mock_api_client):
+    def test_download_adi_journal_missing_receipt_date(self, mock_api_client):
         self.login()
 
         response = self.client.get(
-            reverse('bank_admin:download_adi_refund_file') + '?receipt_date=bleh',
-            follow=True
-        )
-
-        self.assertContains(response,
-                            _("Invalid format for receipt_date"),
-                            status_code=400)
-
-    def test_download_adi_payment_missing_receipt_date(self, mock_api_client):
-        self.login()
-
-        response = self.client.get(
-            reverse('bank_admin:download_adi_payment_file'),
-            follow=True
-        )
-
-        self.assertContains(response,
-                            _("'receipt_date' parameter required"),
-                            status_code=400)
-
-    def test_download_adi_refund_missing_receipt_date(self, mock_api_client):
-        self.login()
-
-        response = self.client.get(
-            reverse('bank_admin:download_adi_refund_file'),
+            reverse('bank_admin:download_adi_journal'),
             follow=True
         )
 
@@ -391,7 +332,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
 
     def test_download_bank_statement_requires_login(self):
-        self.check_login_redirect(reverse('bank_admin:download_adi_refund_file') +
+        self.check_login_redirect(reverse('bank_admin:download_bank_statement') +
                                   '?receipt_date=2014-12-11')
 
     @mock.patch('bank_admin.utils.api_client')

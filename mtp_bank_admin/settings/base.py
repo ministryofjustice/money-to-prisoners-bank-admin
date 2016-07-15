@@ -217,8 +217,7 @@ REFUND_REFERENCE = 'Refund %s %s'
 REFUND_OUTPUT_FILENAME = 'mtp_accesspay_%d%m%y.txt'
 
 ADI_TEMPLATE_FILEPATH = 'local_files/adi_template.xlsx'
-ADI_PAYMENT_OUTPUT_FILENAME = 'adi_credit_file_%y%m%d.xlsx'
-ADI_REFUND_OUTPUT_FILENAME = 'adi_refund_file_%y%m%d.xlsx'
+ADI_OUTPUT_FILENAME = 'adi_journal_%y%m%d.xlsx'
 
 BANK_STMT_SENDER_ID = os.environ.get('BANK_STMT_SENDER_ID', '')
 BANK_STMT_RECEIVER_ID = os.environ.get('BANK_STMT_RECEIVER_ID', '')
