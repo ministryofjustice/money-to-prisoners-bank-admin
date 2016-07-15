@@ -51,10 +51,9 @@ class DownloadPageTests(BankAdminTestCase):
     def test_checking_download_page(self):
         self.assertInSource('Access Pay file – refunds')
         self.assertInSource('Download file')
-        self.assertInSource('ADI Journal – refunds')
+        self.assertInSource('ADI Journal')
         self.assertInSource('Download transactions')
-        self.assertInSource('<a href="#">Previous ADI Journals – refunds</a>')
-        self.assertInSource('ADI Journal – credits')
+        self.assertInSource('<a href="#">Previous ADI Journals</a>')
         self.assertInSource('Bank statement')
         self.assertInSource('Download transactions')
         self.assertInSource('<a href="#">Previous bank statements</a>')
@@ -68,7 +67,7 @@ class DownloadPageTests(BankAdminTestCase):
         self.assertEqual('22px', file_link.value_of_css_property('margin-top'))
 
     def test_open_foldout(self):
-        label = "Previous ADI Journals – refunds"
+        label = "Previous ADI Journals"
         expand_button = self.driver.find_element_by_xpath('//div[a[contains(text(),"' + label + '")]]')
         expand_button_link = expand_button.find_element_by_tag_name('a')
         expand_box = self.driver.find_element_by_xpath(

@@ -6,7 +6,7 @@ from django.conf import settings
 from openpyxl import load_workbook, styles
 from openpyxl.writer.excel import save_virtual_workbook
 
-from . import ADI_PAYMENT_LABEL, ADI_REFUND_LABEL
+from . import ADI_JOURNAL_LABEL
 from . import adi_config as config
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
@@ -23,12 +23,11 @@ class AdiJournal(object):
         'alignment': styles.Alignment
     }
 
-    def __init__(self, payment_type, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.wb = load_workbook(settings.ADI_TEMPLATE_FILEPATH)
         self.journal_ws = self.wb.get_sheet_by_name(config.ADI_JOURNAL_SHEET)
 
         self.current_row = config.ADI_JOURNAL_START_ROW
-        self.payment_type = payment_type
 
     def _next_row(self, increment=1):
         self.current_row += increment
@@ -67,10 +66,10 @@ class AdiJournal(object):
                 })
         )
 
-    def _lookup(self, field, record_type, context={}):
+    def _lookup(self, field, payment_type, record_type, context={}):
         try:
             value_dict = config.ADI_JOURNAL_FIELDS[field]['value']
-            value = value_dict[self.payment_type.name][record_type.name]
+            value = value_dict[payment_type.name][record_type.name]
             if value:
                 return value.format(**context)
         except KeyError:
@@ -84,9 +83,9 @@ class AdiJournal(object):
         self._add_column_sum('debit')
         self._add_column_sum('credit')
 
-    def add_payment_row(self, amount, record_type, **kwargs):
+    def add_payment_row(self, amount, payment_type, record_type, **kwargs):
         for field in config.ADI_JOURNAL_FIELDS:
-            static_value = self._lookup(field, record_type, context=kwargs)
+            static_value = self._lookup(field, payment_type, record_type, context=kwargs)
             self._set_field(field, static_value)
 
         if record_type == RecordType.debit:
@@ -99,35 +98,45 @@ class AdiJournal(object):
     def create_file(self):
         self._finish_journal()
 
-        if self.payment_type == PaymentType.payment:
-            filename = settings.ADI_PAYMENT_OUTPUT_FILENAME
-        elif self.payment_type == PaymentType.refund:
-            filename = settings.ADI_REFUND_OUTPUT_FILENAME
-
+        filename = settings.ADI_OUTPUT_FILENAME
         return (date.today().strftime(filename),
                 save_virtual_workbook(self.wb))
 
 
-def generate_adi_payment_file(request, receipt_date):
+def generate_adi_journal(request, receipt_date):
     reconcile_for_date(request, receipt_date)
-    new_transactions = retrieve_all_transactions(
+    creditable_transactions = retrieve_all_transactions(
         request,
         status='creditable',
         received_at__gte=receipt_date,
         received_at__lt=(receipt_date + timedelta(days=1))
     )
+    refundable_transactions = retrieve_all_transactions(
+        request,
+        status='refundable',
+        received_at__gte=receipt_date,
+        received_at__lt=(receipt_date + timedelta(days=1))
+    )
+    rejected_transactions = retrieve_all_transactions(
+        request,
+        status='unidentified',
+        received_at__gte=receipt_date,
+        received_at__lt=(receipt_date + timedelta(days=1))
+    )
 
-    if len(new_transactions) == 0:
+    if (len(creditable_transactions) == 0 and
+            len(rejected_transactions) == 0 and
+            len(refundable_transactions) == 0):
         raise EmptyFileError()
 
     journal_date = receipt_date.strftime('%d/%m/%Y')
-    journal = AdiJournal(PaymentType.payment)
+    journal = AdiJournal()
 
     prison_payments = defaultdict(list)
-    for transaction in new_transactions:
+    for transaction in creditable_transactions:
         prison_payments[transaction['prison']['nomis_id']].append(transaction)
 
-    # do payments
+    # add valid payment rows
     reconciled_transactions = []
     for _, transaction_list in prison_payments.items():
         credit_total = 0
@@ -135,52 +144,45 @@ def generate_adi_payment_file(request, receipt_date):
             credit_amount = Decimal(transaction['amount'])/100
             credit_total += credit_amount
             journal.add_payment_row(
-                credit_amount, RecordType.debit,
+                credit_amount, PaymentType.payment, RecordType.debit,
                 unique_id=str(transaction['ref_code'])
             )
             reconciled_transactions.append(transaction['id'])
         journal.add_payment_row(
-            credit_total, RecordType.credit,
+            credit_total, PaymentType.payment, RecordType.credit,
             prison_ledger_code=transaction_list[0]['prison']['general_ledger_code'],
             prison_name=transaction_list[0]['prison']['name'],
             date=journal_date
         )
 
-    created_journal = journal.create_file()
-    create_batch_record(request, ADI_PAYMENT_LABEL, reconciled_transactions)
-
-    return created_journal
-
-
-def generate_adi_refund_file(request, receipt_date):
-    reconcile_for_date(request, receipt_date)
-    refunds = retrieve_all_transactions(
-        request,
-        status='refundable',
-        received_at__gte=receipt_date,
-        received_at__lt=(receipt_date + timedelta(days=1))
-    )
-
-    if len(refunds) == 0:
-        raise EmptyFileError()
-
-    journal_date = receipt_date.strftime('%d/%m/%Y')
-    journal = AdiJournal(PaymentType.refund)
-
-    # do refunds
-    reconciled_transactions = []
+    # add refund rows
     refund_total = 0
-    for refund in refunds:
+    for refund in refundable_transactions:
         refund_amount = Decimal(refund['amount'])/100
         refund_total += refund_amount
         journal.add_payment_row(
-            refund_amount, RecordType.debit,
+            refund_amount, PaymentType.refund, RecordType.debit,
             unique_id=str(refund['ref_code'])
         )
         reconciled_transactions.append(refund['id'])
-    journal.add_payment_row(refund_total, RecordType.credit, date=journal_date)
+    journal.add_payment_row(
+        refund_total, PaymentType.refund, RecordType.credit, date=journal_date
+    )
+
+    # add reject rows
+    for reject in rejected_transactions:
+        amount = Decimal(reject['amount'])/100
+        journal.add_payment_row(
+            amount, PaymentType.reject, RecordType.debit,
+            unique_id=str(reject['ref_code'])
+        )
+        journal.add_payment_row(
+            amount, PaymentType.reject, RecordType.credit,
+            reference=reject['reference'], date=journal_date
+        )
+        reconciled_transactions.append(reject['id'])
 
     created_journal = journal.create_file()
-    create_batch_record(request, ADI_REFUND_LABEL, reconciled_transactions)
+    create_batch_record(request, ADI_JOURNAL_LABEL, reconciled_transactions)
 
     return created_journal

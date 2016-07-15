@@ -11,7 +11,6 @@ from django.utils.translation import ugettext_lazy as _
 from . import refund, adi, statement
 from .decorators import filter_by_receipt_date
 from .exceptions import EmptyFileError
-from .types import PaymentType
 
 logger = logging.getLogger('mtp')
 
@@ -36,14 +35,12 @@ def download_refund_file(request, receipt_date):
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
 
-def download_adi_file(payment_type, request, receipt_date):
+@login_required
+@filter_by_receipt_date
+def download_adi_journal(request, receipt_date):
     try:
-        if payment_type == PaymentType.payment:
-            filename, filedata = adi.generate_adi_payment_file(request, receipt_date)
-            file_description = 'ADI payment file'
-        else:
-            filename, filedata = adi.generate_adi_refund_file(request, receipt_date)
-            file_description = 'ADI refund file'
+        filename, filedata = adi.generate_adi_journal(request, receipt_date)
+        file_description = 'ADI journal'
 
         response = HttpResponse(
             filedata,
@@ -61,18 +58,6 @@ def download_adi_file(payment_type, request, receipt_date):
     except EmptyFileError:
         messages.add_message(request, messages.ERROR, _('No transactions available'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
-
-
-@login_required
-@filter_by_receipt_date
-def download_adi_payment_file(request, receipt_date):
-    return download_adi_file(PaymentType.payment, request, receipt_date)
-
-
-@login_required
-@filter_by_receipt_date
-def download_adi_refund_file(request, receipt_date):
-    return download_adi_file(PaymentType.refund, request, receipt_date)
 
 
 @login_required
