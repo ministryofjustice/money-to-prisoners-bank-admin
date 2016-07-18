@@ -99,7 +99,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(adi_config.ADI_JOURNAL_SHEET)
+            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
             row = adi_config.ADI_JOURNAL_START_ROW
 
             current_total_debit = 0
@@ -139,7 +139,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(adi_config.ADI_JOURNAL_SHEET)
+            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
             row = adi_config.ADI_JOURNAL_START_ROW
 
             debit_rows = 0
@@ -202,7 +202,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(adi_config.ADI_JOURNAL_SHEET)
+            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
             row = adi_config.ADI_JOURNAL_START_ROW
 
             credits_checked = 0

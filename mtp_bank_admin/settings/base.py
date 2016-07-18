@@ -216,8 +216,8 @@ GOOGLE_ANALYTICS_ID = os.environ.get('GOOGLE_ANALYTICS_ID', None)
 REFUND_REFERENCE = 'Refund %s %s'
 REFUND_OUTPUT_FILENAME = 'mtp_accesspay_%d%m%y.txt'
 
-ADI_TEMPLATE_FILEPATH = 'local_files/adi_template.xlsx'
-ADI_OUTPUT_FILENAME = 'adi_journal_%y%m%d.xlsx'
+ADI_TEMPLATE_FILEPATH = 'local_files/adi_template.xlsm'
+ADI_OUTPUT_FILENAME = 'adi_journal_%y%m%d.xlsm'
 
 BANK_STMT_SENDER_ID = os.environ.get('BANK_STMT_SENDER_ID', '')
 BANK_STMT_RECEIVER_ID = os.environ.get('BANK_STMT_RECEIVER_ID', '')

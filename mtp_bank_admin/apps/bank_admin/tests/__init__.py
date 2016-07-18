@@ -29,7 +29,12 @@ def get_test_transactions(trans_type=None, count=20):
 
         transaction['amount'] = random.randint(500, 5000)
         transaction['ref_code'] = '9' + str(random.randint(0, 99999)).zfill(5)
-        transaction['reference'] = ORIGINAL_REF
+        if i % 5:
+            transaction['reference'] = ORIGINAL_REF
+            transaction['reference_in_sender_field'] = False
+        else:
+            transaction['sender_name'] = ORIGINAL_REF
+            transaction['reference_in_sender_field'] = True
         transactions.append(transaction)
     return {'count': count, 'results': sorted(transactions, key=lambda t: t['id'])}
 

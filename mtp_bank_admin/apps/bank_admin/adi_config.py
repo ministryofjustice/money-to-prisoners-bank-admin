@@ -2,27 +2,52 @@ from openpyxl import styles
 
 ADI_JOURNAL_SHEET = 'TEMPLATE'
 
+
+ADI_DATE_CELL = 'I10'
+ADI_DATE_FORMAT = '%d/%m/%y'
+ADI_BATCH_NAME_CELL = 'I11'
+ADI_BATCH_NAME_FORMAT = '578/MTP/%d%m%y/<initials>'
+
 # journal table
-ADI_JOURNAL_START_ROW = 4
+ADI_JOURNAL_START_ROW = 15
 
 _white_style = {
     'fill': {
         'start_color': 'FFFFFF',
-        'end_color': 'FFFFFF'
+        'end_color': 'FFFFFF',
+        'fill_type': None,
+    },
+    'font': {
+        'name': 'Arial',
+        'size': 11,
     }
 }
 
 _tan_style = {
     'fill': {
-        'start_color': 'FFCC99',
-        'end_color': 'FFCC99'
+        'start_color': 'F6F7E7',
+        'end_color': 'F6F7E7',
+        'fill_type': 'solid',
+    },
+    'font': {
+        'name': 'Arial',
+        'size': 11,
     }
 }
 
 ADI_FINAL_ROW_STYLE = {
     'border': {
-        'top': styles.Side(style='thin', color='000000'),
-        'bottom': styles.Side(style='thin', color='000000')
+        'top': styles.Side(style='medium', color='000000'),
+        'bottom': styles.Side(style='medium', color='000000'),
+    },
+    'fill': {
+        'start_color': 'CCCC98',
+        'end_color': 'CCCC98',
+        'fill_type': 'solid',
+    },
+    'font': {
+        'name': 'Arial',
+        'size': 11,
     }
 }
 
@@ -30,9 +55,9 @@ ADI_JOURNAL_FIELDS = {
     'upload': {
         'column': 'B',
         'value': {
-            'payment': {'debit': 'o', 'credit': 'o'},
-            'refund': {'debit': 'o', 'credit': 'o'},
-            'reject': {'debit': 'o', 'credit': 'o'},
+            'payment': {'debit': '', 'credit': ''},
+            'refund': {'debit': '', 'credit': ''},
+            'reject': {'debit': '', 'credit': ''},
         },
         'style': dict(
             border={
