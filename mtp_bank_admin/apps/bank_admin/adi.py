@@ -24,7 +24,7 @@ class AdiJournal(object):
     }
 
     def __init__(self, *args, **kwargs):
-        self.wb = load_workbook(settings.ADI_TEMPLATE_FILEPATH)
+        self.wb = load_workbook(settings.ADI_TEMPLATE_FILEPATH, keep_vba=True)
         self.journal_ws = self.wb.get_sheet_by_name(config.ADI_JOURNAL_SHEET)
 
         self.current_row = config.ADI_JOURNAL_START_ROW
@@ -32,16 +32,18 @@ class AdiJournal(object):
     def _next_row(self, increment=1):
         self.current_row += increment
 
-    def _set_field(self, field, value, style=None, extra_style=None):
-        cell = '%s%s' % (config.ADI_JOURNAL_FIELDS[field]['column'],
+    def _get_cell(self, field):
+        return '%s%s' % (config.ADI_JOURNAL_FIELDS[field]['column'],
                          self.current_row)
+
+    def _set_field(self, field, value, style=None, extra_style=None):
+        cell = self._get_cell(field)
         self.journal_ws[cell] = value
 
         computed_style = defaultdict(dict)
-        if style:
-            computed_style.update(style)
-        else:
-            computed_style.update(config.ADI_JOURNAL_FIELDS[field]['style'])
+        base_style = style or config.ADI_JOURNAL_FIELDS[field]['style']
+        for key in base_style:
+            computed_style[key].update(base_style[key])
 
         if extra_style:
             for key in extra_style:
@@ -63,8 +65,11 @@ class AdiJournal(object):
                     'column': config.ADI_JOURNAL_FIELDS[field]['column'],
                     'start': config.ADI_JOURNAL_START_ROW,
                     'end': self.current_row - 1
-                })
+                }),
+            extra_style=config.ADI_FINAL_ROW_STYLE
         )
+        cell = self._get_cell(field)
+        self.journal_ws[cell].number_format = '£#,##0.00_-'
 
     def _lookup(self, field, payment_type, record_type, context={}):
         try:
@@ -79,9 +84,23 @@ class AdiJournal(object):
     def _finish_journal(self):
         for field in config.ADI_JOURNAL_FIELDS:
             self._set_field(field, '', extra_style=config.ADI_FINAL_ROW_STYLE)
+        bold = {'font': {'bold': True}, 'alignment': {'horizontal': 'left'}}
 
+        self._set_field('upload', 'Totals:', extra_style=dict(config.ADI_FINAL_ROW_STYLE, **bold))
         self._add_column_sum('debit')
         self._add_column_sum('credit')
+
+        self._next_row(increment=2)
+        self._set_field('description', 'Uploaded by:', style=config._tan_style, extra_style=bold)
+
+        self._next_row(increment=2)
+        self._set_field('description', 'Checked by:', style=config._tan_style, extra_style=bold)
+
+        self._next_row(increment=2)
+        self._set_field('description', 'Posted by:', style=config._tan_style, extra_style=bold)
+
+        self.journal_ws[config.ADI_DATE_CELL] = date.today().strftime(config.ADI_DATE_FORMAT)
+        self.journal_ws[config.ADI_BATCH_NAME_CELL] = date.today().strftime(config.ADI_BATCH_NAME_FORMAT)
 
     def add_payment_row(self, amount, payment_type, record_type, **kwargs):
         for field in config.ADI_JOURNAL_FIELDS:
@@ -95,8 +114,9 @@ class AdiJournal(object):
 
         self._next_row()
 
-    def create_file(self):
+    def create_file(self, receipt_date):
         self._finish_journal()
+        self.journal_ws.title = receipt_date.strftime('%d%m%y')
 
         filename = settings.ADI_OUTPUT_FILENAME
         return (date.today().strftime(filename),
@@ -171,6 +191,7 @@ def generate_adi_journal(request, receipt_date):
 
     # add reject rows
     for reject in rejected_transactions:
+        reference = reject['sender_name'] if reject['reference_in_sender_field'] else reject['reference']
         amount = Decimal(reject['amount'])/100
         journal.add_payment_row(
             amount, PaymentType.reject, RecordType.debit,
@@ -178,11 +199,11 @@ def generate_adi_journal(request, receipt_date):
         )
         journal.add_payment_row(
             amount, PaymentType.reject, RecordType.credit,
-            reference=reject['reference'], date=journal_date
+            reference=reference, date=journal_date
         )
         reconciled_transactions.append(reject['id'])
 
-    created_journal = journal.create_file()
+    created_journal = journal.create_file(receipt_date)
     create_batch_record(request, ADI_JOURNAL_LABEL, reconciled_transactions)
 
     return created_journal
