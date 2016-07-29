@@ -55,16 +55,20 @@ ADI_JOURNAL_FIELDS = {
     'upload': {
         'column': 'B',
         'value': {
-            'payment': {'debit': '', 'credit': ''},
-            'refund': {'debit': '', 'credit': ''},
-            'reject': {'debit': '', 'credit': ''},
+            'payment': {'debit': 'O', 'credit': 'O'},
+            'refund': {'debit': 'O', 'credit': 'O'},
+            'reject': {'debit': 'O', 'credit': 'O'},
         },
         'style': dict(
             border={
                 'left': styles.Side(style='medium', color='000000'),
                 'right': styles.Side(style='medium', color='000000')
             },
-            **_white_style
+            fill=_white_style['fill'],
+            font={
+                'name': 'Wingdings',
+                'size': 11,
+            }
         )
     },
     'company': {
@@ -184,7 +188,13 @@ ADI_JOURNAL_FIELDS = {
     },
     'line_dff_1': {
         'column': 'N',
-        'style': _tan_style
+        'style': dict(
+            _tan_style,
+            font={
+                'name': 'Wingdings',
+                'size': 11,
+            }
+        )
     },
     'messages': {
         'column': 'O',

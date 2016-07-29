@@ -237,3 +237,27 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         conn = mock_api_client.get_connection().transactions
         conn.reconcile.post.assert_called_with({'date': datetime.now().date().isoformat()})
+
+    def test_adi_journal_upload_range_set(self, mock_api_client):
+        filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
+        creditable_transactions, refundable_transactions, rejected_transactions = test_data
+        num_transactions = sum([
+            len(creditable_transactions['results']) + len(TEST_PRISONS),
+            len(refundable_transactions['results']) + 1,
+            len(rejected_transactions['results'])*2
+        ])
+
+        with temp_file(filename, exceldata) as f:
+            wb = load_workbook(f)
+            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+
+            self.assertEqual(
+                wb.get_named_range('BNE_UPLOAD').destinations,
+                [(
+                    journal_ws,
+                    '$B$%(start)s:$B$%(end)s' % {
+                        'start': adi_config.ADI_JOURNAL_START_ROW,
+                        'end': adi_config.ADI_JOURNAL_START_ROW + num_transactions - 1
+                    }
+                )]
+            )

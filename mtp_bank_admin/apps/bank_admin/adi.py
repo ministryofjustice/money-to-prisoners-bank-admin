@@ -84,11 +84,20 @@ class AdiJournal(object):
     def _finish_journal(self):
         for field in config.ADI_JOURNAL_FIELDS:
             self._set_field(field, '', extra_style=config.ADI_FINAL_ROW_STYLE)
-        bold = {'font': {'bold': True}, 'alignment': {'horizontal': 'left'}}
+        bold = {'font': {'name': 'Arial', 'bold': True},
+                'alignment': {'horizontal': 'left'}}
 
         self._set_field('upload', 'Totals:', extra_style=dict(config.ADI_FINAL_ROW_STYLE, **bold))
         self._add_column_sum('debit')
         self._add_column_sum('credit')
+
+        self.wb.get_named_range('BNE_UPLOAD').destinations = [(
+            self.journal_ws,
+            "$B$%(start)s:$B$%(end)s" % {
+                'start': config.ADI_JOURNAL_START_ROW,
+                'end': self.current_row - 1,
+            }
+        )]
 
         self._next_row(increment=2)
         self._set_field('description', 'Uploaded by:', style=config._tan_style, extra_style=bold)
