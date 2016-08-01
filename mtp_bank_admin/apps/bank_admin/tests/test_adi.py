@@ -6,6 +6,7 @@ from openpyxl import load_workbook
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
+from mtp_common.auth.models import MojUser
 from unittest import mock, skip
 
 from . import TEST_PRISONS, NO_TRANSACTIONS, get_test_transactions,\
@@ -39,10 +40,12 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         self.factory = RequestFactory()
 
     def get_request(self, **kwargs):
-        return self.factory.get(
+        request = self.factory.get(
             reverse('bank_admin:download_adi_journal'),
             **kwargs
         )
+        request.user = MojUser(1, '', {'first_name': 'John', 'last_name': 'Smith'})
+        return request
 
     def _generate_test_adi_journal(self, mock_api_client):
         creditable_transactions = get_test_transactions(PaymentType.payment, 20)
@@ -261,3 +264,11 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                     }
                 )]
             )
+
+    def test_batch_name_includes_initials(self, mock_api_client):
+        filename, exceldata, _ = self._generate_test_adi_journal(mock_api_client)
+
+        with temp_file(filename, exceldata) as f:
+            wb = load_workbook(f)
+            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+            self.assertTrue('JS' in journal_ws[adi_config.ADI_BATCH_NAME_CELL].value)

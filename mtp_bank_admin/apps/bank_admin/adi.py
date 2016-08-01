@@ -81,7 +81,7 @@ class AdiJournal(object):
             pass  # no static value
         return None
 
-    def _finish_journal(self):
+    def _finish_journal(self, receipt_date, user):
         for field in config.ADI_JOURNAL_FIELDS:
             self._set_field(field, '', extra_style=config.ADI_FINAL_ROW_STYLE)
         bold = {'font': {'name': 'Arial', 'bold': True},
@@ -108,8 +108,13 @@ class AdiJournal(object):
         self._next_row(increment=2)
         self._set_field('description', 'Posted by:', style=config._tan_style, extra_style=bold)
 
-        self.journal_ws[config.ADI_DATE_CELL] = date.today().strftime(config.ADI_DATE_FORMAT)
-        self.journal_ws[config.ADI_BATCH_NAME_CELL] = date.today().strftime(config.ADI_BATCH_NAME_FORMAT)
+        batch_date = date.today().strftime(config.ADI_BATCH_DATE_FORMAT)
+        self.journal_ws[config.ADI_BATCH_NAME_CELL] = config.ADI_BATCH_NAME_FORMAT % {
+            'date': batch_date,
+            'initials': user.get_initials() or '<initials>',
+        }
+        self.journal_ws[config.ADI_DATE_CELL] = receipt_date.strftime(config.ADI_DATE_FORMAT)
+        self.journal_ws.title = receipt_date.strftime('%d%m%y')
 
     def add_payment_row(self, amount, payment_type, record_type, **kwargs):
         for field in config.ADI_JOURNAL_FIELDS:
@@ -123,12 +128,9 @@ class AdiJournal(object):
 
         self._next_row()
 
-    def create_file(self, receipt_date):
-        self._finish_journal()
-        self.journal_ws.title = receipt_date.strftime('%d%m%y')
-
-        filename = settings.ADI_OUTPUT_FILENAME
-        return (date.today().strftime(filename),
+    def create_file(self, receipt_date, user):
+        self._finish_journal(receipt_date, user)
+        return (date.today().strftime(settings.ADI_OUTPUT_FILENAME),
                 save_virtual_workbook(self.wb))
 
 
@@ -212,7 +214,7 @@ def generate_adi_journal(request, receipt_date):
         )
         reconciled_transactions.append(reject['id'])
 
-    created_journal = journal.create_file(receipt_date)
+    created_journal = journal.create_file(receipt_date, request.user)
     create_batch_record(request, ADI_JOURNAL_LABEL, reconciled_transactions)
 
     return created_journal
