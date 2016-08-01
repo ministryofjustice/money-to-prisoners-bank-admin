@@ -6,7 +6,8 @@ ADI_JOURNAL_SHEET = 'TEMPLATE'
 ADI_DATE_CELL = 'I10'
 ADI_DATE_FORMAT = '%d/%m/%y'
 ADI_BATCH_NAME_CELL = 'I11'
-ADI_BATCH_NAME_FORMAT = '578/MTP/%d%m%y/<initials>'
+ADI_BATCH_DATE_FORMAT = '%d%m%y'
+ADI_BATCH_NAME_FORMAT = '578/MTP/%(date)s/%(initials)s'
 
 # journal table
 ADI_JOURNAL_START_ROW = 15
