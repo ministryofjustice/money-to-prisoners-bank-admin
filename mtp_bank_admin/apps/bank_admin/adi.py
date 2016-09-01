@@ -113,7 +113,10 @@ class AdiJournal(object):
             'date': batch_date,
             'initials': user.get_initials() or '<initials>',
         }
-        self.journal_ws[config.ADI_DATE_CELL] = receipt_date.strftime(config.ADI_DATE_FORMAT)
+        accounting_date = date.today()
+        if accounting_date.month != receipt_date.month:
+            accounting_date = receipt_date
+        self.journal_ws[config.ADI_DATE_CELL] = accounting_date.strftime(config.ADI_DATE_FORMAT)
         self.journal_ws.title = receipt_date.strftime('%d%m%y')
 
     def add_payment_row(self, amount, payment_type, record_type, **kwargs):
