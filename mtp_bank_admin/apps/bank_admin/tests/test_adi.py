@@ -1,13 +1,13 @@
-import os
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, date
+import os
+from unittest import mock, skip
 
-from openpyxl import load_workbook
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
 from mtp_common.auth.models import MojUser
-from unittest import mock, skip
+from openpyxl import load_workbook
 
 from . import TEST_PRISONS, NO_TRANSACTIONS, get_test_transactions,\
     AssertCalledWithBatchRequest
@@ -47,7 +47,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         request.user = MojUser(1, '', {'first_name': 'John', 'last_name': 'Smith'})
         return request
 
-    def _generate_test_adi_journal(self, mock_api_client):
+    def _generate_test_adi_journal(self, mock_api_client, receipt_date=None):
         creditable_transactions = get_test_transactions(PaymentType.payment, 20)
         refundable_transactions = get_test_transactions(PaymentType.refund, 5)
         rejected_transactions = get_test_transactions(PaymentType.reject, 2)
@@ -70,8 +70,10 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             ]
         })
 
+        if receipt_date is None:
+            receipt_date = date.today()
         filename, exceldata = adi.generate_adi_journal(self.get_request(),
-                                                       datetime.now().date())
+                                                       receipt_date)
 
         self.assertTrue(batch_conn.post.side_effect.called)
 
@@ -272,3 +274,37 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             wb = load_workbook(f)
             journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
             self.assertTrue('JS' in journal_ws[adi_config.ADI_BATCH_NAME_CELL].value)
+
+    @mock.patch('mtp_bank_admin.apps.bank_admin.adi.date')
+    def test_accounting_date_is_download_date(self, mock_date, mock_api_client):
+        processing_date = date(2016, 8, 31)
+        mock_date.today.return_value = processing_date
+        receipt_date = date(2016, 8, 30)
+        filename, exceldata, _ = self._generate_test_adi_journal(
+            mock_api_client, receipt_date=receipt_date
+        )
+
+        with temp_file(filename, exceldata) as f:
+            wb = load_workbook(f)
+            journal_ws = wb.get_sheet_by_name(receipt_date.strftime('%d%m%y'))
+            self.assertEqual(
+                processing_date.strftime(adi_config.ADI_DATE_FORMAT),
+                journal_ws[adi_config.ADI_DATE_CELL].value
+            )
+
+    @mock.patch('mtp_bank_admin.apps.bank_admin.adi.date')
+    def test_accounting_date_is_set_back_across_month_boundary(self, mock_date, mock_api_client):
+        processing_date = date(2016, 9, 1)
+        mock_date.today.return_value = processing_date
+        receipt_date = date(2016, 8, 31)
+        filename, exceldata, _ = self._generate_test_adi_journal(
+            mock_api_client, receipt_date=receipt_date
+        )
+
+        with temp_file(filename, exceldata) as f:
+            wb = load_workbook(f)
+            journal_ws = wb.get_sheet_by_name(receipt_date.strftime('%d%m%y'))
+            self.assertEqual(
+                receipt_date.strftime(adi_config.ADI_DATE_FORMAT),
+                journal_ws[adi_config.ADI_DATE_CELL].value
+            )
