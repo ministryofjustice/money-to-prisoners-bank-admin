@@ -33,6 +33,11 @@ class LoginTests(BankAdminTestCase):
         self.assertCurrentUrl('/')
         self.assertInSource('Download files')
 
+    def test_good_login_without_case_sensitivity(self):
+        self.login('Bank-Admin', 'bank-admin')
+        self.assertCurrentUrl('/')
+        self.assertInSource('Download files')
+
     def test_logout(self):
         self.login('bank-admin', 'bank-admin')
         self.driver.find_element_by_link_text('Sign out').click()
