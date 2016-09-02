@@ -10,7 +10,7 @@
 
     <div class="container">
 
-      <div class="mtp-compact-row-1">
+      <div class="mtp-compact__row-1">
         {% if perms.transaction.view_bank_details_transaction %}
         <section>
           <h2 class="heading-small">{% trans 'Access Pay file – refunds' %}</h2>
@@ -29,7 +29,7 @@
             <div class="help-box-title" aria-controls="previous-ap-refunds" aria-expanded="true" role="heading">
               <div></div><a href="#">{% trans 'Previous AccessPay refund files' %}</a>
             </div>
-            <div  class="panel panel-border-narrow help-box-contents" id="previous-ap-refunds">
+            <div class="panel panel-border-narrow help-box-contents" id="previous-ap-refunds">
               <ul>
               {% else %}
                 <li>
@@ -77,7 +77,7 @@
           </div>
         </section>
       </div>
-      <div class="mtp-compact-row-2">
+      <div class="mtp-compact__row-2">
         <section>
           <h2 class="heading-small">{% trans 'Bank statement' %}</h2>
 
