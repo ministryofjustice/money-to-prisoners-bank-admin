@@ -7,9 +7,29 @@ TEST_PRISONS = [
     {'nomis_id': 'DPR', 'general_ledger_code': '067',  'name': 'Dark Prison'},
     {'nomis_id': 'SPR', 'general_ledger_code': '054',  'name': 'Scary Prison'}
 ]
+TEST_PRISONS_RESPONSE = {'count': 3, 'results': TEST_PRISONS}
 
 NO_TRANSACTIONS = {'count': 0, 'results': []}
 ORIGINAL_REF = 'original reference'
+
+
+def get_test_credits(count=20):
+    credits = []
+    for i in range(count):
+        credit = {'id': i, 'status': 'credited'}
+        credit['amount'] = random.randint(500, 5000)
+        if i % 2:
+            credit['reconciliation_code'] = '9' + str(random.randint(0, 99999)).zfill(5)
+        else:
+            credit['reconciliation_code'] = 'Card payment'
+        if i % 2:
+            credit['prison'] = TEST_PRISONS[0]['nomis_id']
+        elif i % 3:
+            credit['prison'] = TEST_PRISONS[1]['nomis_id']
+        else:
+            credit['prison'] = TEST_PRISONS[2]['nomis_id']
+        credits.append(credit)
+    return {'count': count, 'results': sorted(credits, key=lambda t: t['id'])}
 
 
 def get_test_transactions(trans_type=None, count=20):

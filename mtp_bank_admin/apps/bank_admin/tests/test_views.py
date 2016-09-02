@@ -10,7 +10,9 @@ from django.conf import settings
 from mtp_common.auth.exceptions import Unauthorized, Forbidden
 from mtp_common.auth.test_utils import generate_tokens
 
-from . import get_test_transactions, NO_TRANSACTIONS
+from . import (
+    get_test_transactions, get_test_credits, NO_TRANSACTIONS, TEST_PRISONS_RESPONSE
+)
 from .test_refund import REFUND_TRANSACTIONS, expected_output
 from ..types import PaymentType
 
@@ -192,8 +194,8 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
     def test_download_refund_file_no_transactions_error_message(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.return_value = NO_TRANSACTIONS
+        conn = mock_api_client.get_connection()
+        conn.transactions.get.return_value = NO_TRANSACTIONS
 
         response = self.client.get(
             reverse('bank_admin:download_refund_file') + '?receipt_date=2014-12-11',
@@ -207,13 +209,14 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
 class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
 
     def _set_returned_transactions(self, mock_api_client):
-        creditable_transactions = get_test_transactions(PaymentType.payment, 20)
+        credits = get_test_credits(20)
         refundable_transactions = get_test_transactions(PaymentType.refund, 5)
         rejected_transactions = get_test_transactions(PaymentType.reject, 2)
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.side_effect = [
-            creditable_transactions,
+        conn = mock_api_client.get_connection()
+        conn.prisons.get.return_value = TEST_PRISONS_RESPONSE
+        conn.credits.get.return_value = credits
+        conn.transactions.get.side_effect = [
             refundable_transactions,
             rejected_transactions
         ]
@@ -250,14 +253,14 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
             '?receipt_date=2014-11-12'
         )
 
-        conn.get.assert_has_calls([
-            mock.call(
-                limit=settings.REQUEST_PAGE_SIZE,
-                offset=0,
-                status='creditable',
-                received_at__gte=datetime.date(2014, 11, 12),
-                received_at__lt=datetime.date(2014, 11, 13)
-            ),
+        conn.credits.get.assert_called_with(
+            limit=settings.REQUEST_PAGE_SIZE,
+            offset=0,
+            valid=True,
+            received_at__gte=datetime.date(2014, 11, 12),
+            received_at__lt=datetime.date(2014, 11, 13)
+        )
+        conn.transactions.get.assert_has_calls([
             mock.call(
                 limit=settings.REQUEST_PAGE_SIZE,
                 offset=0,
@@ -282,7 +285,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
     def test_download_adi_journal_unauthorized(self, auth_api_client, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
+        conn = mock_api_client.get_connection().credits
         conn.get.side_effect = Unauthorized()
 
         response = self.client.get(reverse('bank_admin:download_adi_journal') +
@@ -294,8 +297,10 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
     def test_download_adi_journal_no_transactions_error_message(self, mock_api_client):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.side_effect = [NO_TRANSACTIONS, NO_TRANSACTIONS, NO_TRANSACTIONS]
+        conn = mock_api_client.get_connection()
+        conn.prisons.get.return_value = TEST_PRISONS_RESPONSE
+        conn.credits.get.return_value = NO_TRANSACTIONS
+        conn.transactions.get.return_value = NO_TRANSACTIONS
 
         response = self.client.get(reverse('bank_admin:download_adi_journal') +
                                    '?receipt_date=2014-12-11',

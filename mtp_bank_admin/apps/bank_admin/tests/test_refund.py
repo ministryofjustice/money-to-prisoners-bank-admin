@@ -2,10 +2,13 @@ from copy import deepcopy
 from datetime import datetime, date
 from unittest import mock
 
+from django.test.client import RequestFactory
+from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
+from mtp_common.auth.models import MojUser
 
 from . import NO_TRANSACTIONS
-from .. import refund, ACCESSPAY_LABEL
+from .. import refund
 from ..exceptions import EmptyFileError
 
 REFUND_TRANSACTIONS = [
@@ -68,18 +71,36 @@ def get_base_ref():
     return datetime.now().strftime('Refund %d%m ')
 
 
+class RefundFileTestCase(SimpleTestCase):
+
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def get_request(self, **kwargs):
+        request = self.factory.get(
+            reverse('bank_admin:download_refund_file'),
+            **kwargs
+        )
+        request.user = MojUser(
+            1, '',
+            {'first_name': 'John', 'last_name': 'Smith', 'username': 'jsmith'}
+        )
+        return request
+
+
 @mock.patch('mtp_bank_admin.apps.bank_admin.refund.api_client')
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
-class ValidTransactionsTestCase(SimpleTestCase):
+class ValidTransactionsTestCase(RefundFileTestCase):
 
     def test_generate_refund_file(self, mock_api_client, mock_refund_api_client):
         conn = mock_api_client.get_connection().transactions
         conn.get.side_effect = REFUND_TRANSACTIONS
 
         refund_conn = mock_refund_api_client.get_connection().transactions
-        batch_conn = mock_api_client.get_connection().batches
 
-        _, csvdata = refund.generate_refund_file_for_date(None, date.today())
+        _, csvdata = refund.generate_refund_file_for_date(
+            self.get_request(), date.today()
+        )
 
         conn.reconcile.post.assert_called_with(
             {'date': date.today().isoformat()}
@@ -89,9 +110,6 @@ class ValidTransactionsTestCase(SimpleTestCase):
             {'id': '4', 'refunded': True},
             {'id': '5', 'refunded': True}
         ])
-        batch_conn.post.assert_called_once_with(
-            {'label': ACCESSPAY_LABEL, 'transactions': ['3', '4', '5']}
-        )
 
         self.assertEqual(expected_output(), csvdata)
 
@@ -106,7 +124,9 @@ class ValidTransactionsTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().transactions
         conn.get.side_effect = naughty_transactions
 
-        _, csvdata = refund.generate_refund_file_for_date(None, date.today())
+        _, csvdata = refund.generate_refund_file_for_date(
+            self.get_request(), date.today()
+        )
 
         self.assertEqual(
             ('''111111,22222222,"'=HYPERLINK(""http://127.0.0.1/?value=""&A1&A1, '''
@@ -120,7 +140,7 @@ class ValidTransactionsTestCase(SimpleTestCase):
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.refund.api_client')
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
-class NoTransactionsTestCase(SimpleTestCase):
+class NoTransactionsTestCase(RefundFileTestCase):
 
     def test_generate_refund_file_raises_error(self, mock_api_client,
                                                mock_refund_api_client):
@@ -130,7 +150,9 @@ class NoTransactionsTestCase(SimpleTestCase):
         refund_conn = mock_refund_api_client.get_connection().transactions
 
         try:
-            _, csvdata = refund.generate_refund_file_for_date(None, date.today())
+            _, csvdata = refund.generate_refund_file_for_date(
+                self.get_request(), date.today()
+            )
             self.fail('EmptyFileError expected')
         except EmptyFileError:
             self.assertFalse(refund_conn.patch.called)

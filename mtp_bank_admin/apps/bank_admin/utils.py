@@ -1,8 +1,6 @@
 from datetime import timedelta
-import math
 import time
 
-from django.conf import settings
 from mtp_common.api import retrieve_all_pages
 from mtp_common.auth import api_client
 
@@ -12,22 +10,14 @@ def retrieve_all_transactions(request, **kwargs):
     return retrieve_all_pages(endpoint, **kwargs)
 
 
-def create_batch_record(request, label, transaction_ids):
-    client = api_client.get_connection(request)
-    response = client.batches.post({
-        'label': label,
-        'transactions': transaction_ids[:settings.REQUEST_PAGE_SIZE]
-    })
-    t_count = len(transaction_ids)
-    if t_count > settings.REQUEST_PAGE_SIZE:
-        batch_id = response['id']
-        number_of_requests = math.ceil(len(transaction_ids)/settings.REQUEST_PAGE_SIZE)
-        for i in range(1, number_of_requests):
-            offset_start = i*settings.REQUEST_PAGE_SIZE
-            offset_end = (i+1)*settings.REQUEST_PAGE_SIZE
-            client.batches(batch_id).patch(
-                {'transactions': transaction_ids[offset_start:offset_end]}
-            )
+def retrieve_all_valid_credits(request, **kwargs):
+    endpoint = api_client.get_connection(request).credits.get
+    return retrieve_all_pages(endpoint, valid=True, **kwargs)
+
+
+def retrieve_prisons(request):
+    prisons = api_client.get_connection(request).prisons.get().get('results', [])
+    return {prison['nomis_id']: prison for prison in prisons}
 
 
 def reconcile_for_date(request, date):

@@ -10,8 +10,10 @@ from . import ADI_JOURNAL_LABEL
 from . import adi_config as config
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
-from .utils import retrieve_all_transactions, create_batch_record,\
-    reconcile_for_date
+from .utils import (
+    retrieve_all_transactions, retrieve_all_valid_credits, create_batch_record,
+    reconcile_for_date, retrieve_prisons
+)
 
 
 class AdiJournal(object):
@@ -139,9 +141,8 @@ class AdiJournal(object):
 
 def generate_adi_journal(request, receipt_date):
     reconcile_for_date(request, receipt_date)
-    creditable_transactions = retrieve_all_transactions(
+    credits = retrieve_all_valid_credits(
         request,
-        status='creditable',
         received_at__gte=receipt_date,
         received_at__lt=(receipt_date + timedelta(days=1))
     )
@@ -158,7 +159,7 @@ def generate_adi_journal(request, receipt_date):
         received_at__lt=(receipt_date + timedelta(days=1))
     )
 
-    if (len(creditable_transactions) == 0 and
+    if (len(credits) == 0 and
             len(rejected_transactions) == 0 and
             len(refundable_transactions) == 0):
         raise EmptyFileError()
@@ -166,26 +167,25 @@ def generate_adi_journal(request, receipt_date):
     journal_date = receipt_date.strftime('%d/%m/%Y')
     journal = AdiJournal()
 
+    prisons = retrieve_prisons(request)
     prison_payments = defaultdict(list)
-    for transaction in creditable_transactions:
-        prison_payments[transaction['prison']['nomis_id']].append(transaction)
+    for credit in credits:
+        prison_payments[credit['prison']].append(credit)
 
     # add valid payment rows
-    reconciled_transactions = []
-    for _, transaction_list in prison_payments.items():
+    for _, credit_list in prison_payments.items():
         credit_total = 0
-        for transaction in transaction_list:
-            credit_amount = Decimal(transaction['amount'])/100
+        for credit in credit_list:
+            credit_amount = Decimal(credit['amount'])/100
             credit_total += credit_amount
             journal.add_payment_row(
                 credit_amount, PaymentType.payment, RecordType.debit,
-                unique_id=str(transaction['ref_code'])
+                reconciliation_code=str(credit['reconciliation_code'])
             )
-            reconciled_transactions.append(transaction['id'])
         journal.add_payment_row(
             credit_total, PaymentType.payment, RecordType.credit,
-            prison_ledger_code=transaction_list[0]['prison']['general_ledger_code'],
-            prison_name=transaction_list[0]['prison']['name'],
+            prison_ledger_code=prisons[credit_list[0]['prison']]['general_ledger_code'],
+            prison_name=prisons[credit_list[0]['prison']]['name'],
             date=journal_date
         )
 
@@ -196,9 +196,8 @@ def generate_adi_journal(request, receipt_date):
         refund_total += refund_amount
         journal.add_payment_row(
             refund_amount, PaymentType.refund, RecordType.debit,
-            unique_id=str(refund['ref_code'])
+            reconciliation_code=str(refund['ref_code'])
         )
-        reconciled_transactions.append(refund['id'])
     journal.add_payment_row(
         refund_total, PaymentType.refund, RecordType.credit, date=journal_date
     )
@@ -209,15 +208,14 @@ def generate_adi_journal(request, receipt_date):
         amount = Decimal(reject['amount'])/100
         journal.add_payment_row(
             amount, PaymentType.reject, RecordType.debit,
-            unique_id=str(reject['ref_code'])
+            reconciliation_code=str(reject['ref_code'])
         )
         journal.add_payment_row(
             amount, PaymentType.reject, RecordType.credit,
             reference=reference, date=journal_date
         )
-        reconciled_transactions.append(reject['id'])
 
     created_journal = journal.create_file(receipt_date, request.user)
-    create_batch_record(request, ADI_JOURNAL_LABEL, reconciled_transactions)
+    create_batch_record(request, ADI_JOURNAL_LABEL, [])
 
     return created_journal
