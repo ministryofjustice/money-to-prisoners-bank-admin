@@ -1,6 +1,7 @@
-from datetime import date, timedelta
 from collections import defaultdict
+from datetime import date, timedelta
 from decimal import Decimal
+import logging
 
 from django.conf import settings
 from openpyxl import load_workbook, styles
@@ -11,9 +12,11 @@ from . import adi_config as config
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
 from .utils import (
-    retrieve_all_transactions, retrieve_all_valid_credits, create_batch_record,
+    retrieve_all_transactions, retrieve_all_valid_credits,
     reconcile_for_date, retrieve_prisons
 )
+
+logger = logging.getLogger('mtp')
 
 
 class AdiJournal(object):
@@ -216,6 +219,10 @@ def generate_adi_journal(request, receipt_date):
         )
 
     created_journal = journal.create_file(receipt_date, request.user)
-    create_batch_record(request, ADI_JOURNAL_LABEL, [])
+    logger.info('{user} downloaded {label} containing {count} records'.format(
+        user=request.user.username,
+        label=ADI_JOURNAL_LABEL,
+        count=len(credits) + len(rejected_transactions) + len(refundable_transactions)
+    ))
 
     return created_journal
