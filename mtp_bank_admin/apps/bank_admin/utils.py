@@ -1,8 +1,9 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 import time
 
 from mtp_common.api import retrieve_all_pages
 from mtp_common.auth import api_client
+import requests
 
 
 def retrieve_all_transactions(request, **kwargs):
@@ -41,13 +42,6 @@ def get_daily_file_uid():
     int(time.time()) % 86400
 
 
-def get_next_weekday(date):
-    next_weekday = date + timedelta(days=1)
-    while next_weekday.weekday() >= 5:
-        next_weekday += timedelta(days=1)
-    return next_weekday
-
-
 def escape_csv_formula(value):
     """
     Escapes formulae (strings that start with =) to prevent
@@ -57,3 +51,27 @@ def escape_csv_formula(value):
     if isinstance(value, str) and value.startswith('='):
         return "'" + value
     return value
+
+
+class WorkdayChecker:
+
+    def __init__(self):
+        response = requests.get('https://www.gov.uk/bank-holidays.json')
+        if response.status_code == 200:
+            self.holidays = [
+                datetime.strptime(holiday['date'], '%Y-%m-%d').date() for holiday in
+                response.json()['england-and-wales']['events']
+            ]
+        else:
+            raise RuntimeError(
+                'Could not retrieve list of holidays for work day calculation'
+            )
+
+    def is_workday(self, date):
+        return date.weekday() < 5 and date not in self.holidays
+
+    def get_previous_workday(self, date):
+        previous_day = date - timedelta(days=1)
+        while not self.is_workday(previous_day):
+            previous_day -= timedelta(days=1)
+        return previous_day
