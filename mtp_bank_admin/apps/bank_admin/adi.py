@@ -13,7 +13,7 @@ from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
 from .utils import (
     retrieve_all_transactions, retrieve_all_valid_credits,
-    reconcile_for_date, retrieve_prisons
+    reconcile_for_date, retrieve_prisons, WorkdayChecker
 )
 
 logger = logging.getLogger('mtp')
@@ -143,23 +143,24 @@ class AdiJournal(object):
 
 
 def generate_adi_journal(request, receipt_date):
+    checker = WorkdayChecker()
     reconcile_for_date(request, receipt_date)
     credits = retrieve_all_valid_credits(
         request,
-        received_at__gte=receipt_date,
-        received_at__lt=(receipt_date + timedelta(days=1))
+        received_at__gte=checker.get_previous_workday(receipt_date) + timedelta(days=1),
+        received_at__lt=receipt_date + timedelta(days=1)
     )
     refundable_transactions = retrieve_all_transactions(
         request,
         status='refundable',
         received_at__gte=receipt_date,
-        received_at__lt=(receipt_date + timedelta(days=1))
+        received_at__lt=receipt_date + timedelta(days=1)
     )
     rejected_transactions = retrieve_all_transactions(
         request,
         status='unidentified',
         received_at__gte=receipt_date,
-        received_at__lt=(receipt_date + timedelta(days=1))
+        received_at__lt=receipt_date + timedelta(days=1)
     )
 
     if (len(credits) == 0 and
@@ -171,24 +172,33 @@ def generate_adi_journal(request, receipt_date):
     journal = AdiJournal()
 
     prisons = retrieve_prisons(request)
-    prison_payments = defaultdict(list)
+    bulk_payments_by_prison = defaultdict(dict)
+    card_reconciliation_code = '%s - Card payment' % journal_date
     for credit in credits:
-        prison_payments[credit['prison']].append(credit)
+        if credit['source'] == 'online':
+            reconciliation_code = card_reconciliation_code
+        else:
+            reconciliation_code = str(credit['reconciliation_code'])
+        prison = credit['prison']
+        if reconciliation_code in bulk_payments_by_prison[prison]:
+            bulk_payments_by_prison[prison][reconciliation_code] += credit['amount']
+        else:
+            bulk_payments_by_prison[prison][reconciliation_code] = credit['amount']
 
     # add valid payment rows
-    for _, credit_list in prison_payments.items():
+    for prison, payments in bulk_payments_by_prison.items():
         credit_total = 0
-        for credit in credit_list:
-            credit_amount = Decimal(credit['amount'])/100
+        for reconciliation_code in sorted(payments.keys()):
+            credit_amount = Decimal(payments[reconciliation_code])/100
             credit_total += credit_amount
             journal.add_payment_row(
                 credit_amount, PaymentType.payment, RecordType.debit,
-                reconciliation_code=str(credit['reconciliation_code'])
+                reconciliation_code=reconciliation_code
             )
         journal.add_payment_row(
             credit_total, PaymentType.payment, RecordType.credit,
-            prison_ledger_code=prisons[credit_list[0]['prison']]['general_ledger_code'],
-            prison_name=prisons[credit_list[0]['prison']]['name'],
+            prison_ledger_code=prisons[prison]['general_ledger_code'],
+            prison_name=prisons[prison]['name'],
             date=journal_date
         )
 
