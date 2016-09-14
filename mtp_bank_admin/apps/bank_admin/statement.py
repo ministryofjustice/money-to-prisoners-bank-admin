@@ -1,14 +1,16 @@
 import datetime
+import logging
 
-from django.conf import settings
 from bai2 import bai2, models, constants
+from django.conf import settings
 
 from . import BAI2_STMT_LABEL
 from .utils import (
-    retrieve_all_transactions, create_batch_record, get_daily_file_uid,
+    retrieve_all_transactions, get_daily_file_uid,
     reconcile_for_date, retrieve_last_balance
 )
 
+logger = logging.getLogger('mtp')
 
 CREDIT_TYPE_CODE = '399'
 DEBIT_TYPE_CODE = '699'
@@ -23,11 +25,12 @@ RECORD_LENGTH = 80
 
 
 def generate_bank_statement(request, receipt_date):
-    reconcile_for_date(request, receipt_date)
+    reconciliation_date = reconcile_for_date(request, receipt_date)
+
     transactions = retrieve_all_transactions(
         request,
         received_at__gte=receipt_date,
-        received_at__lt=(receipt_date + datetime.timedelta(days=1))
+        received_at__lt=reconciliation_date
     )
 
     transaction_records = []
@@ -117,9 +120,11 @@ def generate_bank_statement(request, receipt_date):
     group.children.append(account)
 
     output = bai2.write(bai2_file, clock_format_for_intra_day=True)
-    if len(transactions) > 0:
-        create_batch_record(request, BAI2_STMT_LABEL,
-                            [t['id'] for t in transactions])
+    logger.info('{user} downloaded {label} containing {count} records'.format(
+        user=request.user.username,
+        label=BAI2_STMT_LABEL,
+        count=len(transactions)
+    ))
 
     return (receipt_date.strftime(settings.BANK_STMT_OUTPUT_FILENAME),
             output)

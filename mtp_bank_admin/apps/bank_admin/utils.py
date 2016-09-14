@@ -1,10 +1,12 @@
-from datetime import timedelta
-import math
+from datetime import datetime, timedelta
 import time
 
-from django.conf import settings
+from django.utils.timezone import now
 from mtp_common.api import retrieve_all_pages
 from mtp_common.auth import api_client
+import requests
+
+from .exceptions import EarlyReconciliationError, UpstreamServiceUnavailable
 
 
 def retrieve_all_transactions(request, **kwargs):
@@ -12,30 +14,30 @@ def retrieve_all_transactions(request, **kwargs):
     return retrieve_all_pages(endpoint, **kwargs)
 
 
-def create_batch_record(request, label, transaction_ids):
+def retrieve_all_valid_credits(request, **kwargs):
+    endpoint = api_client.get_connection(request).credits.get
+    return retrieve_all_pages(endpoint, valid=True, **kwargs)
+
+
+def retrieve_prisons(request):
+    prisons = api_client.get_connection(request).prisons.get().get('results', [])
+    return {prison['nomis_id']: prison for prison in prisons}
+
+
+def reconcile_for_date(request, receipt_date):
+    checker = WorkdayChecker()
+    reconciliation_date = checker.get_next_workday(receipt_date)
+
+    if reconciliation_date > now().date():
+        raise EarlyReconciliationError
+
     client = api_client.get_connection(request)
-    response = client.batches.post({
-        'label': label,
-        'transactions': transaction_ids[:settings.REQUEST_PAGE_SIZE]
+    client.transactions.reconcile.post({
+        'received_at__gte': receipt_date.isoformat(),
+        'received_at__lt': reconciliation_date.isoformat(),
     })
-    t_count = len(transaction_ids)
-    if t_count > settings.REQUEST_PAGE_SIZE:
-        batch_id = response['id']
-        number_of_requests = math.ceil(len(transaction_ids)/settings.REQUEST_PAGE_SIZE)
-        for i in range(1, number_of_requests):
-            offset_start = i*settings.REQUEST_PAGE_SIZE
-            offset_end = (i+1)*settings.REQUEST_PAGE_SIZE
-            client.batches(batch_id).patch(
-                {'transactions': transaction_ids[offset_start:offset_end]}
-            )
 
-
-def reconcile_for_date(request, date):
-    if date:
-        client = api_client.get_connection(request)
-        client.transactions.reconcile.post({
-            'date': date.isoformat(),
-        })
+    return reconciliation_date
 
 
 def retrieve_last_balance(request, date):
@@ -51,13 +53,6 @@ def get_daily_file_uid():
     int(time.time()) % 86400
 
 
-def get_next_weekday(date):
-    next_weekday = date + timedelta(days=1)
-    while next_weekday.weekday() >= 5:
-        next_weekday += timedelta(days=1)
-    return next_weekday
-
-
 def escape_csv_formula(value):
     """
     Escapes formulae (strings that start with =) to prevent
@@ -67,3 +62,27 @@ def escape_csv_formula(value):
     if isinstance(value, str) and value.startswith('='):
         return "'" + value
     return value
+
+
+class WorkdayChecker:
+
+    def __init__(self):
+        response = requests.get('https://www.gov.uk/bank-holidays.json')
+        if response.status_code == 200:
+            self.holidays = [
+                datetime.strptime(holiday['date'], '%Y-%m-%d').date() for holiday in
+                response.json()['england-and-wales']['events']
+            ]
+        else:
+            raise UpstreamServiceUnavailable(
+                'Could not retrieve list of holidays for work day calculation'
+            )
+
+    def is_workday(self, date):
+        return date.weekday() < 5 and date not in self.holidays
+
+    def get_next_workday(self, date):
+        next_day = date + timedelta(days=1)
+        while not self.is_workday(next_day):
+            next_day += timedelta(days=1)
+        return next_day

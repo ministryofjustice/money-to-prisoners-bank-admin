@@ -1,7 +1,8 @@
 import csv
-import io
-from datetime import datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
+import io
+import logging
 
 from django.conf import settings
 from mtp_common.auth.backends import api_client
@@ -9,18 +10,20 @@ from mtp_common.auth.backends import api_client
 from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
 from .utils import (
-    retrieve_all_transactions, create_batch_record, escape_csv_formula,
-    get_next_weekday, reconcile_for_date
+    retrieve_all_transactions, escape_csv_formula, reconcile_for_date
 )
+
+logger = logging.getLogger('mtp')
 
 
 def generate_refund_file_for_date(request, receipt_date):
-    reconcile_for_date(request, receipt_date)
+    reconciliation_date = reconcile_for_date(request, receipt_date)
+
     transactions_to_refund = retrieve_all_transactions(
         request,
         status='refundable',
         received_at__gte=receipt_date,
-        received_at__lt=(receipt_date + timedelta(days=1))
+        received_at__lt=reconciliation_date
     )
 
     filedata = generate_refund_file(request, transactions_to_refund)
@@ -33,10 +36,13 @@ def generate_refund_file_for_date(request, receipt_date):
     client = api_client.get_connection(request)
     client.transactions.patch(refunded_transactions)
 
-    create_batch_record(request, ACCESSPAY_LABEL,
-                        [t['id'] for t in transactions_to_refund])
+    logger.info('{user} downloaded {label} containing {count} records'.format(
+        user=request.user.username,
+        label=ACCESSPAY_LABEL,
+        count=len(transactions_to_refund)
+    ))
 
-    return (get_next_weekday(receipt_date).strftime(settings.REFUND_OUTPUT_FILENAME),
+    return (date.today().strftime(settings.REFUND_OUTPUT_FILENAME),
             filedata)
 
 

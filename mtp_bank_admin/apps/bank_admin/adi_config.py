@@ -172,9 +172,9 @@ ADI_JOURNAL_FIELDS = {
     'description': {
         'column': 'M',
         'value': {
-            'payment': {'debit': '{unique_id}', 'credit': '{prison_name} MTP Total {date}'},
-            'refund': {'debit': '{unique_id}', 'credit': 'MTP Refund File {date}'},
-            'reject': {'debit': '{unique_id}', 'credit': '{date} - {reference}'},
+            'payment': {'debit': '{reconciliation_code}', 'credit': '{prison_name} MTP Total {date}'},
+            'refund': {'debit': '{reconciliation_code}', 'credit': 'MTP Refund File {date}'},
+            'reject': {'debit': '{reconciliation_code}', 'credit': '{date} - {reference}'},
         },
         'style': dict(
             border={

@@ -1,20 +1,17 @@
-from datetime import datetime
-import math
+from datetime import date
 import random
 from unittest import mock
 
 from bai2 import bai2
 from bai2.constants import TypeCodes
-from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
 from django.test.client import RequestFactory
+from mtp_common.auth.models import MojUser
 
 from . import (
-    get_test_transactions, NO_TRANSACTIONS, ORIGINAL_REF,
-    AssertCalledWithBatchRequest
+    get_test_transactions, NO_TRANSACTIONS, ORIGINAL_REF, TEST_HOLIDAYS
 )
-from .. import BAI2_STMT_LABEL
 from ..statement import generate_bank_statement
 
 
@@ -46,40 +43,41 @@ def mock_balance(mock_api_client):
     return balance_conn
 
 
-def mock_batch(test_case, mock_api_client, test_data):
-    t_ids = [t['id'] for t in test_data['results']]
-
-    batch_conn = mock_api_client.get_connection().batches
-    batch_conn.post.side_effect = AssertCalledWithBatchRequest(test_case, {
-        'label': BAI2_STMT_LABEL,
-        'transactions': t_ids[:settings.REQUEST_PAGE_SIZE]
-    })
-
-    return batch_conn
-
-
-@mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
-class BankStatementGenerationTestCase(SimpleTestCase):
+class BankStatementTestCase(SimpleTestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
 
     def get_request(self, **kwargs):
-        return self.factory.get(
+        request = self.factory.get(
             reverse('bank_admin:download_bank_statement'),
             **kwargs
         )
+        request.user = MojUser(
+            1, '',
+            {'first_name': 'John', 'last_name': 'Smith', 'username': 'jsmith'}
+        )
+        return request
 
-    def test_number_of_records_correct(self, mock_api_client):
+    def _generate_and_parse_bank_statement(self, mock_api_client, receipt_date=None):
         _, test_data = mock_test_transactions(mock_api_client)
         mock_balance(mock_api_client)
-        batch_conn = mock_batch(self, mock_api_client, test_data)
 
-        _, bai2_file = generate_bank_statement(self.get_request(),
-                                               datetime.now().date())
-        self.assertTrue(batch_conn.post.side_effect.called)
+        if receipt_date is None:
+            receipt_date = date(2016, 9, 13)
+        with mock.patch('bank_admin.utils.requests') as mock_requests:
+            mock_requests.get().status_code = 200
+            mock_requests.get().json.return_value = TEST_HOLIDAYS
+            _, bai2_file = generate_bank_statement(self.get_request(),
+                                                   receipt_date)
+        return bai2.parse_from_string(bai2_file, check_integrity=True), test_data
 
-        parsed_file = bai2.parse_from_string(bai2_file, check_integrity=True)
+
+@mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
+class BankStatementGenerationTestCase(BankStatementTestCase):
+
+    def test_number_of_records_correct(self, mock_api_client):
+        parsed_file, test_data = self._generate_and_parse_bank_statement(mock_api_client)
 
         self.assertEqual(len(parsed_file.children), 1)
         self.assertEqual(len(parsed_file.children[0].children), 1)
@@ -89,15 +87,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
         )
 
     def test_control_totals_correct(self, mock_api_client):
-        _, test_data = mock_test_transactions(mock_api_client)
-        mock_balance(mock_api_client)
-        batch_conn = mock_batch(self, mock_api_client, test_data)
-
-        _, bai2_file = generate_bank_statement(self.get_request(),
-                                               datetime.now().date())
-        self.assertTrue(batch_conn.post.side_effect.called)
-
-        parsed_file = bai2.parse_from_string(bai2_file, check_integrity=True)
+        parsed_file, test_data = self._generate_and_parse_bank_statement(mock_api_client)
 
         credit_num = 0
         credit_total = 0
@@ -136,14 +126,7 @@ class BankStatementGenerationTestCase(SimpleTestCase):
         )
 
     def test_reference_overwritten_for_credit_and_not_debit(self, mock_api_client):
-        _, test_data = mock_test_transactions(mock_api_client)
-        mock_balance(mock_api_client)
-
-        today = datetime.now().date()
-        _, bai2_file = generate_bank_statement(self.get_request(),
-                                               today)
-
-        parsed_file = bai2.parse_from_string(bai2_file, check_integrity=True)
+        parsed_file, test_data = self._generate_and_parse_bank_statement(mock_api_client)
 
         account = parsed_file.children[0].children[0]
         for record in account.children:
@@ -153,58 +136,31 @@ class BankStatementGenerationTestCase(SimpleTestCase):
                 self.assertTrue(record.text == ORIGINAL_REF)
 
     def test_reconciles_date(self, mock_api_client):
-        conn, test_data = mock_test_transactions(mock_api_client)
+        _, _ = self._generate_and_parse_bank_statement(
+            mock_api_client, receipt_date=date(2016, 9, 13)
+        )
 
-        today = datetime.now().date()
-        _, bai2_file = generate_bank_statement(self.get_request(),
-                                               today)
-
-        conn.reconcile.post.assert_called_with({'date': today.isoformat()})
-
-    def test_batch_creation_batched_correctly(self, mock_api_client):
-        _, test_data = mock_test_transactions(mock_api_client, count=1050)
-        mock_balance(mock_api_client)
-        batch_conn = mock_batch(self, mock_api_client, test_data)
-
-        _, bai2_file = generate_bank_statement(self.get_request(),
-                                               datetime.now().date())
-        self.assertTrue(batch_conn.post.side_effect.called)
-
-        t_ids = [t['id'] for t in test_data['results']]
-        batch_conn.assert_called_with(1)
-        expected_calls = []
-        number_of_requests = math.ceil(len(t_ids)/settings.REQUEST_PAGE_SIZE)
-        for i in range(1, number_of_requests):
-            offset_start = i*settings.REQUEST_PAGE_SIZE
-            offset_end = (i+1)*settings.REQUEST_PAGE_SIZE
-            expected_calls.append(
-                mock.call({'transactions': t_ids[offset_start:offset_end]})
-            )
-        batch_conn(1).patch.assert_has_calls(
-            expected_calls
+        conn = mock_api_client.get_connection().transactions
+        conn.reconcile.post.assert_called_with(
+            {'received_at__gte': date(2016, 9, 13).isoformat(),
+             'received_at__lt': date(2016, 9, 14).isoformat()}
         )
 
 
 @mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
-class NoTransactionsTestCase(SimpleTestCase):
-
-    def setUp(self):
-        self.factory = RequestFactory()
-
-    def get_request(self, **kwargs):
-        return self.factory.get(
-            reverse('bank_admin:download_bank_statement'),
-            **kwargs
-        )
+class NoTransactionsTestCase(BankStatementTestCase):
 
     def test_empty_statement_generated(self, mock_api_client):
         conn = mock_api_client.get_connection().transactions
         conn.get.return_value = NO_TRANSACTIONS
         mock_balance(mock_api_client)
 
-        today = datetime.now().date()
-        _, bai2_file = generate_bank_statement(self.get_request(),
-                                               today)
+        today = date(2016, 9, 13)
+        with mock.patch('bank_admin.utils.requests') as mock_requests:
+            mock_requests.get().status_code = 200
+            mock_requests.get().json.return_value = TEST_HOLIDAYS
+            _, bai2_file = generate_bank_statement(self.get_request(),
+                                                   today)
 
         parsed_file = bai2.parse_from_string(bai2_file, check_integrity=True)
         account = parsed_file.children[0].children[0]

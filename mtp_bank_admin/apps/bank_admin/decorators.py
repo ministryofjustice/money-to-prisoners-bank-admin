@@ -1,8 +1,13 @@
 from datetime import datetime
 from functools import wraps
 
+from django.core.urlresolvers import reverse_lazy
+from django.contrib import messages
 from django.http import HttpResponseBadRequest
+from django.shortcuts import redirect
 from django.utils.translation import ugettext as _
+
+from .exceptions import EmptyFileError, EarlyReconciliationError, UpstreamServiceUnavailable
 
 
 def filter_by_receipt_date(view_func):
@@ -18,4 +23,22 @@ def filter_by_receipt_date(view_func):
         else:
             return HttpResponseBadRequest(_("'receipt_date' parameter required"))
         return view_func(request, receipt_date, *args, **kwargs)
+    return wrapper
+
+
+def handle_file_download_errors(view_func):
+    @wraps(view_func)
+    def wrapper(request, receipt_date, *args, **kwargs):
+        try:
+            return view_func(request, receipt_date, *args, **kwargs)
+        except EmptyFileError:
+            messages.add_message(request, messages.ERROR, _(
+                'No transactions available'))
+        except EarlyReconciliationError:
+            messages.add_message(request, messages.ERROR, _(
+                'This file cannot be downloaded until the next working day'))
+        except UpstreamServiceUnavailable:
+            messages.add_message(request, messages.ERROR, _(
+                'There was a problem generating the file. Please try again later.'))
+        return redirect(reverse_lazy('bank_admin:dashboard'))
     return wrapper

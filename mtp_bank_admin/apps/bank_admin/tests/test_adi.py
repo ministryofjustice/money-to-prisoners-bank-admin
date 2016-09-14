@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from datetime import datetime, date
+from datetime import date
 import os
 from unittest import mock, skip
 
@@ -9,10 +9,12 @@ from django.test import SimpleTestCase
 from mtp_common.auth.models import MojUser
 from openpyxl import load_workbook
 
-from . import TEST_PRISONS, NO_TRANSACTIONS, get_test_transactions,\
-    AssertCalledWithBatchRequest
-from .. import adi, adi_config, ADI_JOURNAL_LABEL
-from ..exceptions import EmptyFileError
+from . import (
+    TEST_PRISONS, TEST_PRISONS_RESPONSE, NO_TRANSACTIONS, TEST_HOLIDAYS,
+    get_test_transactions, get_test_credits
+)
+from .. import adi, adi_config
+from ..exceptions import EmptyFileError, EarlyReconciliationError
 from ..types import PaymentType
 
 
@@ -44,217 +46,212 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             reverse('bank_admin:download_adi_journal'),
             **kwargs
         )
-        request.user = MojUser(1, '', {'first_name': 'John', 'last_name': 'Smith'})
+        request.user = MojUser(
+            1, '',
+            {'first_name': 'John', 'last_name': 'Smith', 'username': 'jsmith'}
+        )
         return request
 
     def _generate_test_adi_journal(self, mock_api_client, receipt_date=None):
-        creditable_transactions = get_test_transactions(PaymentType.payment, 20)
+        credits = get_test_credits(20)
         refundable_transactions = get_test_transactions(PaymentType.refund, 5)
         rejected_transactions = get_test_transactions(PaymentType.reject, 2)
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.side_effect = [
-            creditable_transactions,
+        conn = mock_api_client.get_connection()
+        conn.prisons.get.return_value = TEST_PRISONS_RESPONSE
+        conn.credits.get.return_value = credits
+        conn.transactions.get.side_effect = [
             refundable_transactions,
             rejected_transactions
         ]
 
-        batch_conn = mock_api_client.get_connection().batches
-        batch_conn.post.side_effect = AssertCalledWithBatchRequest(self, {
-            'label': ADI_JOURNAL_LABEL,
-            'transactions': [
-                t['id'] for t in
-                creditable_transactions['results'] +
-                refundable_transactions['results'] +
-                rejected_transactions['results']
-            ]
-        })
-
         if receipt_date is None:
-            receipt_date = date.today()
-        filename, exceldata = adi.generate_adi_journal(self.get_request(),
-                                                       receipt_date)
+            receipt_date = date(2016, 9, 13)
+        with mock.patch('bank_admin.utils.requests') as mock_requests:
+            mock_requests.get().status_code = 200
+            mock_requests.get().json.return_value = TEST_HOLIDAYS
+            filename, exceldata = adi.generate_adi_journal(self.get_request(),
+                                                           receipt_date)
 
-        self.assertTrue(batch_conn.post.side_effect.called)
-
-        return filename, exceldata, (creditable_transactions, refundable_transactions, rejected_transactions)
+        return filename, exceldata, (credits, refundable_transactions, rejected_transactions)
 
     @skip('Enable to generate an example file for inspection')
     def test_adi_journal_generation(self, mock_api_client):
-        creditable_transactions = get_test_transactions(PaymentType.payment, 20)
-        refundable_transactions = get_test_transactions(PaymentType.refund, 5)
-        rejected_transactions = get_test_transactions(PaymentType.reject, 2)
-
-        conn = mock_api_client.get_connection().transactions
-        conn.get.side_effect = [
-            creditable_transactions,
-            refundable_transactions,
-            rejected_transactions
-        ]
-
-        filename, exceldata = adi.generate_adi_journal(self.get_request(),
-                                                       datetime.now().date())
-
+        filename, exceldata, _ = self._generate_test_adi_journal(mock_api_client)
         with open(filename, 'wb+') as f:
             f.write(exceldata)
 
     def test_adi_journal_debits_match_credits(self, mock_api_client):
         filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
-        creditable_transactions, refundable_transactions, rejected_transactions = test_data
+        credits, refundable_transactions, rejected_transactions = test_data
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+            journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
 
             current_total_debit = 0
-            for _ in range(len(creditable_transactions['results']) + len(TEST_PRISONS)):
+            debit = None
+            credit = None
+            while True:
                 debit = get_cell_value(journal_ws, 'debit', row)
                 credit = get_cell_value(journal_ws, 'credit', row)
 
-                if debit:
+                if debit and credit:
+                    # final line
+                    break
+                elif debit:
                     current_total_debit += debit
                 elif credit:
                     self.assertAlmostEqual(credit, current_total_debit)
                     current_total_debit = 0
                 row += 1
-
-            current_total_debit = 0
-            for _ in range(len(refundable_transactions['results']) + 1):
-                debit = get_cell_value(journal_ws, 'debit', row)
-                credit = get_cell_value(journal_ws, 'credit', row)
-
-                if debit:
-                    current_total_debit += debit
-                elif credit:
-                    self.assertAlmostEqual(credit, current_total_debit)
-                    current_total_debit = 0
-                row += 1
-
-            for _ in range(len(rejected_transactions['results'])):
-                debit = get_cell_value(journal_ws, 'debit', row)
-                row += 1
-                credit = get_cell_value(journal_ws, 'credit', row)
-                row += 1
-                self.assertAlmostEqual(credit, debit)
 
     def test_adi_journal_number_of_payment_rows_correct(self, mock_api_client):
         filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
-        creditable_transactions, refundable_transactions, rejected_transactions = test_data
+        credits, refundable_transactions, rejected_transactions = test_data
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+            journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
 
-            debit_rows = 0
-            credit_rows = 0
-            for _ in range(len(creditable_transactions['results']) + len(TEST_PRISONS)):
+            expected_credits = 0
+            prisons_with_card_payments = set()
+            for credit in credits['results']:
+                if credit['source'] == 'bank_transfer':
+                    expected_credits += 1
+                else:
+                    # one lump sum per prison for card payments
+                    if credit['prison'] not in prisons_with_card_payments:
+                        expected_credits += 1
+                        prisons_with_card_payments.add(credit['prison'])
+
+            expected_debit_rows = (
+                # valid credits
+                expected_credits +
+                # refunds
+                len(refundable_transactions['results']) +
+                # rejects
+                len(rejected_transactions['results'])
+            )
+
+            expected_credit_rows = (
+                # valid credits
+                len(TEST_PRISONS) +
+                # refunds
+                1 +
+                # rejects
+                len(rejected_transactions['results'])
+            )
+
+            file_debit_rows = 0
+            file_credit_rows = 0
+            while True:
                 debit = get_cell_value(journal_ws, 'debit', row)
                 credit = get_cell_value(journal_ws, 'credit', row)
 
-                if debit:
-                    debit_rows += 1
+                if debit and credit:
+                    # final line
+                    break
+                elif debit:
+                    file_debit_rows += 1
                 elif credit:
-                    credit_rows += 1
+                    file_credit_rows += 1
                 row += 1
 
-            self.assertEqual(debit_rows, len(creditable_transactions['results']))
-            self.assertEqual(credit_rows, len(TEST_PRISONS))
-
-            debit_rows = 0
-            credit_rows = 0
-            for _ in range(len(refundable_transactions['results']) + 1):
-                debit = get_cell_value(journal_ws, 'debit', row)
-                credit = get_cell_value(journal_ws, 'credit', row)
-
-                if debit:
-                    debit_rows += 1
-                elif credit:
-                    credit_rows += 1
-                row += 1
-
-            self.assertEqual(debit_rows, len(refundable_transactions['results']))
-            self.assertEqual(credit_rows, 1)
-
-            debit_rows = 0
-            credit_rows = 0
-            for _ in range(len(rejected_transactions['results'])*2):
-                debit = get_cell_value(journal_ws, 'debit', row)
-                credit = get_cell_value(journal_ws, 'credit', row)
-
-                if debit:
-                    debit_rows += 1
-                elif credit:
-                    credit_rows += 1
-                row += 1
-
-            self.assertEqual(debit_rows, len(rejected_transactions['results']))
-            self.assertEqual(credit_rows, len(rejected_transactions['results']))
+            credit = self.assertEqual(expected_credit_rows, file_credit_rows)
+            credit = self.assertEqual(expected_debit_rows, file_debit_rows)
 
     def test_adi_journal_credit_sums_correct(self, mock_api_client):
         filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
-        creditable_transactions, refundable_transactions, rejected_transactions = test_data
+        credits, refundable_transactions, rejected_transactions = test_data
 
         prison_totals = {}
         for prison in TEST_PRISONS:
             prison_totals[prison['general_ledger_code']] = float(sum(
-                [t['amount'] for t in creditable_transactions['results']
-                    if 'prison' in t and t['prison'] == prison]
+                [c['amount'] for c in credits['results']
+                    if 'prison' in c and c['prison'] == prison['nomis_id']]
             ))/100
 
         refund_total = float(sum([t['amount'] for t in refundable_transactions['results']]))/100
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+            journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
 
-            credits_checked = 0
-            for _ in range(len(creditable_transactions['results']) + len(TEST_PRISONS)):
+            refund_bu_code = adi_config.ADI_JOURNAL_FIELDS['business_unit']['value']['refund']['credit']
+            reject_analysis = adi_config.ADI_JOURNAL_FIELDS['analysis']['value']['reject']['credit']
+
+            while True:
+                debit = get_cell_value(journal_ws, 'debit', row)
                 credit = get_cell_value(journal_ws, 'credit', row)
 
-                if credit:
-                    credits_checked += 1
-                    prison = get_cell_value(journal_ws, 'business_unit', row)
-                    self.assertAlmostEqual(credit, prison_totals[prison])
+                if debit and credit:
+                    # final line
+                    break
+                elif credit:
+                    bu_code = get_cell_value(journal_ws, 'business_unit', row)
+                    analysis = get_cell_value(journal_ws, 'analysis', row)
+                    if bu_code == refund_bu_code:
+                        if analysis != reject_analysis:
+                            self.assertAlmostEqual(credit, refund_total)
+                    else:
+                        self.assertAlmostEqual(credit, prison_totals[bu_code])
                 row += 1
 
-            self.assertEqual(credits_checked, len(TEST_PRISONS))
-
-            row += len(refundable_transactions['results'])
-            credit = get_cell_value(journal_ws, 'credit', row)
-            self.assertAlmostEqual(credit, refund_total)
-
     def test_no_transactions_raises_error(self, mock_api_client):
-        conn = mock_api_client.get_connection().transactions
-        conn.get.side_effect = [NO_TRANSACTIONS, NO_TRANSACTIONS, NO_TRANSACTIONS]
+        conn = mock_api_client.get_connection()
+        conn.prisons.get.return_value = TEST_PRISONS_RESPONSE
+        conn.credits.get.return_value = NO_TRANSACTIONS
+        conn.transactions.get.return_value = NO_TRANSACTIONS
 
-        try:
-            _, exceldata = adi.generate_adi_journal(self.get_request(),
-                                                    datetime.now().date())
-            self.fail('EmptyFileError expected')
-        except EmptyFileError:
-            pass
+        with self.assertRaises(EmptyFileError):
+            with mock.patch('bank_admin.utils.requests') as mock_requests:
+                mock_requests.get().status_code = 200
+                mock_requests.get().json.return_value = TEST_HOLIDAYS
+                _, exceldata = adi.generate_adi_journal(self.get_request(),
+                                                        date(2016, 9, 13))
 
     def test_adi_journal_reconciles_date(self, mock_api_client):
-        _, _, _ = self._generate_test_adi_journal(mock_api_client)
+        _, _, _ = self._generate_test_adi_journal(
+            mock_api_client, receipt_date=date(2016, 9, 13)
+        )
 
         conn = mock_api_client.get_connection().transactions
-        conn.reconcile.post.assert_called_with({'date': datetime.now().date().isoformat()})
+        conn.reconcile.post.assert_called_with(
+            {'received_at__gte': date(2016, 9, 13).isoformat(),
+             'received_at__lt': date(2016, 9, 14).isoformat()}
+        )
 
     def test_adi_journal_upload_range_set(self, mock_api_client):
         filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
-        creditable_transactions, refundable_transactions, rejected_transactions = test_data
-        num_transactions = sum([
-            len(creditable_transactions['results']) + len(TEST_PRISONS),
-            len(refundable_transactions['results']) + 1,
+        credits, refundable_transactions, rejected_transactions = test_data
+
+        expected_credits = 0
+        prisons_with_card_payments = set()
+        for credit in credits['results']:
+            if credit['source'] == 'bank_transfer':
+                expected_credits += 1
+            else:
+                # one lump sum per prison for card payments
+                if credit['prison'] not in prisons_with_card_payments:
+                    expected_credits += 1
+                    prisons_with_card_payments.add(credit['prison'])
+
+        expected_rows = (
+            # valid credits
+            expected_credits + len(TEST_PRISONS) +
+            # refunds
+            len(refundable_transactions['results']) + 1 +
+            # rejects
             len(rejected_transactions['results'])*2
-        ])
+        )
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+            journal_ws = wb.get_sheet_by_name('130916')
 
             self.assertEqual(
                 wb.get_named_range('BNE_UPLOAD').destinations,
@@ -262,7 +259,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                     journal_ws,
                     '$B$%(start)s:$B$%(end)s' % {
                         'start': adi_config.ADI_JOURNAL_START_ROW,
-                        'end': adi_config.ADI_JOURNAL_START_ROW + num_transactions - 1
+                        'end': adi_config.ADI_JOURNAL_START_ROW + expected_rows - 1
                     }
                 )]
             )
@@ -272,7 +269,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+            journal_ws = wb.get_sheet_by_name('130916')
             self.assertTrue('JS' in journal_ws[adi_config.ADI_BATCH_NAME_CELL].value)
 
     @mock.patch('mtp_bank_admin.apps.bank_admin.adi.date')
@@ -307,4 +304,10 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             self.assertEqual(
                 receipt_date.strftime(adi_config.ADI_DATE_FORMAT),
                 journal_ws[adi_config.ADI_DATE_CELL].value
+            )
+
+    def test_early_reconciliation_raises_error(self, mock_api_client):
+        with self.assertRaises(EarlyReconciliationError):
+            self._generate_test_adi_journal(
+                mock_api_client, receipt_date=date.today()
             )
