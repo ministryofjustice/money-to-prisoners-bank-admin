@@ -8,6 +8,12 @@ TEST_PRISONS = [
     {'nomis_id': 'SPR', 'general_ledger_code': '054',  'name': 'Scary Prison'}
 ]
 TEST_PRISONS_RESPONSE = {'count': 3, 'results': TEST_PRISONS}
+TEST_HOLIDAYS = {'england-and-wales': {
+    'division': 'england-and-wales',
+    'events': [
+        {'title': 'Boxing Day', 'date': '2016-12-26', 'notes': '', 'bunting': True},
+        {'title': 'Christmas Day', 'date': '2016-12-27', 'notes': 'Substitute day', 'bunting': True}]
+}}
 
 NO_TRANSACTIONS = {'count': 0, 'results': []}
 ORIGINAL_REF = 'original reference'
@@ -19,8 +25,10 @@ def get_test_credits(count=20):
         credit = {'id': i, 'status': 'credited'}
         credit['amount'] = random.randint(500, 5000)
         if i % 2:
+            credit['source'] = 'bank_transfer'
             credit['reconciliation_code'] = '9' + str(random.randint(0, 99999)).zfill(5)
         else:
+            credit['source'] = 'online'
             credit['reconciliation_code'] = 'Card payment'
         if i % 2:
             credit['prison'] = TEST_PRISONS[0]['nomis_id']
@@ -35,7 +43,7 @@ def get_test_credits(count=20):
 def get_test_transactions(trans_type=None, count=20):
     transactions = []
     for i in range(count):
-        transaction = {'id': i, 'category': 'credit', 'source': 'bank_transfer'}
+        transaction = {'id': i, 'category': 'credit'}
         if trans_type == PaymentType.refund or trans_type is None and i % 5 == 0:
             transaction['refunded'] = True
         elif trans_type == PaymentType.payment or trans_type is None and i % 12:

@@ -10,8 +10,8 @@ from mtp_common.auth.models import MojUser
 from openpyxl import load_workbook
 
 from . import (
-    TEST_PRISONS, TEST_PRISONS_RESPONSE, NO_TRANSACTIONS, get_test_transactions,
-    get_test_credits
+    TEST_PRISONS, TEST_PRISONS_RESPONSE, NO_TRANSACTIONS, TEST_HOLIDAYS,
+    get_test_transactions, get_test_credits
 )
 from .. import adi, adi_config
 from ..exceptions import EmptyFileError
@@ -67,8 +67,11 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         if receipt_date is None:
             receipt_date = date.today()
-        filename, exceldata = adi.generate_adi_journal(self.get_request(),
-                                                       receipt_date)
+        with mock.patch('bank_admin.utils.requests') as mock_requests:
+            mock_requests.get().status_code = 200
+            mock_requests.get().json.return_value = TEST_HOLIDAYS
+            filename, exceldata = adi.generate_adi_journal(self.get_request(),
+                                                           receipt_date)
 
         return filename, exceldata, (credits, refundable_transactions, rejected_transactions)
 
@@ -88,35 +91,21 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             row = adi_config.ADI_JOURNAL_START_ROW
 
             current_total_debit = 0
-            for _ in range(len(credits['results']) + len(TEST_PRISONS)):
+            debit = None
+            credit = None
+            while True:
                 debit = get_cell_value(journal_ws, 'debit', row)
                 credit = get_cell_value(journal_ws, 'credit', row)
 
-                if debit:
+                if debit and credit:
+                    # final line
+                    break
+                elif debit:
                     current_total_debit += debit
                 elif credit:
                     self.assertAlmostEqual(credit, current_total_debit)
                     current_total_debit = 0
                 row += 1
-
-            current_total_debit = 0
-            for _ in range(len(refundable_transactions['results']) + 1):
-                debit = get_cell_value(journal_ws, 'debit', row)
-                credit = get_cell_value(journal_ws, 'credit', row)
-
-                if debit:
-                    current_total_debit += debit
-                elif credit:
-                    self.assertAlmostEqual(credit, current_total_debit)
-                    current_total_debit = 0
-                row += 1
-
-            for _ in range(len(rejected_transactions['results'])):
-                debit = get_cell_value(journal_ws, 'debit', row)
-                row += 1
-                credit = get_cell_value(journal_ws, 'credit', row)
-                row += 1
-                self.assertAlmostEqual(credit, debit)
 
     def test_adi_journal_number_of_payment_rows_correct(self, mock_api_client):
         filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
@@ -127,50 +116,52 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
             row = adi_config.ADI_JOURNAL_START_ROW
 
-            debit_rows = 0
-            credit_rows = 0
-            for _ in range(len(credits['results']) + len(TEST_PRISONS)):
+            expected_credits = 0
+            prisons_with_card_payments = set()
+            for credit in credits['results']:
+                if credit['source'] == 'bank_transfer':
+                    expected_credits += 1
+                else:
+                    # one lump sum per prison for card payments
+                    if credit['prison'] not in prisons_with_card_payments:
+                        expected_credits += 1
+                        prisons_with_card_payments.add(credit['prison'])
+
+            expected_debit_rows = (
+                # valid credits
+                expected_credits +
+                # refunds
+                len(refundable_transactions['results']) +
+                # rejects
+                len(rejected_transactions['results'])
+            )
+
+            expected_credit_rows = (
+                # valid credits
+                len(TEST_PRISONS) +
+                # refunds
+                1 +
+                # rejects
+                len(rejected_transactions['results'])
+            )
+
+            file_debit_rows = 0
+            file_credit_rows = 0
+            while True:
                 debit = get_cell_value(journal_ws, 'debit', row)
                 credit = get_cell_value(journal_ws, 'credit', row)
 
-                if debit:
-                    debit_rows += 1
+                if debit and credit:
+                    # final line
+                    break
+                elif debit:
+                    file_debit_rows += 1
                 elif credit:
-                    credit_rows += 1
+                    file_credit_rows += 1
                 row += 1
 
-            self.assertEqual(debit_rows, len(credits['results']))
-            self.assertEqual(credit_rows, len(TEST_PRISONS))
-
-            debit_rows = 0
-            credit_rows = 0
-            for _ in range(len(refundable_transactions['results']) + 1):
-                debit = get_cell_value(journal_ws, 'debit', row)
-                credit = get_cell_value(journal_ws, 'credit', row)
-
-                if debit:
-                    debit_rows += 1
-                elif credit:
-                    credit_rows += 1
-                row += 1
-
-            self.assertEqual(debit_rows, len(refundable_transactions['results']))
-            self.assertEqual(credit_rows, 1)
-
-            debit_rows = 0
-            credit_rows = 0
-            for _ in range(len(rejected_transactions['results'])*2):
-                debit = get_cell_value(journal_ws, 'debit', row)
-                credit = get_cell_value(journal_ws, 'credit', row)
-
-                if debit:
-                    debit_rows += 1
-                elif credit:
-                    credit_rows += 1
-                row += 1
-
-            self.assertEqual(debit_rows, len(rejected_transactions['results']))
-            self.assertEqual(credit_rows, len(rejected_transactions['results']))
+            credit = self.assertEqual(expected_credit_rows, file_credit_rows)
+            credit = self.assertEqual(expected_debit_rows, file_debit_rows)
 
     def test_adi_journal_credit_sums_correct(self, mock_api_client):
         filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
@@ -190,21 +181,25 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
             row = adi_config.ADI_JOURNAL_START_ROW
 
-            credits_checked = 0
-            for _ in range(len(credits['results']) + len(TEST_PRISONS)):
+            refund_bu_code = adi_config.ADI_JOURNAL_FIELDS['business_unit']['value']['refund']['credit']
+            reject_analysis = adi_config.ADI_JOURNAL_FIELDS['analysis']['value']['reject']['credit']
+
+            while True:
+                debit = get_cell_value(journal_ws, 'debit', row)
                 credit = get_cell_value(journal_ws, 'credit', row)
 
-                if credit:
-                    credits_checked += 1
-                    prison = get_cell_value(journal_ws, 'business_unit', row)
-                    self.assertAlmostEqual(credit, prison_totals[prison])
+                if debit and credit:
+                    # final line
+                    break
+                elif credit:
+                    bu_code = get_cell_value(journal_ws, 'business_unit', row)
+                    analysis = get_cell_value(journal_ws, 'analysis', row)
+                    if bu_code == refund_bu_code:
+                        if analysis != reject_analysis:
+                            self.assertAlmostEqual(credit, refund_total)
+                    else:
+                        self.assertAlmostEqual(credit, prison_totals[bu_code])
                 row += 1
-
-            self.assertEqual(credits_checked, len(TEST_PRISONS))
-
-            row += len(refundable_transactions['results'])
-            credit = get_cell_value(journal_ws, 'credit', row)
-            self.assertAlmostEqual(credit, refund_total)
 
     def test_no_transactions_raises_error(self, mock_api_client):
         conn = mock_api_client.get_connection()
@@ -213,26 +208,49 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn.transactions.get.return_value = NO_TRANSACTIONS
 
         try:
-            _, exceldata = adi.generate_adi_journal(self.get_request(),
-                                                    datetime.now().date())
+            with mock.patch('bank_admin.utils.requests') as mock_requests:
+                mock_requests.get().status_code = 200
+                mock_requests.get().json.return_value = TEST_HOLIDAYS
+                _, exceldata = adi.generate_adi_journal(self.get_request(),
+                                                        datetime.now().date())
             self.fail('EmptyFileError expected')
         except EmptyFileError:
             pass
 
     def test_adi_journal_reconciles_date(self, mock_api_client):
-        _, _, _ = self._generate_test_adi_journal(mock_api_client)
+        _, _, _ = self._generate_test_adi_journal(
+            mock_api_client, receipt_date=date(2016, 9, 13)
+        )
 
         conn = mock_api_client.get_connection().transactions
-        conn.reconcile.post.assert_called_with({'date': datetime.now().date().isoformat()})
+        conn.reconcile.post.assert_called_with(
+            {'received_at__gte': date(2016, 9, 13).isoformat(),
+             'received_at__lt': date(2016, 9, 14).isoformat()}
+        )
 
     def test_adi_journal_upload_range_set(self, mock_api_client):
         filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
         credits, refundable_transactions, rejected_transactions = test_data
-        num_transactions = sum([
-            len(credits['results']) + len(TEST_PRISONS),
-            len(refundable_transactions['results']) + 1,
+
+        expected_credits = 0
+        prisons_with_card_payments = set()
+        for credit in credits['results']:
+            if credit['source'] == 'bank_transfer':
+                expected_credits += 1
+            else:
+                # one lump sum per prison for card payments
+                if credit['prison'] not in prisons_with_card_payments:
+                    expected_credits += 1
+                    prisons_with_card_payments.add(credit['prison'])
+
+        expected_rows = (
+            # valid credits
+            expected_credits + len(TEST_PRISONS) +
+            # refunds
+            len(refundable_transactions['results']) + 1 +
+            # rejects
             len(rejected_transactions['results'])*2
-        ])
+        )
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
@@ -244,7 +262,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                     journal_ws,
                     '$B$%(start)s:$B$%(end)s' % {
                         'start': adi_config.ADI_JOURNAL_START_ROW,
-                        'end': adi_config.ADI_JOURNAL_START_ROW + num_transactions - 1
+                        'end': adi_config.ADI_JOURNAL_START_ROW + expected_rows - 1
                     }
                 )]
             )
