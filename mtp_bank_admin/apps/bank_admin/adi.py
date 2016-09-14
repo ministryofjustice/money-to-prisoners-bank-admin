@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 import logging
 
@@ -144,23 +144,26 @@ class AdiJournal(object):
 
 def generate_adi_journal(request, receipt_date):
     checker = WorkdayChecker()
-    reconcile_for_date(request, receipt_date)
+    start_date, end_date = checker.get_reconciliation_period_bounds(receipt_date)
+
+    reconcile_for_date(request, start_date, end_date)
+
     credits = retrieve_all_valid_credits(
         request,
-        received_at__gte=checker.get_previous_workday(receipt_date) + timedelta(days=1),
-        received_at__lt=receipt_date + timedelta(days=1)
+        received_at__gte=start_date,
+        received_at__lt=end_date
     )
     refundable_transactions = retrieve_all_transactions(
         request,
         status='refundable',
-        received_at__gte=receipt_date,
-        received_at__lt=receipt_date + timedelta(days=1)
+        received_at__gte=start_date,
+        received_at__lt=end_date
     )
     rejected_transactions = retrieve_all_transactions(
         request,
         status='unidentified',
-        received_at__gte=receipt_date,
-        received_at__lt=receipt_date + timedelta(days=1)
+        received_at__gte=start_date,
+        received_at__lt=end_date
     )
 
     if (len(credits) == 0 and

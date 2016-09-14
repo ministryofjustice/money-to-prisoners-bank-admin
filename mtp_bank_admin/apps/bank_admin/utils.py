@@ -21,12 +21,12 @@ def retrieve_prisons(request):
     return {prison['nomis_id']: prison for prison in prisons}
 
 
-def reconcile_for_date(request, date):
-    if date:
-        client = api_client.get_connection(request)
-        client.transactions.reconcile.post({
-            'date': date.isoformat(),
-        })
+def reconcile_for_date(request, start_date, end_date):
+    client = api_client.get_connection(request)
+    client.transactions.reconcile.post({
+        'received_at__gte': start_date.isoformat(),
+        'received_at__lt': end_date.isoformat(),
+    })
 
 
 def retrieve_last_balance(request, date):
@@ -75,3 +75,8 @@ class WorkdayChecker:
         while not self.is_workday(previous_day):
             previous_day -= timedelta(days=1)
         return previous_day
+
+    def get_reconciliation_period_bounds(self, date):
+        start_date = self.get_previous_workday(date) + timedelta(days=1)
+        end_date = date + timedelta(days=1)
+        return (start_date, end_date)
