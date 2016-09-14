@@ -6,7 +6,7 @@ from mtp_common.api import retrieve_all_pages
 from mtp_common.auth import api_client
 import requests
 
-from .exceptions import EarlyReconciliationError
+from .exceptions import EarlyReconciliationError, UpstreamServiceUnavailable
 
 
 def retrieve_all_transactions(request, **kwargs):
@@ -74,7 +74,7 @@ class WorkdayChecker:
                 response.json()['england-and-wales']['events']
             ]
         else:
-            raise RuntimeError(
+            raise UpstreamServiceUnavailable(
                 'Could not retrieve list of holidays for work day calculation'
             )
 

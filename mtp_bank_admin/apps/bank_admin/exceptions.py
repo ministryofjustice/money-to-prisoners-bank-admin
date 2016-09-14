@@ -8,3 +8,7 @@ class UnrecognisedFieldError(BaseException):
 
 class EarlyReconciliationError(BaseException):
     pass
+
+
+class UpstreamServiceUnavailable(BaseException):
+    pass
