@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from . import refund, adi, statement
 from .decorators import filter_by_receipt_date
-from .exceptions import EmptyFileError
+from .exceptions import EmptyFileError, EarlyReconciliationError
 
 logger = logging.getLogger('mtp')
 
@@ -31,7 +31,8 @@ def download_refund_file(request, receipt_date):
         return response
     except EmptyFileError:
         messages.add_message(request, messages.ERROR, _('No transactions available'))
-
+    except EarlyReconciliationError:
+        messages.add_message(request, messages.ERROR, _('This file cannot be downloaded until the next working day'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
 
@@ -57,6 +58,8 @@ def download_adi_journal(request, receipt_date):
         return response
     except EmptyFileError:
         messages.add_message(request, messages.ERROR, _('No transactions available'))
+    except EarlyReconciliationError:
+        messages.add_message(request, messages.ERROR, _('This file cannot be downloaded until the next working day'))
     return redirect(reverse_lazy('bank_admin:dashboard'))
 
 
@@ -77,4 +80,6 @@ def download_bank_statement(request, receipt_date):
         return response
     except EmptyFileError:
         messages.add_message(request, messages.ERROR, _('No transactions available'))
+    except EarlyReconciliationError:
+        messages.add_message(request, messages.ERROR, _('This file cannot be downloaded until the next working day'))
     return redirect(reverse_lazy('bank_admin:dashboard'))

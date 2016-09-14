@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import date
 import random
 from unittest import mock
 
@@ -64,7 +64,7 @@ class BankStatementTestCase(SimpleTestCase):
         mock_balance(mock_api_client)
 
         if receipt_date is None:
-            receipt_date = datetime.now().date()
+            receipt_date = date(2016, 9, 13)
         with mock.patch('bank_admin.utils.requests') as mock_requests:
             mock_requests.get().status_code = 200
             mock_requests.get().json.return_value = TEST_HOLIDAYS
@@ -155,7 +155,7 @@ class NoTransactionsTestCase(BankStatementTestCase):
         conn.get.return_value = NO_TRANSACTIONS
         mock_balance(mock_api_client)
 
-        today = datetime.now().date()
+        today = date(2016, 9, 13)
         with mock.patch('bank_admin.utils.requests') as mock_requests:
             mock_requests.get().status_code = 200
             mock_requests.get().json.return_value = TEST_HOLIDAYS

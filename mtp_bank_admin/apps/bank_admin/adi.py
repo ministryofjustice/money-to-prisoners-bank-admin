@@ -13,7 +13,7 @@ from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
 from .utils import (
     retrieve_all_transactions, retrieve_all_valid_credits,
-    reconcile_for_date, retrieve_prisons, WorkdayChecker
+    reconcile_for_date, retrieve_prisons
 )
 
 logger = logging.getLogger('mtp')
@@ -143,27 +143,24 @@ class AdiJournal(object):
 
 
 def generate_adi_journal(request, receipt_date):
-    checker = WorkdayChecker()
-    start_date, end_date = checker.get_reconciliation_period_bounds(receipt_date)
-
-    reconcile_for_date(request, start_date, end_date)
+    reconciliation_date = reconcile_for_date(request, receipt_date)
 
     credits = retrieve_all_valid_credits(
         request,
-        received_at__gte=start_date,
-        received_at__lt=end_date
+        received_at__gte=receipt_date,
+        received_at__lt=reconciliation_date
     )
     refundable_transactions = retrieve_all_transactions(
         request,
         status='refundable',
-        received_at__gte=start_date,
-        received_at__lt=end_date
+        received_at__gte=receipt_date,
+        received_at__lt=reconciliation_date
     )
     rejected_transactions = retrieve_all_transactions(
         request,
         status='unidentified',
-        received_at__gte=start_date,
-        received_at__lt=end_date
+        received_at__gte=receipt_date,
+        received_at__lt=reconciliation_date
     )
 
     if (len(credits) == 0 and

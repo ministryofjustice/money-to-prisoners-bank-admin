@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from datetime import datetime, date
+from datetime import date
 import os
 from unittest import mock, skip
 
@@ -14,7 +14,7 @@ from . import (
     get_test_transactions, get_test_credits
 )
 from .. import adi, adi_config
-from ..exceptions import EmptyFileError
+from ..exceptions import EmptyFileError, EarlyReconciliationError
 from ..types import PaymentType
 
 
@@ -66,7 +66,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         ]
 
         if receipt_date is None:
-            receipt_date = date.today()
+            receipt_date = date(2016, 9, 13)
         with mock.patch('bank_admin.utils.requests') as mock_requests:
             mock_requests.get().status_code = 200
             mock_requests.get().json.return_value = TEST_HOLIDAYS
@@ -87,7 +87,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+            journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
 
             current_total_debit = 0
@@ -113,7 +113,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+            journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
 
             expected_credits = 0
@@ -178,7 +178,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+            journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
 
             refund_bu_code = adi_config.ADI_JOURNAL_FIELDS['business_unit']['value']['refund']['credit']
@@ -212,7 +212,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                 mock_requests.get().status_code = 200
                 mock_requests.get().json.return_value = TEST_HOLIDAYS
                 _, exceldata = adi.generate_adi_journal(self.get_request(),
-                                                        datetime.now().date())
+                                                        date(2016, 9, 13))
             self.fail('EmptyFileError expected')
         except EmptyFileError:
             pass
@@ -254,7 +254,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+            journal_ws = wb.get_sheet_by_name('130916')
 
             self.assertEqual(
                 wb.get_named_range('BNE_UPLOAD').destinations,
@@ -272,7 +272,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(datetime.now().strftime('%d%m%y'))
+            journal_ws = wb.get_sheet_by_name('130916')
             self.assertTrue('JS' in journal_ws[adi_config.ADI_BATCH_NAME_CELL].value)
 
     @mock.patch('mtp_bank_admin.apps.bank_admin.adi.date')
@@ -308,3 +308,12 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                 receipt_date.strftime(adi_config.ADI_DATE_FORMAT),
                 journal_ws[adi_config.ADI_DATE_CELL].value
             )
+
+    def test_early_reconciliation_raises_error(self, mock_api_client):
+        try:
+            self._generate_test_adi_journal(
+                mock_api_client, receipt_date=date.today()
+            )
+            self.fail('EarlyReconciliationError expected')
+        except EarlyReconciliationError:
+            pass

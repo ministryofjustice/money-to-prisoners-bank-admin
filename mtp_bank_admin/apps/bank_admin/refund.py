@@ -10,22 +10,20 @@ from mtp_common.auth.backends import api_client
 from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
 from .utils import (
-    retrieve_all_transactions, escape_csv_formula, reconcile_for_date, WorkdayChecker
+    retrieve_all_transactions, escape_csv_formula, reconcile_for_date
 )
 
 logger = logging.getLogger('mtp')
 
 
 def generate_refund_file_for_date(request, receipt_date):
-    checker = WorkdayChecker()
-    start_date, end_date = checker.get_reconciliation_period_bounds(receipt_date)
-    reconcile_for_date(request, start_date, end_date)
+    reconciliation_date = reconcile_for_date(request, receipt_date)
 
     transactions_to_refund = retrieve_all_transactions(
         request,
         status='refundable',
-        received_at__gte=start_date,
-        received_at__lt=end_date
+        received_at__gte=receipt_date,
+        received_at__lt=reconciliation_date
     )
 
     filedata = generate_refund_file(request, transactions_to_refund)

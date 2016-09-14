@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta
 import time
 
+from django.utils.timezone import now
 from mtp_common.api import retrieve_all_pages
 from mtp_common.auth import api_client
 import requests
+
+from .exceptions import EarlyReconciliationError
 
 
 def retrieve_all_transactions(request, **kwargs):
@@ -21,12 +24,20 @@ def retrieve_prisons(request):
     return {prison['nomis_id']: prison for prison in prisons}
 
 
-def reconcile_for_date(request, start_date, end_date):
+def reconcile_for_date(request, receipt_date):
+    checker = WorkdayChecker()
+    reconciliation_date = checker.get_next_workday(receipt_date)
+
+    if reconciliation_date > now().date():
+        raise EarlyReconciliationError
+
     client = api_client.get_connection(request)
     client.transactions.reconcile.post({
-        'received_at__gte': start_date.isoformat(),
-        'received_at__lt': end_date.isoformat(),
+        'received_at__gte': receipt_date.isoformat(),
+        'received_at__lt': reconciliation_date.isoformat(),
     })
+
+    return reconciliation_date
 
 
 def retrieve_last_balance(request, date):
@@ -70,13 +81,8 @@ class WorkdayChecker:
     def is_workday(self, date):
         return date.weekday() < 5 and date not in self.holidays
 
-    def get_previous_workday(self, date):
-        previous_day = date - timedelta(days=1)
-        while not self.is_workday(previous_day):
-            previous_day -= timedelta(days=1)
-        return previous_day
-
-    def get_reconciliation_period_bounds(self, date):
-        start_date = self.get_previous_workday(date) + timedelta(days=1)
-        end_date = date + timedelta(days=1)
-        return (start_date, end_date)
+    def get_next_workday(self, date):
+        next_day = date + timedelta(days=1)
+        while not self.is_workday(next_day):
+            next_day += timedelta(days=1)
+        return next_day

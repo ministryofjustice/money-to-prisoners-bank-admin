@@ -7,7 +7,7 @@ from django.conf import settings
 from . import BAI2_STMT_LABEL
 from .utils import (
     retrieve_all_transactions, get_daily_file_uid,
-    reconcile_for_date, retrieve_last_balance, WorkdayChecker
+    reconcile_for_date, retrieve_last_balance
 )
 
 logger = logging.getLogger('mtp')
@@ -25,14 +25,12 @@ RECORD_LENGTH = 80
 
 
 def generate_bank_statement(request, receipt_date):
-    checker = WorkdayChecker()
-    start_date, end_date = checker.get_reconciliation_period_bounds(receipt_date)
-    reconcile_for_date(request, start_date, end_date)
+    reconciliation_date = reconcile_for_date(request, receipt_date)
 
     transactions = retrieve_all_transactions(
         request,
-        received_at__gte=start_date,
-        received_at__lt=end_date
+        received_at__gte=receipt_date,
+        received_at__lt=reconciliation_date
     )
 
     transaction_records = []
