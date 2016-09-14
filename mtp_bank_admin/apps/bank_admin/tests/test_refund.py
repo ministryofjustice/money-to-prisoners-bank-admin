@@ -160,13 +160,11 @@ class NoTransactionsTestCase(RefundFileTestCase):
 
         refund_conn = mock_refund_api_client.get_connection().transactions
 
-        try:
+        with self.assertRaises(EmptyFileError):
             with mock.patch('bank_admin.utils.requests') as mock_requests:
                 mock_requests.get().status_code = 200
                 mock_requests.get().json.return_value = TEST_HOLIDAYS
                 _, csvdata = refund.generate_refund_file_for_date(
                     self.get_request(), date(2016, 9, 13)
                 )
-            self.fail('EmptyFileError expected')
-        except EmptyFileError:
-            self.assertFalse(refund_conn.patch.called)
+        self.assertFalse(refund_conn.patch.called)

@@ -207,15 +207,12 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn.credits.get.return_value = NO_TRANSACTIONS
         conn.transactions.get.return_value = NO_TRANSACTIONS
 
-        try:
+        with self.assertRaises(EmptyFileError):
             with mock.patch('bank_admin.utils.requests') as mock_requests:
                 mock_requests.get().status_code = 200
                 mock_requests.get().json.return_value = TEST_HOLIDAYS
                 _, exceldata = adi.generate_adi_journal(self.get_request(),
                                                         date(2016, 9, 13))
-            self.fail('EmptyFileError expected')
-        except EmptyFileError:
-            pass
 
     def test_adi_journal_reconciles_date(self, mock_api_client):
         _, _, _ = self._generate_test_adi_journal(
@@ -310,10 +307,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             )
 
     def test_early_reconciliation_raises_error(self, mock_api_client):
-        try:
+        with self.assertRaises(EarlyReconciliationError):
             self._generate_test_adi_journal(
                 mock_api_client, receipt_date=date.today()
             )
-            self.fail('EarlyReconciliationError expected')
-        except EarlyReconciliationError:
-            pass
