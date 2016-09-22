@@ -129,6 +129,14 @@ class AdiJournal(object):
             static_value = self._lookup(field, payment_type, record_type, context=kwargs)
             self._set_field(field, static_value)
 
+        # test code please ignore
+        if kwargs.get('prison_ledger_code') == '509':
+            self._set_field('responsibility_code', '0094')
+            self._set_field('activity', '810')
+            self._set_field('account', '05100')
+            self._set_field('funding_source', '00')
+        # delete section later
+
         if record_type == RecordType.debit:
             self._set_field('debit', float(amount))
         elif record_type == RecordType.credit:
