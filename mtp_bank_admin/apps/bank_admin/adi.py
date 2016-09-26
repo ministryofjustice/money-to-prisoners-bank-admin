@@ -184,6 +184,8 @@ def generate_adi_journal(request, receipt_date):
     card_reconciliation_code = '%s - Card payment' % journal_date
     for credit in credits:
         if credit['source'] == 'online':
+            if settings.ENVIRONMENT == 'prod':
+                continue
             reconciliation_code = card_reconciliation_code
         else:
             reconciliation_code = str(credit['reconciliation_code'])
