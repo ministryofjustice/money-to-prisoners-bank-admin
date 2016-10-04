@@ -40,7 +40,12 @@ def generate_bank_statement(request, receipt_date):
     debit_total = 0
     for transaction in transactions:
         transaction_record = models.TransactionDetail([])
-        transaction_record.text = str(transaction.get('reference', ''))
+        reference = ' '.join([
+            str(transaction[field_name]) for field_name
+            in ['sender_name', 'reference']
+            if transaction.get(field_name)
+        ])
+        transaction_record.text = reference
 
         if transaction['category'] == 'debit':
             transaction_record.type_code = constants.TypeCodes[DEBIT_TYPE_CODE]

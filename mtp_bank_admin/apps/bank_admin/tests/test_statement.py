@@ -10,7 +10,7 @@ from django.test.client import RequestFactory
 from mtp_common.auth.models import MojUser
 
 from . import (
-    get_test_transactions, NO_TRANSACTIONS, ORIGINAL_REF, TEST_HOLIDAYS
+    get_test_transactions, NO_TRANSACTIONS, ORIGINAL_REF, SENDER_NAME, TEST_HOLIDAYS
 )
 from ..statement import generate_bank_statement
 
@@ -20,6 +20,7 @@ def get_test_transactions_for_stmt(count=20):
     for i in range(int(count*0.75), count):
         transaction = {'id': i, 'category': 'debit', 'source': 'administrative'}
         transaction['amount'] = random.randint(500, 5000)
+        transaction['sender_name'] = SENDER_NAME
         transaction['reference'] = ORIGINAL_REF
         transactions['results'].append(transaction)
     transactions['count'] = count
@@ -131,9 +132,11 @@ class BankStatementGenerationTestCase(BankStatementTestCase):
         account = parsed_file.children[0].children[0]
         for record in account.children:
             if record.type_code == TypeCodes['399']:
-                self.assertTrue(record.text != ORIGINAL_REF)
+                self.assertNotEqual(record.text, SENDER_NAME + ' ' + ORIGINAL_REF)
+                self.assertNotEqual(record.text, ORIGINAL_REF)
+                self.assertNotEqual(record.text, SENDER_NAME)
             else:
-                self.assertTrue(record.text == ORIGINAL_REF)
+                self.assertEqual(record.text, SENDER_NAME + ' ' + ORIGINAL_REF)
 
     def test_reconciles_date(self, mock_api_client):
         _, _ = self._generate_and_parse_bank_statement(

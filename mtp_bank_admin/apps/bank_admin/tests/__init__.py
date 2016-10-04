@@ -17,6 +17,7 @@ TEST_HOLIDAYS = {'england-and-wales': {
 
 NO_TRANSACTIONS = {'count': 0, 'results': []}
 ORIGINAL_REF = 'original reference'
+SENDER_NAME = 'sender'
 
 
 def get_test_credits(count=20):
@@ -58,6 +59,7 @@ def get_test_transactions(trans_type=None, count=20):
         transaction['amount'] = random.randint(500, 5000)
         transaction['ref_code'] = '9' + str(random.randint(0, 99999)).zfill(5)
         if i % 5:
+            transaction['sender_name'] = SENDER_NAME
             transaction['reference'] = ORIGINAL_REF
             transaction['reference_in_sender_field'] = False
         else:
