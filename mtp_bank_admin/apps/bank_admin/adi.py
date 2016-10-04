@@ -13,7 +13,7 @@ from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
 from .utils import (
     retrieve_all_transactions, retrieve_all_valid_credits,
-    reconcile_for_date, retrieve_prisons
+    reconcile_for_date, retrieve_prisons, get_full_narrative
 )
 
 logger = logging.getLogger('mtp')
@@ -171,32 +171,34 @@ def generate_adi_journal(request, receipt_date):
     journal_date = receipt_date.strftime('%d/%m/%Y')
     journal = AdiJournal()
 
-    prisons = retrieve_prisons(request)
-    bulk_payments_by_prison = defaultdict(dict)
-    card_reconciliation_code = '%s - Card payment' % journal_date
+    debit_card_total = 0
+    prison_totals = defaultdict(int)
+    prison_transactions = defaultdict(list)
     for credit in credits:
+        amount = Decimal(credit['amount'])/100
+        prison_totals[credit['prison']] += amount
         if credit['source'] == 'online':
-            reconciliation_code = card_reconciliation_code
+            debit_card_total += amount
         else:
-            reconciliation_code = str(credit['reconciliation_code'])
-        prison = credit['prison']
-        if reconciliation_code in bulk_payments_by_prison[prison]:
-            bulk_payments_by_prison[prison][reconciliation_code] += credit['amount']
-        else:
-            bulk_payments_by_prison[prison][reconciliation_code] = credit['amount']
+            prison_transactions[credit['prison']].append(credit)
+
+    prisons = retrieve_prisons(request)
+    card_reconciliation_code = '%s - Card payment' % journal_date
 
     # add valid payment rows
-    for prison, payments in bulk_payments_by_prison.items():
-        credit_total = 0
-        for reconciliation_code in sorted(payments.keys()):
-            credit_amount = Decimal(payments[reconciliation_code])/100
-            credit_total += credit_amount
+    journal.add_payment_row(
+        debit_card_total, PaymentType.payment, RecordType.debit,
+        reconciliation_code=card_reconciliation_code
+    )
+    for prison in prison_totals:
+        for transaction in prison_transactions.get(prison, []):
             journal.add_payment_row(
-                credit_amount, PaymentType.payment, RecordType.debit,
-                reconciliation_code=reconciliation_code
+                Decimal(transaction['amount'])/100,
+                PaymentType.payment, RecordType.debit,
+                reconciliation_code=transaction['reconciliation_code']
             )
         journal.add_payment_row(
-            credit_total, PaymentType.payment, RecordType.credit,
+            prison_totals[prison], PaymentType.payment, RecordType.credit,
             prison_ledger_code=prisons[prison]['general_ledger_code'],
             prison_name=prisons[prison]['name'],
             date=journal_date
@@ -217,14 +219,14 @@ def generate_adi_journal(request, receipt_date):
 
     # add reject rows
     for reject in rejected_transactions:
-        reference = reject['sender_name'] if reject['reference_in_sender_field'] else reject['reference']
-        amount = Decimal(reject['amount'])/100
+        reject_amount = Decimal(reject['amount'])/100
+        reference = get_full_narrative(reject)
         journal.add_payment_row(
-            amount, PaymentType.reject, RecordType.debit,
+            reject_amount, PaymentType.reject, RecordType.debit,
             reconciliation_code=str(reject['ref_code'])
         )
         journal.add_payment_row(
-            amount, PaymentType.reject, RecordType.credit,
+            reject_amount, PaymentType.reject, RecordType.credit,
             reference=reference, date=journal_date
         )
 

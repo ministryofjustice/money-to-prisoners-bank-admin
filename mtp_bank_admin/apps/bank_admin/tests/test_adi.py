@@ -75,6 +75,38 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         return filename, exceldata, (credits, refundable_transactions, rejected_transactions)
 
+    def _get_expected_number_of_rows(self, credits, refundable_transactions, rejected_transactions):
+        expected_credits = 0
+        has_card_payments = False
+        for credit in credits['results']:
+            if credit['source'] == 'bank_transfer':
+                expected_credits += 1
+            else:
+                # one lump sum for card payments
+                if not has_card_payments:
+                    has_card_payments = True
+                    expected_credits += 1
+
+        expected_debit_rows = (
+            # valid credits
+            expected_credits +
+            # refunds
+            len(refundable_transactions['results']) +
+            # rejects
+            len(rejected_transactions['results'])
+        )
+
+        expected_credit_rows = (
+            # valid credits
+            len(TEST_PRISONS) +
+            # refunds
+            1 +
+            # rejects
+            len(rejected_transactions['results'])
+        )
+
+        return expected_debit_rows, expected_credit_rows
+
     @skip('Enable to generate an example file for inspection')
     def test_adi_journal_generation(self, mock_api_client):
         filename, exceldata, _ = self._generate_test_adi_journal(mock_api_client)
@@ -90,9 +122,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
 
-            current_total_debit = 0
-            debit = None
-            credit = None
+            current_balance = 0
             while True:
                 debit = get_cell_value(journal_ws, 'debit', row)
                 credit = get_cell_value(journal_ws, 'credit', row)
@@ -101,11 +131,11 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                     # final line
                     break
                 elif debit:
-                    current_total_debit += debit
+                    current_balance -= debit
                 elif credit:
-                    self.assertAlmostEqual(credit, current_total_debit)
-                    current_total_debit = 0
+                    current_balance += credit
                 row += 1
+            self.assertAlmostEqual(0, current_balance)
 
     def test_adi_journal_number_of_payment_rows_correct(self, mock_api_client):
         filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
@@ -116,33 +146,8 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
 
-            expected_credits = 0
-            prisons_with_card_payments = set()
-            for credit in credits['results']:
-                if credit['source'] == 'bank_transfer':
-                    expected_credits += 1
-                else:
-                    # one lump sum per prison for card payments
-                    if credit['prison'] not in prisons_with_card_payments:
-                        expected_credits += 1
-                        prisons_with_card_payments.add(credit['prison'])
-
-            expected_debit_rows = (
-                # valid credits
-                expected_credits +
-                # refunds
-                len(refundable_transactions['results']) +
-                # rejects
-                len(rejected_transactions['results'])
-            )
-
-            expected_credit_rows = (
-                # valid credits
-                len(TEST_PRISONS) +
-                # refunds
-                1 +
-                # rejects
-                len(rejected_transactions['results'])
+            expected_debit_rows, expected_credit_rows = self._get_expected_number_of_rows(
+                credits, refundable_transactions, rejected_transactions
             )
 
             file_debit_rows = 0
@@ -229,25 +234,10 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
         credits, refundable_transactions, rejected_transactions = test_data
 
-        expected_credits = 0
-        prisons_with_card_payments = set()
-        for credit in credits['results']:
-            if credit['source'] == 'bank_transfer':
-                expected_credits += 1
-            else:
-                # one lump sum per prison for card payments
-                if credit['prison'] not in prisons_with_card_payments:
-                    expected_credits += 1
-                    prisons_with_card_payments.add(credit['prison'])
-
-        expected_rows = (
-            # valid credits
-            expected_credits + len(TEST_PRISONS) +
-            # refunds
-            len(refundable_transactions['results']) + 1 +
-            # rejects
-            len(rejected_transactions['results'])*2
+        expected_debit_rows, expected_credit_rows = self._get_expected_number_of_rows(
+            credits, refundable_transactions, rejected_transactions
         )
+        expected_rows = expected_debit_rows + expected_credit_rows
 
         with temp_file(filename, exceldata) as f:
             wb = load_workbook(f)
