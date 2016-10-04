@@ -129,14 +129,6 @@ class AdiJournal(object):
             static_value = self._lookup(field, payment_type, record_type, context=kwargs)
             self._set_field(field, static_value)
 
-        # test code please ignore
-        if kwargs.get('prison_ledger_code') == '509':
-            self._set_field('responsibility_code', '0094')
-            self._set_field('activity', '810')
-            self._set_field('account', '05100')
-            self._set_field('funding_source', '00')
-        # delete section later
-
         if record_type == RecordType.debit:
             self._set_field('debit', float(amount))
         elif record_type == RecordType.credit:
@@ -184,8 +176,6 @@ def generate_adi_journal(request, receipt_date):
     card_reconciliation_code = '%s - Card payment' % journal_date
     for credit in credits:
         if credit['source'] == 'online':
-            if settings.ENVIRONMENT == 'prod':
-                continue
             reconciliation_code = card_reconciliation_code
         else:
             reconciliation_code = str(credit['reconciliation_code'])
