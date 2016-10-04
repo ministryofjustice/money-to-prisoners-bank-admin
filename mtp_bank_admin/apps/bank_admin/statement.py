@@ -7,7 +7,7 @@ from django.conf import settings
 from . import BAI2_STMT_LABEL
 from .utils import (
     retrieve_all_transactions, get_daily_file_uid,
-    reconcile_for_date, retrieve_last_balance
+    reconcile_for_date, retrieve_last_balance, get_full_narrative
 )
 
 logger = logging.getLogger('mtp')
@@ -40,7 +40,7 @@ def generate_bank_statement(request, receipt_date):
     debit_total = 0
     for transaction in transactions:
         transaction_record = models.TransactionDetail([])
-        transaction_record.text = str(transaction.get('reference', ''))
+        transaction_record.text = get_full_narrative(transaction)
 
         if transaction['category'] == 'debit':
             transaction_record.type_code = constants.TypeCodes[DEBIT_TYPE_CODE]

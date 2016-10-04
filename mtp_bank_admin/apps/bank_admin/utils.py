@@ -64,6 +64,14 @@ def escape_csv_formula(value):
     return value
 
 
+def get_full_narrative(transaction):
+    return ' '.join([
+        str(transaction[field_name]) for field_name
+        in ['sender_name', 'reference']
+        if transaction.get(field_name)
+    ])
+
+
 class WorkdayChecker:
 
     def __init__(self):
