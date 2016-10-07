@@ -30,7 +30,7 @@ def get_test_credits(count=20):
             credit['reconciliation_code'] = '9' + str(random.randint(0, 99999)).zfill(5)
         else:
             credit['source'] = 'online'
-            credit['reconciliation_code'] = 'Card payment'
+            credit['reconciliation_code'] = '800001'
         if i % 2:
             credit['prison'] = TEST_PRISONS[0]['nomis_id']
         elif i % 3:
