@@ -1,12 +1,13 @@
-import logging
 import datetime
-
+import logging
 from unittest import mock
-from django.test import SimpleTestCase
-from django.core.urlresolvers import reverse
-from django.utils.encoding import escape_uri_path
-from django.utils.translation import ugettext_lazy as _
+
 from django.conf import settings
+from django.core.urlresolvers import reverse
+from django.test import SimpleTestCase
+from django.utils.encoding import escape_uri_path
+from django.utils.timezone import utc
+from django.utils.translation import ugettext_lazy as _
 from mtp_common.auth.exceptions import Unauthorized, Forbidden
 from mtp_common.auth.test_utils import generate_tokens
 
@@ -170,8 +171,8 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
             limit=settings.REQUEST_PAGE_SIZE,
             offset=0,
             status='refundable',
-            received_at__gte=datetime.date(2014, 11, 12),
-            received_at__lt=datetime.date(2014, 11, 13)
+            received_at__gte=datetime.datetime(2014, 11, 11, 23, 0, tzinfo=utc),
+            received_at__lt=datetime.datetime(2014, 11, 12, 23, 0, tzinfo=utc)
         )
 
 
@@ -257,23 +258,23 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
             limit=settings.REQUEST_PAGE_SIZE,
             offset=0,
             valid=True,
-            received_at__gte=datetime.date(2014, 11, 12),
-            received_at__lt=datetime.date(2014, 11, 13)
+            received_at__gte=datetime.datetime(2014, 11, 11, 23, 0, tzinfo=utc),
+            received_at__lt=datetime.datetime(2014, 11, 12, 23, 0, tzinfo=utc)
         )
         conn.transactions.get.assert_has_calls([
             mock.call(
                 limit=settings.REQUEST_PAGE_SIZE,
                 offset=0,
                 status='refundable',
-                received_at__gte=datetime.date(2014, 11, 12),
-                received_at__lt=datetime.date(2014, 11, 13)
+                received_at__gte=datetime.datetime(2014, 11, 11, 23, 0, tzinfo=utc),
+                received_at__lt=datetime.datetime(2014, 11, 12, 23, 0, tzinfo=utc)
             ),
             mock.call(
                 limit=settings.REQUEST_PAGE_SIZE,
                 offset=0,
                 status='unidentified',
-                received_at__gte=datetime.date(2014, 11, 12),
-                received_at__lt=datetime.date(2014, 11, 13)
+                received_at__gte=datetime.datetime(2014, 11, 11, 23, 0, tzinfo=utc),
+                received_at__lt=datetime.datetime(2014, 11, 12, 23, 0, tzinfo=utc)
             )
         ])
 
@@ -368,8 +369,8 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
         conn.get.assert_called_with(
             limit=settings.REQUEST_PAGE_SIZE,
             offset=0,
-            received_at__gte=datetime.date(2014, 11, 12),
-            received_at__lt=datetime.date(2014, 11, 13)
+            received_at__gte=datetime.datetime(2014, 11, 11, 23, 0, tzinfo=utc),
+            received_at__lt=datetime.datetime(2014, 11, 12, 23, 0, tzinfo=utc)
         )
 
 
