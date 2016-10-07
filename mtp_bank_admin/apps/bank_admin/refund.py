@@ -17,13 +17,13 @@ logger = logging.getLogger('mtp')
 
 
 def generate_refund_file_for_date(request, receipt_date):
-    reconciliation_date = reconcile_for_date(request, receipt_date)
+    start_date, end_date = reconcile_for_date(request, receipt_date)
 
     transactions_to_refund = retrieve_all_transactions(
         request,
         status='refundable',
-        received_at__gte=receipt_date,
-        received_at__lt=reconciliation_date
+        received_at__gte=start_date,
+        received_at__lt=end_date
     )
 
     filedata = generate_refund_file(request, transactions_to_refund)

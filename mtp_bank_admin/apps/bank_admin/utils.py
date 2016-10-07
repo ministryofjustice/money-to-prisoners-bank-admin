@@ -26,18 +26,19 @@ def retrieve_prisons(request):
 
 def reconcile_for_date(request, receipt_date):
     checker = WorkdayChecker()
-    reconciliation_date = checker.get_next_workday(receipt_date)
+    start_date = checker.get_previous_workday(receipt_date) + timedelta(days=1)
+    end_date = receipt_date + timedelta(days=1)
 
-    if reconciliation_date > now().date():
+    if start_date > now().date() or end_date > now().date():
         raise EarlyReconciliationError
 
     client = api_client.get_connection(request)
     client.transactions.reconcile.post({
-        'received_at__gte': receipt_date.isoformat(),
-        'received_at__lt': reconciliation_date.isoformat(),
+        'received_at__gte': start_date.isoformat(),
+        'received_at__lt': end_date.isoformat(),
     })
 
-    return reconciliation_date
+    return start_date, end_date
 
 
 def retrieve_last_balance(request, date):
@@ -94,3 +95,9 @@ class WorkdayChecker:
         while not self.is_workday(next_day):
             next_day += timedelta(days=1)
         return next_day
+
+    def get_previous_workday(self, date):
+        previous_day = date - timedelta(days=1)
+        while not self.is_workday(previous_day):
+            previous_day -= timedelta(days=1)
+        return previous_day

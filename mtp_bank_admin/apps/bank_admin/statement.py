@@ -25,12 +25,12 @@ RECORD_LENGTH = 80
 
 
 def generate_bank_statement(request, receipt_date):
-    reconciliation_date = reconcile_for_date(request, receipt_date)
+    start_date, end_date = reconcile_for_date(request, receipt_date)
 
     transactions = retrieve_all_transactions(
         request,
-        received_at__gte=receipt_date,
-        received_at__lt=reconciliation_date
+        received_at__gte=start_date,
+        received_at__lt=end_date
     )
 
     transaction_records = []
