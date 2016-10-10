@@ -5,6 +5,7 @@ from unittest import mock
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
+from django.utils.timezone import utc
 from mtp_common.auth.models import MojUser
 
 from . import NO_TRANSACTIONS, TEST_HOLIDAYS
@@ -116,8 +117,8 @@ class ValidTransactionsTestCase(RefundFileTestCase):
         )
 
         conn.reconcile.post.assert_called_with(
-            {'received_at__gte': date(2016, 9, 13).isoformat(),
-             'received_at__lt': date(2016, 9, 14).isoformat()}
+            {'received_at__gte': datetime(2016, 9, 12, 23, 0, tzinfo=utc).isoformat(),
+             'received_at__lt': datetime(2016, 9, 13, 23, 0, tzinfo=utc).isoformat()}
         )
         refund_conn.patch.assert_called_once_with([
             {'id': '3', 'refunded': True},

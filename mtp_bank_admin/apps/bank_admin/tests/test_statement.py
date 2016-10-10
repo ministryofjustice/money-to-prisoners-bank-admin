@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 import random
 from unittest import mock
 
@@ -7,6 +7,7 @@ from bai2.constants import TypeCodes
 from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
 from django.test.client import RequestFactory
+from django.utils.timezone import utc
 from mtp_common.auth.models import MojUser
 
 from . import (
@@ -145,8 +146,8 @@ class BankStatementGenerationTestCase(BankStatementTestCase):
 
         conn = mock_api_client.get_connection().transactions
         conn.reconcile.post.assert_called_with(
-            {'received_at__gte': date(2016, 9, 13).isoformat(),
-             'received_at__lt': date(2016, 9, 14).isoformat()}
+            {'received_at__gte': datetime(2016, 9, 12, 23, 0, tzinfo=utc).isoformat(),
+             'received_at__lt': datetime(2016, 9, 13, 23, 0, tzinfo=utc).isoformat()}
         )
 
 

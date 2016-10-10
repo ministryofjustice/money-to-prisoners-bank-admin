@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta
-import time
+from datetime import datetime, time, timedelta
+import time as systime
 
-from django.utils.timezone import now
+from django.utils.timezone import now, utc
 from mtp_common.api import retrieve_all_pages
 from mtp_common.auth import api_client
 import requests
@@ -24,12 +24,16 @@ def retrieve_prisons(request):
     return {prison['nomis_id']: prison for prison in prisons}
 
 
+def set_worldpay_cutoff(date):
+    return datetime.combine(date, time(23, 0, tzinfo=utc))
+
+
 def reconcile_for_date(request, receipt_date):
     checker = WorkdayChecker()
-    start_date = checker.get_previous_workday(receipt_date) + timedelta(days=1)
-    end_date = receipt_date + timedelta(days=1)
+    start_date = set_worldpay_cutoff(checker.get_previous_workday(receipt_date))
+    end_date = set_worldpay_cutoff(receipt_date)
 
-    if start_date > now().date() or end_date > now().date():
+    if start_date.date() >= now().date() or end_date.date() >= now().date():
         raise EarlyReconciliationError
 
     client = api_client.get_connection(request)
@@ -51,7 +55,7 @@ def retrieve_last_balance(request, date):
 
 
 def get_daily_file_uid():
-    int(time.time()) % 86400
+    int(systime.time()) % 86400
 
 
 def escape_csv_formula(value):
