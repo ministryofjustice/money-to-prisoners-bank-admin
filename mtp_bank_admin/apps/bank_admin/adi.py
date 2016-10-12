@@ -171,27 +171,31 @@ def generate_adi_journal(request, receipt_date):
     journal_date = receipt_date.strftime('%d/%m/%Y')
     journal = AdiJournal()
 
-    debit_card_total = 0
+    debit_card_batches = defaultdict(int)
     prison_totals = defaultdict(int)
     prison_transactions = defaultdict(list)
-    card_reconciliation_code = '%s - Card payment' % journal_date
     for credit in credits:
         amount = Decimal(credit['amount'])/100
         prison_totals[credit['prison']] += amount
         if credit['source'] == 'online':
             if credit['reconciliation_code']:
                 card_reconciliation_code = credit['reconciliation_code']
-            debit_card_total += amount
+            else:
+                card_reconciliation_code = '%s - Card payment' % journal_date
+            debit_card_batches[card_reconciliation_code] += amount
         else:
             prison_transactions[credit['prison']].append(credit)
 
     prisons = retrieve_prisons(request)
 
     # add valid payment rows
-    journal.add_payment_row(
-        debit_card_total, PaymentType.payment, RecordType.debit,
-        reconciliation_code=card_reconciliation_code
-    )
+    # debit card batches
+    for batch_code in debit_card_batches:
+        journal.add_payment_row(
+            debit_card_batches[batch_code], PaymentType.payment, RecordType.debit,
+            reconciliation_code=batch_code
+        )
+    # other credits
     for prison in prison_totals:
         for transaction in prison_transactions.get(prison, []):
             journal.add_payment_row(

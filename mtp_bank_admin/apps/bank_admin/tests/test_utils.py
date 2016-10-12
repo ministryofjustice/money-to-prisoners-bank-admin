@@ -1,10 +1,49 @@
 from unittest import mock
-from datetime import date
+from datetime import date, datetime
 
 from django.test import SimpleTestCase
+from django.utils.timezone import utc
 
-from bank_admin.utils import WorkdayChecker
+from bank_admin.utils import WorkdayChecker, reconcile_for_date
 from . import TEST_HOLIDAYS
+
+
+@mock.patch('bank_admin.utils.api_client')
+class ReconcileForDateTestCase(SimpleTestCase):
+
+    def test_reconciles_midweek(self, mock_api_client):
+        start_date, end_date = reconcile_for_date(None, date(2016, 9, 15))
+
+        conn = mock_api_client.get_connection().transactions
+        conn.reconcile.post.assert_called_with(
+            {'received_at__gte': datetime(2016, 9, 14, 23, 0, tzinfo=utc).isoformat(),
+             'received_at__lt': datetime(2016, 9, 15, 23, 0, tzinfo=utc).isoformat()}
+        )
+
+        self.assertEqual(start_date, datetime(2016, 9, 14, 23, 0, tzinfo=utc))
+        self.assertEqual(end_date, datetime(2016, 9, 15, 23, 0, tzinfo=utc))
+
+    def test_reconciles_weekend(self, mock_api_client):
+        start_date, end_date = reconcile_for_date(None, date(2016, 10, 7))
+
+        conn = mock_api_client.get_connection().transactions
+        conn.reconcile.post.assert_has_calls([
+            mock.call(
+                {'received_at__gte': datetime(2016, 10, 6, 23, 0, tzinfo=utc).isoformat(),
+                 'received_at__lt': datetime(2016, 10, 7, 23, 0, tzinfo=utc).isoformat()}
+            ),
+            mock.call(
+                {'received_at__gte': datetime(2016, 10, 7, 23, 0, tzinfo=utc).isoformat(),
+                 'received_at__lt': datetime(2016, 10, 8, 23, 0, tzinfo=utc).isoformat()}
+            ),
+            mock.call(
+                {'received_at__gte': datetime(2016, 10, 8, 23, 0, tzinfo=utc).isoformat(),
+                 'received_at__lt': datetime(2016, 10, 9, 23, 0, tzinfo=utc).isoformat()}
+            )
+        ])
+
+        self.assertEqual(start_date, datetime(2016, 10, 6, 23, 0, tzinfo=utc))
+        self.assertEqual(end_date, datetime(2016, 10, 9, 23, 0, tzinfo=utc))
 
 
 class WorkdayCheckerTestCase(SimpleTestCase):

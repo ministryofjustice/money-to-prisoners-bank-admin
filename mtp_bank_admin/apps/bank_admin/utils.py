@@ -25,22 +25,26 @@ def retrieve_prisons(request):
 
 
 def set_worldpay_cutoff(date):
-    return datetime.combine(date, time(23, 0, tzinfo=utc))
+    return datetime.combine(date - timedelta(days=1), time(23, 0, tzinfo=utc))
 
 
 def reconcile_for_date(request, receipt_date):
     checker = WorkdayChecker()
-    start_date = set_worldpay_cutoff(checker.get_previous_workday(receipt_date))
-    end_date = set_worldpay_cutoff(receipt_date)
+    start_date = set_worldpay_cutoff(receipt_date)
+    end_date = set_worldpay_cutoff(checker.get_next_workday(receipt_date))
 
     if start_date.date() >= now().date() or end_date.date() >= now().date():
         raise EarlyReconciliationError
 
-    client = api_client.get_connection(request)
-    client.transactions.reconcile.post({
-        'received_at__gte': start_date.isoformat(),
-        'received_at__lt': end_date.isoformat(),
-    })
+    reconciliation_date = start_date
+    while reconciliation_date < end_date:
+        end_of_day = reconciliation_date + timedelta(days=1)
+        client = api_client.get_connection(request)
+        client.transactions.reconcile.post({
+            'received_at__gte': reconciliation_date.isoformat(),
+            'received_at__lt': end_of_day.isoformat(),
+        })
+        reconciliation_date = end_of_day
 
     return start_date, end_date
 

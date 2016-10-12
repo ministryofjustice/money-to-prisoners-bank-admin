@@ -78,14 +78,14 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
     def _get_expected_number_of_rows(self, credits, refundable_transactions, rejected_transactions):
         expected_credits = 0
-        has_card_payments = False
+        card_payment_ref_codes = set()
         for credit in credits['results']:
             if credit['source'] == 'bank_transfer':
                 expected_credits += 1
             else:
-                # one lump sum for card payments
-                if not has_card_payments:
-                    has_card_payments = True
+                # one lump sum for each card payment batch
+                if credit['reconciliation_code'] not in card_payment_ref_codes:
+                    card_payment_ref_codes.add(credit['reconciliation_code'])
                     expected_credits += 1
 
         expected_debit_rows = (
