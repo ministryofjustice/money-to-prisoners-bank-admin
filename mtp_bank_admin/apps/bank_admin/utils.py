@@ -20,8 +20,8 @@ def retrieve_all_valid_credits(request, **kwargs):
 
 
 def retrieve_prisons(request):
-    prisons = api_client.get_connection(request).prisons.get().get('results', [])
-    return {prison['nomis_id']: prison for prison in prisons}
+    endpoint = api_client.get_connection(request).prisons.get
+    return {prison['nomis_id']: prison for prison in retrieve_all_pages(endpoint)}
 
 
 def set_worldpay_cutoff(date):
