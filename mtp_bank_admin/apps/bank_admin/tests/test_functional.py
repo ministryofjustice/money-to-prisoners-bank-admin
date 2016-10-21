@@ -17,7 +17,6 @@ class LoginTests(BankAdminTestCase):
         self.driver.get(self.live_server_url)
         heading = self.driver.find_element_by_tag_name('h1')
         self.assertEqual('Bank Admin', heading.text)
-        self.assertEqual('48px', heading.value_of_css_property('font-size'))
 
     def test_bad_login(self):
         self.login('bank-admin', 'bad-password')
@@ -62,14 +61,6 @@ class DownloadPageTests(BankAdminTestCase):
         self.assertInSource('Bank statement')
         self.assertInSource('Download transactions')
         self.assertInSource('<a href="#">Previous bank statements</a>')
-        first_section = self.driver.find_element_by_xpath('//section')
-        self.assertEqual('inline-block', first_section.value_of_css_property('display'))
-        page_heading_1 = self.driver.find_element_by_xpath('//h1')
-        self.assertEqual('28px', page_heading_1.value_of_css_property('font-size'))
-        page_heading_2 = self.driver.find_element_by_xpath('//h2')
-        self.assertEqual('19px', page_heading_2.value_of_css_property('font-size'))
-        file_link = self.driver.find_element_by_css_selector('div.mtp-filelink')
-        self.assertEqual('22px', file_link.value_of_css_property('margin-top'))
 
     def test_open_foldout(self):
         label = "Previous ADI Journals"
