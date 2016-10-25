@@ -25,7 +25,7 @@ def retrieve_prisons(request):
 
 
 def set_worldpay_cutoff(date):
-    return datetime.combine(date - timedelta(days=1), time(23, 0, tzinfo=utc))
+    return datetime.combine(date, time(0, 0, 0, tzinfo=utc))
 
 
 def reconcile_for_date(request, receipt_date):
@@ -33,7 +33,7 @@ def reconcile_for_date(request, receipt_date):
     start_date = set_worldpay_cutoff(receipt_date)
     end_date = set_worldpay_cutoff(checker.get_next_workday(receipt_date))
 
-    if start_date.date() >= now().date() or end_date.date() >= now().date():
+    if start_date.date() >= now().date() or end_date.date() > now().date():
         raise EarlyReconciliationError
 
     reconciliation_date = start_date

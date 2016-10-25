@@ -16,12 +16,12 @@ class ReconcileForDateTestCase(SimpleTestCase):
 
         conn = mock_api_client.get_connection().transactions
         conn.reconcile.post.assert_called_with(
-            {'received_at__gte': datetime(2016, 9, 14, 23, 0, tzinfo=utc).isoformat(),
-             'received_at__lt': datetime(2016, 9, 15, 23, 0, tzinfo=utc).isoformat()}
+            {'received_at__gte': datetime(2016, 9, 15, 0, 0, tzinfo=utc).isoformat(),
+             'received_at__lt': datetime(2016, 9, 16, 0, 0, tzinfo=utc).isoformat()}
         )
 
-        self.assertEqual(start_date, datetime(2016, 9, 14, 23, 0, tzinfo=utc))
-        self.assertEqual(end_date, datetime(2016, 9, 15, 23, 0, tzinfo=utc))
+        self.assertEqual(start_date, datetime(2016, 9, 15, 0, 0, tzinfo=utc))
+        self.assertEqual(end_date, datetime(2016, 9, 16, 0, 0, tzinfo=utc))
 
     def test_reconciles_weekend(self, mock_api_client):
         start_date, end_date = reconcile_for_date(None, date(2016, 10, 7))
@@ -29,21 +29,21 @@ class ReconcileForDateTestCase(SimpleTestCase):
         conn = mock_api_client.get_connection().transactions
         conn.reconcile.post.assert_has_calls([
             mock.call(
-                {'received_at__gte': datetime(2016, 10, 6, 23, 0, tzinfo=utc).isoformat(),
-                 'received_at__lt': datetime(2016, 10, 7, 23, 0, tzinfo=utc).isoformat()}
+                {'received_at__gte': datetime(2016, 10, 7, 0, 0, tzinfo=utc).isoformat(),
+                 'received_at__lt': datetime(2016, 10, 8, 0, 0, tzinfo=utc).isoformat()}
             ),
             mock.call(
-                {'received_at__gte': datetime(2016, 10, 7, 23, 0, tzinfo=utc).isoformat(),
-                 'received_at__lt': datetime(2016, 10, 8, 23, 0, tzinfo=utc).isoformat()}
+                {'received_at__gte': datetime(2016, 10, 8, 0, 0, tzinfo=utc).isoformat(),
+                 'received_at__lt': datetime(2016, 10, 9, 0, 0, tzinfo=utc).isoformat()}
             ),
             mock.call(
-                {'received_at__gte': datetime(2016, 10, 8, 23, 0, tzinfo=utc).isoformat(),
-                 'received_at__lt': datetime(2016, 10, 9, 23, 0, tzinfo=utc).isoformat()}
+                {'received_at__gte': datetime(2016, 10, 9, 0, 0, tzinfo=utc).isoformat(),
+                 'received_at__lt': datetime(2016, 10, 10, 0, 0, tzinfo=utc).isoformat()}
             )
         ])
 
-        self.assertEqual(start_date, datetime(2016, 10, 6, 23, 0, tzinfo=utc))
-        self.assertEqual(end_date, datetime(2016, 10, 9, 23, 0, tzinfo=utc))
+        self.assertEqual(start_date, datetime(2016, 10, 7, 0, 0, tzinfo=utc))
+        self.assertEqual(end_date, datetime(2016, 10, 10, 0, 0, tzinfo=utc))
 
 
 class WorkdayCheckerTestCase(SimpleTestCase):
