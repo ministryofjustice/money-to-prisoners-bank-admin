@@ -227,8 +227,8 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         conn = mock_api_client.get_connection().transactions
         conn.reconcile.post.assert_called_with(
-            {'received_at__gte': datetime(2016, 9, 12, 23, 0, tzinfo=utc).isoformat(),
-             'received_at__lt': datetime(2016, 9, 13, 23, 0, tzinfo=utc).isoformat()}
+            {'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
+             'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()}
         )
 
     def test_adi_journal_upload_range_set(self, mock_api_client):

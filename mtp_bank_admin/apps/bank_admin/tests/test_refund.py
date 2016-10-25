@@ -117,8 +117,8 @@ class ValidTransactionsTestCase(RefundFileTestCase):
         )
 
         conn.reconcile.post.assert_called_with(
-            {'received_at__gte': datetime(2016, 9, 12, 23, 0, tzinfo=utc).isoformat(),
-             'received_at__lt': datetime(2016, 9, 13, 23, 0, tzinfo=utc).isoformat()}
+            {'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
+             'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()}
         )
         refund_conn.patch.assert_called_once_with([
             {'id': '3', 'refunded': True},
