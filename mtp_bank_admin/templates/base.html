@@ -7,12 +7,22 @@
   {% sentry_js %}
 {% endblock %}
 
-{% block page_title %}{% trans "Bank Admin" %}{% endblock %}
+{% block page_title %}{% trans 'Bank Admin' %}{% endblock %}
 
-{% block proposition %}{% trans "Bank Admin" %}{% endblock %}
+{% block proposition %}{% trans 'Bank Admin' %}{% endblock %}
 
-{% block user_menu %}
-  <li>
-    <a href="{% url 'password_change' %}">{% trans "Change password" %}</a>
-  </li>
+{% block proposition_menu %}
+  {% if request.user.is_authenticated %}
+    <ul id="proposition-links" class="print-hidden">
+      <li><a href="{% url 'bank_admin:dashboard' %}">{% trans 'Download files' %}</a></li>
+      <li><a href="{% url 'password_change' %}">{% trans 'Change password' %}</a></li>
+      <li>
+        <a href="{% url 'logout' %}">
+          {% blocktrans trimmed with full_name=request.user.get_full_name|default:request.user.username %}
+            Sign out {{ full_name }}
+          {% endblocktrans %}
+        </a>
+      </li>
+    </ul>
+  {% endif %}
 {% endblock %}
