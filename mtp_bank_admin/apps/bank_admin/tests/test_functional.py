@@ -39,7 +39,7 @@ class LoginTests(BankAdminTestCase):
 
     def test_logout(self):
         self.login('bank-admin', 'bank-admin')
-        self.driver.find_element_by_link_text('Sign out').click()
+        self.driver.find_element_by_link_text('Sign out Bank Admin').click()
         self.assertCurrentUrl('/login/')
 
 
