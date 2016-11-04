@@ -1,0 +1,90 @@
+# MTP bank-admin
+msgid ""
+msgstr ""
+"Project-Id-Version: MTP bank-admin\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-11-04 11:52+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Igor U <igor.ushkarev@digital.justice.gov.uk>, 2016\n"
+"Language-Team: Welsh (https://www.transifex.com/ministry-of-justice/teams/34553/cy/)\n"
+"Language: cy\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n==1) ? 0 : (n==2) ? 1 : (n != 8 && n != 11) ? 2 : 3;\n"
+
+#: apps/bank_admin/decorators.py:22 apps/bank_admin/tests/test_views.py:322
+#: apps/bank_admin/tests/test_views.py:402
+msgid "Invalid format for receipt_date"
+msgstr ""
+
+#: apps/bank_admin/decorators.py:24 apps/bank_admin/tests/test_views.py:334
+#: apps/bank_admin/tests/test_views.py:414
+msgid "'receipt_date' parameter required"
+msgstr ""
+
+#: apps/bank_admin/decorators.py:36 apps/bank_admin/tests/test_views.py:206
+#: apps/bank_admin/tests/test_views.py:310
+msgid "No transactions available"
+msgstr ""
+
+#: apps/bank_admin/decorators.py:39
+msgid "This file cannot be downloaded until the next working day"
+msgstr ""
+
+#: apps/bank_admin/decorators.py:42
+msgid "There was a problem generating the file. Please try again later."
+msgstr ""
+
+#: templates/bank_admin/dashboard.html:7 templates/base.html:17
+msgid "Download files"
+msgstr ""
+
+#: templates/bank_admin/dashboard.html:16
+msgid "Access Pay file – refunds"
+msgstr ""
+
+#: templates/bank_admin/dashboard.html:19
+#, python-format
+msgid "Download file for %(date)s"
+msgstr ""
+
+#: templates/bank_admin/dashboard.html:30
+msgid "Previous AccessPay refund files"
+msgstr ""
+
+#: templates/bank_admin/dashboard.html:49
+msgid "ADI Journal"
+msgstr ""
+
+#: templates/bank_admin/dashboard.html:52
+#: templates/bank_admin/dashboard.html:86
+#, python-format
+msgid "Download transactions for %(date)s"
+msgstr ""
+
+#: templates/bank_admin/dashboard.html:63
+msgid "Previous ADI Journals"
+msgstr ""
+
+#: templates/bank_admin/dashboard.html:82
+msgid "Bank statement"
+msgstr ""
+
+#: templates/bank_admin/dashboard.html:97
+msgid "Previous bank statements"
+msgstr ""
+
+#: templates/base.html:10 templates/base.html:12
+#: templates/mtp_auth/login.html:4
+msgid "Bank Admin"
+msgstr ""
+
+#: templates/base.html:18
+msgid "Change password"
+msgstr ""
+
+#: templates/base.html:21
+#, python-format
+msgid "Sign out %(full_name)s"
+msgstr ""
