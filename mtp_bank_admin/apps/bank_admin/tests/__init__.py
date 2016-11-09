@@ -5,9 +5,10 @@ from ..types import PaymentType
 TEST_PRISONS = [
     {'nomis_id': 'BPR', 'general_ledger_code': '048', 'name': 'Big Prison'},
     {'nomis_id': 'DPR', 'general_ledger_code': '067',  'name': 'Dark Prison'},
-    {'nomis_id': 'SPR', 'general_ledger_code': '054',  'name': 'Scary Prison'}
+    {'nomis_id': 'SPR', 'general_ledger_code': '054',  'name': 'Scary Prison'},
+    {'nomis_id': 'NPR', 'general_ledger_code': '067',  'name': 'Nasty Prison'},
 ]
-TEST_PRISONS_RESPONSE = {'count': 3, 'results': TEST_PRISONS}
+TEST_PRISONS_RESPONSE = {'count': 4, 'results': TEST_PRISONS}
 TEST_HOLIDAYS = {'england-and-wales': {
     'division': 'england-and-wales',
     'events': [
@@ -31,12 +32,14 @@ def get_test_credits(count=20):
         else:
             credit['source'] = 'online'
             credit['reconciliation_code'] = '800001'
-        if i % 2:
+        if i % 5 == 0:
             credit['prison'] = TEST_PRISONS[0]['nomis_id']
-        elif i % 3:
+        elif i % 5 == 1:
             credit['prison'] = TEST_PRISONS[1]['nomis_id']
-        else:
+        elif i % 5 == 2:
             credit['prison'] = TEST_PRISONS[2]['nomis_id']
+        else:
+            credit['prison'] = TEST_PRISONS[3]['nomis_id']
         credits.append(credit)
     return {'count': count, 'results': sorted(credits, key=lambda t: t['id'])}
 
@@ -49,12 +52,14 @@ def get_test_transactions(trans_type=None, count=20):
             transaction['refunded'] = True
         elif trans_type == PaymentType.payment or trans_type is None and i % 12:
             transaction['credited'] = True
-            if i % 2:
-                transaction['prison'] = TEST_PRISONS[0]
-            elif i % 3:
-                transaction['prison'] = TEST_PRISONS[1]
+            if i % 4 == 0:
+                transaction['prison'] = TEST_PRISONS[0]['nomis_id']
+            elif i % 4 == 1:
+                transaction['prison'] = TEST_PRISONS[1]['nomis_id']
+            elif i % 4 == 2:
+                transaction['prison'] = TEST_PRISONS[2]['nomis_id']
             else:
-                transaction['prison'] = TEST_PRISONS[2]
+                transaction['prison'] = TEST_PRISONS[3]['nomis_id']
 
         transaction['amount'] = random.randint(500, 5000)
         transaction['ref_code'] = '9' + str(random.randint(0, 99999)).zfill(5)

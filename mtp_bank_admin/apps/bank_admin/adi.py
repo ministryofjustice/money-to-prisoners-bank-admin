@@ -171,12 +171,16 @@ def generate_adi_journal(request, receipt_date):
     journal_date = receipt_date.strftime('%d/%m/%Y')
     journal = AdiJournal()
 
+    prisons = retrieve_prisons(request)
+    bu_lookup = {prison['general_ledger_code']: nomis_id for nomis_id, prison in prisons.items()}
+
     debit_card_batches = defaultdict(int)
     prison_totals = defaultdict(int)
     prison_transactions = defaultdict(list)
     for credit in credits:
+        business_unit = prisons[credit['prison']]['general_ledger_code']
         amount = Decimal(credit['amount'])/100
-        prison_totals[credit['prison']] += amount
+        prison_totals[business_unit] += amount
         if credit['source'] == 'online':
             if credit['reconciliation_code']:
                 card_reconciliation_code = credit['reconciliation_code']
@@ -184,9 +188,7 @@ def generate_adi_journal(request, receipt_date):
                 card_reconciliation_code = '%s - Card payment' % journal_date
             debit_card_batches[card_reconciliation_code] += amount
         else:
-            prison_transactions[credit['prison']].append(credit)
-
-    prisons = retrieve_prisons(request)
+            prison_transactions[business_unit].append(credit)
 
     # add valid payment rows
     # debit card batches
@@ -196,17 +198,17 @@ def generate_adi_journal(request, receipt_date):
             reconciliation_code=batch_code
         )
     # other credits
-    for prison in prison_totals:
-        for transaction in prison_transactions.get(prison, []):
+    for business_unit in prison_totals:
+        for transaction in prison_transactions.get(business_unit, []):
             journal.add_payment_row(
                 Decimal(transaction['amount'])/100,
                 PaymentType.payment, RecordType.debit,
                 reconciliation_code=transaction['reconciliation_code']
             )
         journal.add_payment_row(
-            prison_totals[prison], PaymentType.payment, RecordType.credit,
-            prison_ledger_code=prisons[prison]['general_ledger_code'],
-            prison_name=prisons[prison]['name'],
+            prison_totals[business_unit], PaymentType.payment, RecordType.credit,
+            prison_ledger_code=business_unit,
+            prison_name=prisons[bu_lookup[business_unit]]['name'],
             date=journal_date
         )
 
