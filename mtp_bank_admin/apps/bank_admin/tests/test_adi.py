@@ -1,6 +1,7 @@
 from collections import defaultdict
 from contextlib import contextmanager
 from datetime import date, datetime
+import logging
 import os
 from unittest import mock, skip
 
@@ -13,7 +14,7 @@ from openpyxl import load_workbook
 
 from . import (
     TEST_PRISONS, TEST_PRISONS_RESPONSE, NO_TRANSACTIONS, TEST_HOLIDAYS,
-    get_test_transactions, get_test_credits
+    get_test_transactions, get_test_credits, silence_logger
 )
 from .. import adi, adi_config
 from ..exceptions import EmptyFileError, EarlyReconciliationError
@@ -69,7 +70,8 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         if receipt_date is None:
             receipt_date = date(2016, 9, 13)
-        with mock.patch('bank_admin.utils.requests') as mock_requests:
+        with mock.patch('bank_admin.utils.requests') as mock_requests, \
+                silence_logger(name='mtp', level=logging.WARNING):
             mock_requests.get().status_code = 200
             mock_requests.get().json.return_value = TEST_HOLIDAYS
             filename, exceldata = adi.generate_adi_journal(self.get_request(),
@@ -214,12 +216,11 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         conn.credits.get.return_value = NO_TRANSACTIONS
         conn.transactions.get.return_value = NO_TRANSACTIONS
 
-        with self.assertRaises(EmptyFileError):
-            with mock.patch('bank_admin.utils.requests') as mock_requests:
-                mock_requests.get().status_code = 200
-                mock_requests.get().json.return_value = TEST_HOLIDAYS
-                _, exceldata = adi.generate_adi_journal(self.get_request(),
-                                                        date(2016, 9, 13))
+        with self.assertRaises(EmptyFileError), mock.patch('bank_admin.utils.requests') as mock_requests, \
+                silence_logger(name='mtp', level=logging.WARNING):
+            mock_requests.get().status_code = 200
+            mock_requests.get().json.return_value = TEST_HOLIDAYS
+            _, exceldata = adi.generate_adi_journal(self.get_request(), date(2016, 9, 13))
 
     def test_adi_journal_reconciles_date(self, mock_api_client):
         _, _, _ = self._generate_test_adi_journal(
