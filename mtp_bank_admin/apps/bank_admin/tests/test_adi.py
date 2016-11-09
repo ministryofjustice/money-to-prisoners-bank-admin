@@ -1,3 +1,4 @@
+from collections import defaultdict
 from contextlib import contextmanager
 from datetime import date, datetime
 import os
@@ -99,7 +100,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         expected_credit_rows = (
             # valid credits
-            len(TEST_PRISONS) +
+            len({prison['general_ledger_code'] for prison in TEST_PRISONS}) +
             # refunds
             1 +
             # rejects
@@ -173,9 +174,9 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
         credits, refundable_transactions, rejected_transactions = test_data
 
-        prison_totals = {}
+        prison_totals = defaultdict(int)
         for prison in TEST_PRISONS:
-            prison_totals[prison['general_ledger_code']] = float(sum(
+            prison_totals[prison['general_ledger_code']] += float(sum(
                 [c['amount'] for c in credits['results']
                     if 'prison' in c and c['prison'] == prison['nomis_id']]
             ))/100
