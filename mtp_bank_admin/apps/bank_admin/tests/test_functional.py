@@ -7,6 +7,10 @@ class BankAdminTestCase(FunctionalTestCase):
     """
     accessibility_scope_selector = '#content'
 
+    def login(self, *args, **kwargs):
+        kwargs['url'] = self.live_server_url + '/en-gb/'
+        super().login(*args, **kwargs)
+
 
 class LoginTests(BankAdminTestCase):
     """
@@ -14,7 +18,7 @@ class LoginTests(BankAdminTestCase):
     """
 
     def test_title(self):
-        self.driver.get(self.live_server_url)
+        self.driver.get(self.live_server_url + '/en-gb/')
         heading = self.driver.find_element_by_tag_name('h1')
         self.assertEqual('Bank Admin', heading.text)
 
@@ -24,23 +28,23 @@ class LoginTests(BankAdminTestCase):
 
     def test_good_login(self):
         self.login('bank-admin', 'bank-admin')
-        self.assertCurrentUrl('/')
+        self.assertCurrentUrl('/en-gb/')
         self.assertInSource('Download files')
 
     def test_good_refund_login(self):
         self.login('refund-bank-admin', 'refund-bank-admin')
-        self.assertCurrentUrl('/')
+        self.assertCurrentUrl('/en-gb/')
         self.assertInSource('Download files')
 
     def test_good_login_without_case_sensitivity(self):
         self.login('Bank-Admin', 'bank-admin')
-        self.assertCurrentUrl('/')
+        self.assertCurrentUrl('/en-gb/')
         self.assertInSource('Download files')
 
     def test_logout(self):
         self.login('bank-admin', 'bank-admin')
         self.driver.find_element_by_link_text('Sign out Bank Admin').click()
-        self.assertCurrentUrl('/login/')
+        self.assertCurrentUrl('/en-gb/login/')
 
 
 class DownloadPageTests(BankAdminTestCase):
@@ -57,13 +61,13 @@ class DownloadPageTests(BankAdminTestCase):
         self.assertInSource('Download file')
         self.assertInSource('ADI Journal')
         self.assertInSource('Download transactions')
-        self.assertInSource('<a href="#">Previous ADI Journals</a>')
+        self.assertInSource('Previous ADI Journals')
         self.assertInSource('Bank statement')
         self.assertInSource('Download transactions')
-        self.assertInSource('<a href="#">Previous bank statements</a>')
+        self.assertInSource('Previous bank statements')
 
     def test_open_foldout(self):
-        label = "Previous ADI Journals"
+        label = 'Previous ADI Journals'
         expand_button = self.driver.find_element_by_xpath('//div[a[contains(text(),"' + label + '")]]')
         expand_button_link = expand_button.find_element_by_tag_name('a')
         expand_box = self.driver.find_element_by_xpath(

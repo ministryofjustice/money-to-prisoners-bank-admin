@@ -47,6 +47,7 @@ WSGI_APPLICATION = 'mtp_bank_admin.wsgi.application'
 ROOT_URLCONF = 'mtp_bank_admin.urls'
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'mtp_common.auth.csrf.CsrfViewMiddleware',
     'mtp_common.auth.middleware.AuthenticationMiddleware',

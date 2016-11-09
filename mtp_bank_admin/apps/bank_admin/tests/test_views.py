@@ -12,17 +12,14 @@ from mtp_common.auth.exceptions import Unauthorized, Forbidden
 from mtp_common.auth.test_utils import generate_tokens
 
 from . import (
-    get_test_transactions, get_test_credits, NO_TRANSACTIONS, TEST_PRISONS_RESPONSE
+    get_test_transactions, get_test_credits, NO_TRANSACTIONS, TEST_PRISONS_RESPONSE,
+    silence_logger,
 )
 from .test_refund import REFUND_TRANSACTIONS, expected_output
 from ..types import PaymentType
 
 
 class BankAdminViewTestCase(SimpleTestCase):
-
-    def setUp(self):
-        logging.disable(logging.CRITICAL)
-
     @mock.patch('mtp_common.auth.backends.api_client')
     def login(self, mock_api_client):
         mock_api_client.authenticate.return_value = {
@@ -51,6 +48,26 @@ class BankAdminViewTestCase(SimpleTestCase):
             {'login_url': reverse('login'),
              'attempted_url': escape_uri_path(attempted_url)}
         self.assertRedirects(response, redirect_url)
+
+
+class LocaleTestCase(BankAdminViewTestCase):
+    def test_locale_switches_based_on_browser_language(self):
+        languages = (
+            ('*', 'en-gb'),
+            ('en', 'en-gb'),
+            ('en-gb', 'en-gb'),
+            ('en-GB, en, *', 'en-gb'),
+            ('cy', 'cy'),
+            ('cy, en-GB, en, *', 'cy'),
+            ('en, cy, *', 'en-gb'),
+            ('es', 'en-gb'),
+        )
+        with silence_logger(name='django.request', level=logging.ERROR):
+            for accept_language, expected_slug in languages:
+                response = self.client.get('/', HTTP_ACCEPT_LANGUAGE=accept_language)
+                self.assertRedirects(response, '/%s/' % expected_slug, fetch_redirect_response=False)
+                response = self.client.get('/login/', HTTP_ACCEPT_LANGUAGE=accept_language)
+                self.assertRedirects(response, '/%s/login/' % expected_slug, fetch_redirect_response=True)
 
 
 class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
