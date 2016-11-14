@@ -247,6 +247,8 @@ ZENDESK_CUSTOM_FIELDS = {
     'contact_email': 30769508,
 }
 
+SHOW_LANGUAGE_SWITCH = os.environ.get('SHOW_LANGUAGE_SWITCH', 'False') == 'True'
+
 try:
     from .local import *  # noqa
 except ImportError:
