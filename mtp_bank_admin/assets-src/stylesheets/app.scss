@@ -19,27 +19,30 @@ form .form-group .form-hint {
   h1 {
     font-size: 28px;
   }
+
   h2 {
-    margin: 0;
     font-size: 19px;
+    margin: 0;
   }
+
   h3 {
-    margin: 1em 0 1em 0;
+    margin: 1em 0;
   }
+
   section {
     display: inline-block;
-    width: 470px;
-    vertical-align: top;
     margin-bottom: 2em;
+    vertical-align: top;
+    width: 470px;
   }
 }
 
 .mtp-compact__row-1 {
+  border-bottom: 1px solid $panel-colour;
   margin-bottom: 2em;
   padding-bottom: 1em;
-  border-bottom: 1px solid $panel-colour;
 }
 
 .mtp-filelink {
-  margin: 1.2em 0 1.2em 0;
+  margin: 1.2em 0;
 }
