@@ -9,9 +9,20 @@
 *.sublime-workspace
 *.sublime-project
 
-# project
-mtp_bank_admin/settings/local.py
-mtp_bank_admin/assets/
+# sass & node.js
+*.sass-cache/
+.eslintcache/
 node_modules/
+npm-debug.log
+
+# project
+Dockerfile
+docker-compose.yml
+package.json
+webpack.config.js
+mtp_bank_admin/assets/
+mtp_bank_admin/settings/local.py
+mtp_bank_admin/templates/govuk_template
 static/
+media/
 venv/
