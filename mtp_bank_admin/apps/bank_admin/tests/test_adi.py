@@ -10,11 +10,12 @@ from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
 from django.utils.timezone import utc
 from mtp_common.auth.models import MojUser
+from mtp_common.test_utils import silence_logger
 from openpyxl import load_workbook
 
 from . import (
     TEST_PRISONS, TEST_PRISONS_RESPONSE, NO_TRANSACTIONS, TEST_HOLIDAYS,
-    get_test_transactions, get_test_credits, silence_logger
+    get_test_transactions, get_test_credits,
 )
 from .. import adi, adi_config
 from ..exceptions import EmptyFileError, EarlyReconciliationError

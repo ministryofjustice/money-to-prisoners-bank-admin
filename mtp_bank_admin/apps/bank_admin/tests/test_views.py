@@ -10,10 +10,10 @@ from django.utils.timezone import utc
 from django.utils.translation import ugettext_lazy as _
 from mtp_common.auth.exceptions import Unauthorized, Forbidden
 from mtp_common.auth.test_utils import generate_tokens
+from mtp_common.test_utils import silence_logger
 
 from . import (
     get_test_transactions, get_test_credits, NO_TRANSACTIONS, TEST_PRISONS_RESPONSE,
-    silence_logger,
 )
 from .test_refund import REFUND_TRANSACTIONS, expected_output
 from ..types import PaymentType

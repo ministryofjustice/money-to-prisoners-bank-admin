@@ -1,5 +1,3 @@
-from contextlib import contextmanager
-import logging
 import random
 
 from ..types import PaymentType
@@ -93,12 +91,3 @@ class AssertCalledWithBatchRequest(object):
             sorted(self.expected['transactions'])
         )
         return {'id': 1}
-
-
-@contextmanager
-def silence_logger(name='mtp', level=logging.CRITICAL):
-    logger = logging.getLogger(name)
-    old_level = logger.level
-    logger.setLevel(level)
-    yield
-    logger.setLevel(old_level)
