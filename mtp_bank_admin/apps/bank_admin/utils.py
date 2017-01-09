@@ -59,7 +59,7 @@ def retrieve_last_balance(request, date):
 
 
 def get_daily_file_uid():
-    int(systime.time()) % 86400
+    return int(systime.time()) % 86400
 
 
 def escape_csv_formula(value):

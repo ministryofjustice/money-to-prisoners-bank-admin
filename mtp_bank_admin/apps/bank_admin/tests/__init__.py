@@ -4,9 +4,9 @@ from ..types import PaymentType
 
 TEST_PRISONS = [
     {'nomis_id': 'BPR', 'general_ledger_code': '048', 'name': 'Big Prison'},
-    {'nomis_id': 'DPR', 'general_ledger_code': '067',  'name': 'Dark Prison'},
-    {'nomis_id': 'SPR', 'general_ledger_code': '054',  'name': 'Scary Prison'},
-    {'nomis_id': 'NPR', 'general_ledger_code': '067',  'name': 'Nasty Prison'},
+    {'nomis_id': 'DPR', 'general_ledger_code': '067', 'name': 'Dark Prison'},
+    {'nomis_id': 'SPR', 'general_ledger_code': '054', 'name': 'Scary Prison'},
+    {'nomis_id': 'NPR', 'general_ledger_code': '067', 'name': 'Nasty Prison'},
 ]
 TEST_PRISONS_RESPONSE = {'count': 4, 'results': TEST_PRISONS}
 TEST_HOLIDAYS = {'england-and-wales': {
@@ -17,8 +17,9 @@ TEST_HOLIDAYS = {'england-and-wales': {
 }}
 
 NO_TRANSACTIONS = {'count': 0, 'results': []}
-ORIGINAL_REF = 'original reference'
+ORIGINAL_REF = 'reference'
 SENDER_NAME = 'sender'
+OPENING_BALANCE = 20000
 
 
 def get_test_credits(count=20):
@@ -91,3 +92,13 @@ class AssertCalledWithBatchRequest(object):
             sorted(self.expected['transactions'])
         )
         return {'id': 1}
+
+
+def mock_balance(mock_api_client):
+    balance_conn = mock_api_client.get_connection().balances
+    balance_conn.get.return_value = {
+        'count': 1,
+        'results': [{'closing_balance': OPENING_BALANCE, 'date': '2017-06-05'}]
+    }
+
+    return balance_conn
