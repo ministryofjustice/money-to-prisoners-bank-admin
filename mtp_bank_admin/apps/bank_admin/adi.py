@@ -105,13 +105,13 @@ class AdiJournal(object):
         )]
 
         self._next_row(increment=2)
-        self._set_field('description', 'Uploaded by:', style=config._tan_style, extra_style=bold)
+        self._set_field('description', 'Uploaded by:', style=config._light_blue_style, extra_style=bold)
 
         self._next_row(increment=2)
-        self._set_field('description', 'Checked by:', style=config._tan_style, extra_style=bold)
+        self._set_field('description', 'Checked by:', style=config._light_blue_style, extra_style=bold)
 
         self._next_row(increment=2)
-        self._set_field('description', 'Posted by:', style=config._tan_style, extra_style=bold)
+        self._set_field('description', 'Posted by:', style=config._light_blue_style, extra_style=bold)
 
         batch_date = date.today().strftime(config.ADI_BATCH_DATE_FORMAT)
         self.journal_ws[config.ADI_BATCH_NAME_CELL] = config.ADI_BATCH_NAME_FORMAT % {

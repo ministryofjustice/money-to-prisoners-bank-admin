@@ -1,16 +1,16 @@
 from openpyxl import styles
 
-ADI_JOURNAL_SHEET = 'TEMPLATE'
+ADI_JOURNAL_SHEET = 'Sheet1'
 
 
-ADI_DATE_CELL = 'I10'
+ADI_DATE_CELL = 'E12'
 ADI_DATE_FORMAT = '%d/%m/%y'
-ADI_BATCH_NAME_CELL = 'I11'
+ADI_BATCH_NAME_CELL = 'E14'
 ADI_BATCH_DATE_FORMAT = '%d%m%y'
 ADI_BATCH_NAME_FORMAT = '578/MTP/%(date)s/%(initials)s'
 
 # journal table
-ADI_JOURNAL_START_ROW = 15
+ADI_JOURNAL_START_ROW = 19
 
 _white_style = {
     'fill': {
@@ -24,10 +24,10 @@ _white_style = {
     }
 }
 
-_tan_style = {
+_light_blue_style = {
     'fill': {
-        'start_color': 'F6F7E7',
-        'end_color': 'F6F7E7',
+        'start_color': 'E6EFF8',
+        'end_color': 'E6EFF8',
         'fill_type': 'solid',
     },
     'font': {
@@ -38,12 +38,12 @@ _tan_style = {
 
 ADI_FINAL_ROW_STYLE = {
     'border': {
-        'top': styles.Side(style='medium', color='000000'),
-        'bottom': styles.Side(style='medium', color='000000'),
+        'top': styles.Side(style='thin', color='C7C7C7'),
+        'bottom': styles.Side(style='thin', color='C7C7C7'),
     },
     'fill': {
-        'start_color': 'CCCC98',
-        'end_color': 'CCCC98',
+        'start_color': 'A1C2E1',
+        'end_color': 'A1C2E1',
         'fill_type': 'solid',
     },
     'font': {
@@ -62,8 +62,8 @@ ADI_JOURNAL_FIELDS = {
         },
         'style': dict(
             border={
-                'left': styles.Side(style='medium', color='000000'),
-                'right': styles.Side(style='medium', color='000000')
+                'left': styles.Side(style='thin', color='C7C7C7'),
+                'right': styles.Side(style='thin', color='C7C7C7')
             },
             fill=_white_style['fill'],
             font={
@@ -72,105 +72,96 @@ ADI_JOURNAL_FIELDS = {
             }
         )
     },
-    'company': {
+    'entity': {
         'column': 'C',
         'value': {
-            'payment': {'debit': '1', 'credit': '1'},
-            'refund': {'debit': '1', 'credit': '1'},
-            'reject': {'debit': '1', 'credit': '1'},
+            'payment': {'debit': '0210', 'credit': '0210'},
+            'refund': {'debit': '0210', 'credit': '0210'},
+            'reject': {'debit': '0210', 'credit': '0210'},
         },
         'style': _white_style
     },
-    'business_unit': {
+    'cost_centre': {
         'column': 'D',
         'value': {
-            'payment': {'debit': '535', 'credit': '{prison_ledger_code}'},
-            'refund': {'debit': '535', 'credit': '535'},
-            'reject': {'debit': '535', 'credit': '535'},
-        },
-        'style': _white_style
-    },
-    'responsibility_code': {
-        'column': 'E',
-        'value': {
-            'payment': {'debit': '9500', 'credit': '9500'},
-            'refund': {'debit': '9500', 'credit': '9500'},
-            'reject': {'debit': '9500', 'credit': '9500'},
-        },
-        'style': _white_style
-    },
-    'activity': {
-        'column': 'F',
-        'value': {
-            'payment': {'debit': '950', 'credit': '950'},
-            'refund': {'debit': '950', 'credit': '950'},
-            'reject': {'debit': '950', 'credit': '950'},
+            'payment': {'debit': '99999999', 'credit': '{prison_ledger_code}'},
+            'refund': {'debit': '99999999', 'credit': '99999999'},
+            'reject': {'debit': '99999999', 'credit': '10209200'},
         },
         'style': _white_style
     },
     'account': {
-        'column': 'G',
+        'column': 'E',
         'value': {
-            'payment': {'debit': '08870', 'credit': '09400'},
-            'refund': {'debit': '08870', 'credit': '08870'},
-            'reject': {'debit': '08870', 'credit': '08826'},
+            'payment': {'debit': '1841102059', 'credit': '2617902085'},
+            'refund': {'debit': '1841102059', 'credit': '1841102059'},
+            'reject': {'debit': '1841102059', 'credit': '1816902028'},
         },
         'style': _white_style
     },
-    'funding_source': {
-        'column': 'H',
+    'objective': {
+        'column': 'F',
         'value': {
-            'payment': {'debit': '95', 'credit': '95'},
-            'refund': {'debit': '95', 'credit': '95'},
-            'reject': {'debit': '95', 'credit': '95'},
+            'payment': {'debit': '0000000', 'credit': '0000000'},
+            'refund': {'debit': '0000000', 'credit': '0000000'},
+            'reject': {'debit': '0000000', 'credit': '0000000'},
         },
         'style': _white_style
     },
     'analysis': {
-        'column': 'I',
+        'column': 'G',
         'value': {
-            'payment': {'debit': '00000', 'credit': '00000'},
-            'refund': {'debit': '00000', 'credit': '00000'},
-            'reject': {'debit': '00000', 'credit': '17059'},
+            'payment': {'debit': '00000000', 'credit': '00000000'},
+            'refund': {'debit': '00000000', 'credit': '00000000'},
+            'reject': {'debit': '00000000', 'credit': '00000000'},
+        },
+        'style': _white_style
+    },
+    'intercompany': {
+        'column': 'H',
+        'value': {
+            'payment': {'debit': '0000', 'credit': '0000'},
+            'refund': {'debit': '0000', 'credit': '0000'},
+            'reject': {'debit': '0000', 'credit': '0000'},
         },
         'style': _white_style
     },
     'spare': {
-        'column': 'J',
+        'column': 'I',
         'value': {
-            'payment': {'debit': '000000', 'credit': '000000'},
-            'refund': {'debit': '000000', 'credit': '000000'},
-            'reject': {'debit': '000000', 'credit': '000000'},
+            'payment': {'debit': '0000000', 'credit': '0000000'},
+            'refund': {'debit': '0000000', 'credit': '0000000'},
+            'reject': {'debit': '0000000', 'credit': '0000000'},
         },
         'style': dict(
             border={
-                'right': styles.Side(style='medium', color='000000')
+                'right': styles.Side(style='thin', color='C7C7C7')
             },
             **_white_style
         )
     },
     'debit': {
-        'column': 'K',
+        'column': 'J',
         'style': dict(
             border={
-                'left': styles.Side(style='thin', color='000000'),
-                'right': styles.Side(style='thin', color='000000')
+                'left': styles.Side(style='thin', color='C7C7C7'),
+                'right': styles.Side(style='thin', color='C7C7C7')
             },
             **_white_style
         )
     },
     'credit': {
-        'column': 'L',
+        'column': 'K',
         'style': dict(
             border={
-                'left': styles.Side(style='thin', color='000000'),
-                'right': styles.Side(style='thin', color='000000')
+                'left': styles.Side(style='thin', color='C7C7C7'),
+                'right': styles.Side(style='thin', color='C7C7C7')
             },
             **_white_style
         )
     },
     'description': {
-        'column': 'M',
+        'column': 'L',
         'value': {
             'payment': {'debit': '{reconciliation_code}', 'credit': '{prison_name} MTP Total {date}'},
             'refund': {'debit': '{reconciliation_code}', 'credit': 'MTP Refund File {date}'},
@@ -178,8 +169,8 @@ ADI_JOURNAL_FIELDS = {
         },
         'style': dict(
             border={
-                'left': styles.Side(style='thin', color='000000'),
-                'right': styles.Side(style='medium', color='000000')
+                'left': styles.Side(style='thin', color='C7C7C7'),
+                'right': styles.Side(style='thin', color='C7C7C7')
             },
             alignment={
                 'horizontal': 'center'
@@ -188,22 +179,45 @@ ADI_JOURNAL_FIELDS = {
         )
     },
     'line_dff_1': {
+        'column': 'M',
+        'style': dict(
+            border={
+                'left': styles.Side(style='thin', color='C7C7C7'),
+                'right': styles.Side(style='thin', color='C7C7C7')
+            },
+            **_white_style
+        )
+    },
+    'line_dff_2': {
         'column': 'N',
         'style': dict(
-            _tan_style,
+            border={
+                'left': styles.Side(style='thin', color='C7C7C7'),
+                'right': styles.Side(style='thin', color='C7C7C7')
+            },
+            **_white_style
+        )
+    },
+    'resolution': {
+        'column': 'O',
+        'style': dict(
+            _light_blue_style,
             font={
                 'name': 'Wingdings',
                 'size': 11,
+            },
+            border={
+                'left': styles.Side(style='thin', color='C7C7C7')
             }
         )
     },
     'messages': {
-        'column': 'O',
+        'column': 'Q',
         'style': dict(
+            _light_blue_style,
             border={
-                'right': styles.Side(style='medium', color='000000')
-            },
-            **_tan_style
+                'right': styles.Side(style='medium', color='C7C7C7')
+            }
         )
-    },
+    }
 }
