@@ -228,11 +228,12 @@ REFUND_OUTPUT_FILENAME = 'mtp_accesspay_%d%m%y.txt'
 ADI_TEMPLATE_FILEPATH = 'local_files/adi_template.xlsm'
 ADI_OUTPUT_FILENAME = 'adi_journal_%y%m%d.xlsm'
 
-BANK_STMT_SENDER_ID = os.environ.get('BANK_STMT_SENDER_ID', '')
-BANK_STMT_RECEIVER_ID = os.environ.get('BANK_STMT_RECEIVER_ID', '')
 BANK_STMT_ACCOUNT_NUMBER = os.environ.get('BANK_STMT_ACCOUNT_NUMBER', '')
+BANK_STMT_SORT_CODE = os.environ.get('BANK_STMT_SORT_CODE', '')
 BANK_STMT_CURRENCY = os.environ.get('BANK_STMT_CURRENCY', 'GBP')
-BANK_STMT_OUTPUT_FILENAME = 'stmt_%d%m%y'
+BANK_STMT_OUTPUT_FILENAME = 'NMS{account_number}%d%m%Y.dat'.format(
+    account_number=BANK_STMT_ACCOUNT_NUMBER
+)
 
 REQUEST_PAGE_SIZE = 500
 

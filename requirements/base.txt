@@ -6,6 +6,6 @@ openpyxl==2.3,<2.4
 pytz>=2016.7
 transifex-client>=0.12
 
-git+git://github.com/ministryofjustice/bai2.git
 git+git://github.com/ministryofjustice/django-moj-irat.git
 django-zendesk-tickets>=0.8
+mt940-writer==0.1

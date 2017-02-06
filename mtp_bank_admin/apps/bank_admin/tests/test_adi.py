@@ -191,8 +191,8 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
 
-            refund_bu_code = adi_config.ADI_JOURNAL_FIELDS['business_unit']['value']['refund']['credit']
-            reject_analysis = adi_config.ADI_JOURNAL_FIELDS['analysis']['value']['reject']['credit']
+            refund_bu_code = adi_config.ADI_JOURNAL_FIELDS['cost_centre']['value']['refund']['credit']
+            reject_bu_code = adi_config.ADI_JOURNAL_FIELDS['cost_centre']['value']['reject']['credit']
 
             while True:
                 debit = get_cell_value(journal_ws, 'debit', row)
@@ -202,12 +202,10 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                     # final line
                     break
                 elif credit:
-                    bu_code = get_cell_value(journal_ws, 'business_unit', row)
-                    analysis = get_cell_value(journal_ws, 'analysis', row)
+                    bu_code = get_cell_value(journal_ws, 'cost_centre', row)
                     if bu_code == refund_bu_code:
-                        if analysis != reject_analysis:
-                            self.assertAlmostEqual(credit, refund_total)
-                    else:
+                        self.assertAlmostEqual(credit, refund_total)
+                    elif bu_code != reject_bu_code:
                         self.assertAlmostEqual(credit, prison_totals[bu_code])
                 row += 1
 

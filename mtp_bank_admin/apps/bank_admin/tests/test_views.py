@@ -14,6 +14,7 @@ from mtp_common.test_utils import silence_logger
 
 from . import (
     get_test_transactions, get_test_credits, NO_TRANSACTIONS, TEST_PRISONS_RESPONSE,
+    mock_balance
 )
 from .test_refund import REFUND_TRANSACTIONS, expected_output
 from ..types import PaymentType
@@ -364,6 +365,7 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
 
         conn = mock_api_client.get_connection().transactions
         conn.get.return_value = get_test_transactions()
+        mock_balance(mock_api_client)
 
         response = self.client.get(reverse('bank_admin:download_bank_statement') +
                                    '?receipt_date=2014-12-11')
@@ -377,6 +379,7 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
 
         conn = mock_api_client.get_connection().transactions
         conn.get.return_value = get_test_transactions()
+        mock_balance(mock_api_client)
 
         self.client.get(
             reverse('bank_admin:download_bank_statement') +
