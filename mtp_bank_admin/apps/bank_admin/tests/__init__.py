@@ -4,9 +4,9 @@ from ..types import PaymentType
 
 TEST_PRISONS = [
     {'nomis_id': 'BPR', 'general_ledger_code': '048', 'name': 'Big Prison'},
-    {'nomis_id': 'DPR', 'general_ledger_code': '067', 'name': 'Dark Prison'},
-    {'nomis_id': 'SPR', 'general_ledger_code': '054', 'name': 'Scary Prison'},
-    {'nomis_id': 'NPR', 'general_ledger_code': '067', 'name': 'Nasty Prison'},
+    {'nomis_id': 'MPR', 'general_ledger_code': '067', 'name': 'Medium Prison'},
+    {'nomis_id': 'SPR', 'general_ledger_code': '054', 'name': 'Small Prison'},
+    {'nomis_id': 'NPR', 'general_ledger_code': '067', 'name': 'New Prison'},
 ]
 TEST_PRISONS_RESPONSE = {'count': 4, 'results': TEST_PRISONS}
 TEST_HOLIDAYS = {'england-and-wales': {
