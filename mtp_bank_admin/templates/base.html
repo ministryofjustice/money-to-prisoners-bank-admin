@@ -16,6 +16,11 @@
   {% if request.user.is_authenticated %}
     <ul id="proposition-links" class="print-hidden">
       <li><a href="{% url 'bank_admin:dashboard' %}">{% trans 'Download files' %}</a></li>
+      {% if perms.auth.change_user %}
+        <li>
+          <a href="{% url 'list-users' %}">{% trans 'Manage users' %}</a>
+        </li>
+      {% endif %}
       <li><a href="{% url 'password_change' %}">{% trans 'Change password' %}</a></li>
       <li>
         <a href="{% url 'logout' %}">

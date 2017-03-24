@@ -30,7 +30,6 @@ class BankAdminViewTestCase(SimpleTestCase):
                 'first_name': 'Sam',
                 'last_name': 'Hall',
                 'username': 'shall',
-                'applications': ['bank-admin'],
                 'permissions': ['transaction.view_bank_details_transaction']
             }
         }
@@ -94,7 +93,6 @@ class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
                 'first_name': 'Sam',
                 'last_name': 'Hall',
                 'username': 'shall',
-                'applications': ['bank-admin'],
                 'permissions': ['transaction.view_bank_details_transaction']
             }
         }
@@ -117,7 +115,6 @@ class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
                 'first_name': 'Sam',
                 'last_name': 'Hall',
                 'username': 'shall',
-                'applications': ['bank-admin'],
                 'permissions': []
             }
         }
