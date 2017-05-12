@@ -18,6 +18,7 @@ mtp_bank_admin/assets/
 mtp_bank_admin/settings/local.py
 static/
 media/
+spooler/
 
 # selenium
 geckodriver.log
