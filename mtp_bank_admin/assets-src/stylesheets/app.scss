@@ -2,16 +2,8 @@
 
 @import 'mtp-internal';
 
-// Dashboard design makes page shorter so the whole page fits
-// on a typical user screen
-
-// govuk-elements overrides
-
-form .form-group .form-hint {
-  margin-top: 0;
-}
-
 // Application specific
+// Dashboard design makes page shorter so the whole page fits on a typical user screen
 
 .mtp-compact {
   h1 {
