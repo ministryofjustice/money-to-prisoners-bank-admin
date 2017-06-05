@@ -138,8 +138,9 @@ class AdiJournal(object):
 
     def create_file(self, receipt_date, user):
         self._finish_journal(receipt_date, user)
-        return (date.today().strftime(settings.ADI_OUTPUT_FILENAME),
-                save_virtual_workbook(self.wb))
+        return settings.ADI_OUTPUT_FILENAME.format(
+            initials=user.get_initials() or config.DEFAULT_INITIALS, date=date.today()
+        ), save_virtual_workbook(self.wb)
 
 
 def generate_adi_journal(request, receipt_date):
