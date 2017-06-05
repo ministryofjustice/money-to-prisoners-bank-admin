@@ -226,7 +226,7 @@ REFUND_REFERENCE = 'Refund %s %s'
 REFUND_OUTPUT_FILENAME = 'mtp_accesspay_%d%m%y.txt'
 
 ADI_TEMPLATE_FILEPATH = 'local_files/adi_template.xlsm'
-ADI_OUTPUT_FILENAME = 'adi_journal_%y%m%d.xlsm'
+ADI_OUTPUT_FILENAME = '0210_SSCL_{initials}_{date:%d%m%Y}_MTP01.xlsm'
 
 BANK_STMT_ACCOUNT_NUMBER = os.environ.get('BANK_STMT_ACCOUNT_NUMBER', '')
 BANK_STMT_SORT_CODE = os.environ.get('BANK_STMT_SORT_CODE', '')

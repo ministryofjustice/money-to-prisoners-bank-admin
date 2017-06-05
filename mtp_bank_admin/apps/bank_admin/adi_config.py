@@ -8,6 +8,7 @@ ADI_DATE_FORMAT = '%d/%m/%y'
 ADI_BATCH_NAME_CELL = 'E14'
 ADI_BATCH_DATE_FORMAT = '%d%m%y'
 ADI_BATCH_NAME_FORMAT = '578/MTP/%(date)s/%(initials)s'
+DEFAULT_INITIALS = 'KB'
 
 # journal table
 ADI_JOURNAL_START_ROW = 19
