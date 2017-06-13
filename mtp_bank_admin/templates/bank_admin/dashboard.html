@@ -12,7 +12,7 @@
       <h1 class="heading-xlarge">{% trans 'Download files' %}</h1>
     </header>
 
-    {% include "mtp_common/includes/message_box.html" %}
+    {% include 'mtp_common/includes/message_box.html' %}
 
     <div class="container">
 
@@ -22,31 +22,31 @@
           <h2 class="heading-small">{% trans 'Access Pay file – refunds' %}</h2>
           {% url 'bank_admin:download_refund_file' as base_download_url %}
           {% for day in preceding_days %}
-              {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download file for {{ date }}{% endblocktrans %}
+            {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download file for {{ date }}{% endblocktrans %}
 
-              {% if forloop.first %}
+            {% if forloop.first %}
           <div class="mtp-filelink">
               <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
               {{ download_label }}
               </a>
           </div>
 
-          <div class="help-box">
-            <div class="help-box-title" aria-controls="previous-ap-refunds" aria-expanded="false" role="heading">
-              <div></div><a href="#">{% trans 'Previous AccessPay refund files' %}</a>
-            </div>
-            <div class="panel panel-border-narrow help-box-contents" id="previous-ap-refunds">
-              <ul>
-              {% else %}
-                <li>
-                  <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-                      {{ download_label }}
-                  </a>
-                </li>
-                  {% endif %}
-              {% endfor %}
-              </ul>
-            </div>
+          <p>
+            <a class="mtp-disclosure" href="#" aria-controls="previous-ap-refunds" aria-expanded="false" role="button" data-analytics="pageview,/-help_open/previous-ap-refunds/">
+              <span></span>{% trans 'Previous AccessPay refund files' %}
+            </a>
+          </p>
+          <div id="previous-ap-refunds" class="mtp-disclosure__contents panel panel-border-narrow">
+            <ul class="list list-bullet">
+            {% else %}
+              <li>
+                <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+                    {{ download_label }}
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+            </ul>
           </div>
         </section>
         {% endif %}
@@ -55,65 +55,64 @@
           <h2 class="heading-small">{% trans 'ADI Journal' %}</h2>
           {% url 'bank_admin:download_adi_journal' as base_download_url %}
           {% for day in preceding_days %}
-              {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
+            {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
 
-              {% if forloop.first %}
+            {% if forloop.first %}
           <div class="mtp-filelink">
             <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
             {{ download_label }}
             </a>
           </div>
 
-          <div class="help-box">
-            <div class="help-box-title" aria-controls="previous-adi-journals" aria-expanded="false" role="heading">
-              <div></div><a href="#">{% trans 'Previous ADI Journals' %}</a>
-            </div>
-            <div class="panel panel-border-narrow help-box-contents" id="previous-adi-journals">
-              <ul>
-              {% else %}
-                <li>
-                  <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-                    {{ download_label }}
-                  </a>
-                </li>
-              {% endif %}
+          <p>
+            <a class="mtp-disclosure" href="#" aria-controls="previous-adi-journals" aria-expanded="false" role="button" data-analytics="pageview,/-help_open/previous-adi-journals/">
+              <span></span>{% trans 'Previous ADI Journals' %}
+            </a>
+          </p>
+          <div id="previous-adi-journals" class="mtp-disclosure__contents panel panel-border-narrow">
+            <ul class="list list-bullet">
+            {% else %}
+              <li>
+                <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+                  {{ download_label }}
+                </a>
+              </li>
+            {% endif %}
           {% endfor %}
-              </ul>
-            </div>
+            </ul>
           </div>
         </section>
       </div>
       <div class="mtp-compact__row-2">
         <section>
           <h2 class="heading-small">{% trans 'Bank statement' %}</h2>
-
           {% url 'bank_admin:download_bank_statement' as base_download_url %}
           {% for day in preceding_days %}
-              {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
+            {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
 
-              {% if forloop.first %}
+            {% if forloop.first %}
           <div class="mtp-filelink">
             <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
             {{ download_label }}
             </a>
           </div>
 
-          <div class="help-box">
-            <div class="help-box-title" aria-controls="previous-statements" aria-expanded="false" role="heading">
-              <div></div><a href="#">{% trans 'Previous bank statements' %}</a>
-            </div>
-            <div class="panel panel-border-narrow help-box-contents" id="previous-statements">
-              <ul>
-                {% else %}
-                <li>
-                  <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
-                    {{ download_label }}
-                  </a>
-                </li>
-                {% endif %}
-            {% endfor %}
-              </ul>
-            </div>
+          <p>
+            <a class="mtp-disclosure" href="#" aria-controls="previous-statements" aria-expanded="false" role="button" data-analytics="pageview,/-help_open/previous-statements/">
+              <span></span>{% trans 'Previous bank statements' %}
+            </a>
+          </p>
+          <div id="previous-statements" class="mtp-disclosure__contents panel panel-border-narrow">
+            <ul class="list list-bullet">
+              {% else %}
+              <li>
+                <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+                  {{ download_label }}
+                </a>
+              </li>
+              {% endif %}
+          {% endfor %}
+            </ul>
           </div>
         </section>
       </div>
