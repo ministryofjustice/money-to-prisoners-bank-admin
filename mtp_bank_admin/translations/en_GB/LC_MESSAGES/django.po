@@ -1,9 +1,10 @@
-# MTP bank-admin
+# Send money to a prisoner
+# Copyright (C) Crown copyright (Ministry of Justice)
 msgid ""
 msgstr ""
-"Project-Id-Version: MTP bank-admin\n"
+"Project-Id-Version: mtp-bank-admin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-02-21 15:45+0000\n"
+"POT-Creation-Date: 2017-06-21 14:25+0100\n"
 "PO-Revision-Date: 2016-11-04 10:00+0000\n"
 "Last-Translator: Welsh Language Unit <welsh.language.unit.manager@hmcts.gsi.gov.uk>\n"
 "Language-Team: Welsh (http://www.transifex.com/ministry-of-justice/mtp/language/cy/)\n"
@@ -13,18 +14,18 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: apps/bank_admin/decorators.py:22 apps/bank_admin/tests/test_views.py:340
-#: apps/bank_admin/tests/test_views.py:422
+#: apps/bank_admin/decorators.py:22 apps/bank_admin/tests/test_views.py:337
+#: apps/bank_admin/tests/test_views.py:419
 msgid "Invalid format for receipt_date"
 msgstr ""
 
-#: apps/bank_admin/decorators.py:24 apps/bank_admin/tests/test_views.py:352
-#: apps/bank_admin/tests/test_views.py:434
+#: apps/bank_admin/decorators.py:24 apps/bank_admin/tests/test_views.py:349
+#: apps/bank_admin/tests/test_views.py:431
 msgid "'receipt_date' parameter required"
 msgstr ""
 
-#: apps/bank_admin/decorators.py:36 apps/bank_admin/tests/test_views.py:224
-#: apps/bank_admin/tests/test_views.py:328
+#: apps/bank_admin/decorators.py:36 apps/bank_admin/tests/test_views.py:221
+#: apps/bank_admin/tests/test_views.py:325
 msgid "No transactions available"
 msgstr ""
 
@@ -58,7 +59,7 @@ msgid "ADI Journal"
 msgstr ""
 
 #: templates/bank_admin/dashboard.html:58
-#: templates/bank_admin/dashboard.html:92
+#: templates/bank_admin/dashboard.html:91
 #, python-format
 msgid "Download transactions for %(date)s"
 msgstr ""
@@ -71,7 +72,7 @@ msgstr ""
 msgid "Bank statement"
 msgstr ""
 
-#: templates/bank_admin/dashboard.html:103
+#: templates/bank_admin/dashboard.html:102
 msgid "Previous bank statements"
 msgstr ""
 
@@ -80,11 +81,15 @@ msgstr ""
 msgid "Bank Admin"
 msgstr ""
 
-#: templates/base.html:19
+#: templates/base.html:21
+msgid "Manage users"
+msgstr ""
+
+#: templates/base.html:24
 msgid "Change password"
 msgstr ""
 
-#: templates/base.html:22
+#: templates/base.html:27
 #, python-format
 msgid "Sign out %(full_name)s"
 msgstr ""
