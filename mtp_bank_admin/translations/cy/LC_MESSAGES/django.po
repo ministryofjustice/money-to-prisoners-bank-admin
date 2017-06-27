@@ -2,10 +2,11 @@
 # Copyright (C) Crown copyright (Ministry of Justice)
 msgid ""
 msgstr ""
-"Project-Id-Version: mtp-bank-admin\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-06-21 14:25+0100\n"
+"POT-Creation-Date: 2017-06-27 18:44+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Igor U <igor.ushkarev@digital.justice.gov.uk>, 2017\n"
 "Language-Team: Welsh (https://www.transifex.com/ministry-of-justice/teams/34553/cy/)\n"
 "Language: cy\n"
 "MIME-Version: 1.0\n"
@@ -16,79 +17,79 @@ msgstr ""
 #: apps/bank_admin/decorators.py:22 apps/bank_admin/tests/test_views.py:337
 #: apps/bank_admin/tests/test_views.py:419
 msgid "Invalid format for receipt_date"
-msgstr ""
+msgstr "Fformat annilys ar gyfer y receipt_date"
 
 #: apps/bank_admin/decorators.py:24 apps/bank_admin/tests/test_views.py:349
 #: apps/bank_admin/tests/test_views.py:431
 msgid "'receipt_date' parameter required"
-msgstr ""
+msgstr "Angen paramedr ar gyfer y 'receipt_date'"
 
 #: apps/bank_admin/decorators.py:36 apps/bank_admin/tests/test_views.py:221
 #: apps/bank_admin/tests/test_views.py:325
 msgid "No transactions available"
-msgstr ""
+msgstr "Dim trafodion ar gael"
 
 #: apps/bank_admin/decorators.py:39
 msgid "This file cannot be downloaded until the next working day"
-msgstr ""
+msgstr "Ni ellir lawrlwytho'r ffeil hon tan y diwrnod gwaith nesaf"
 
 #: apps/bank_admin/decorators.py:42
 msgid "There was a problem generating the file. Please try again later."
-msgstr ""
+msgstr "Roedd yna broblem wrth gynhyrchu'r ffeil. Rhowch gynnig arall arni hwyrach ymlaen. "
 
 #: templates/bank_admin/dashboard.html:12 templates/base.html:18
 msgid "Download files"
-msgstr ""
+msgstr "Lawrlwytho ffeiliau"
 
 #: templates/bank_admin/dashboard.html:22
 msgid "Access Pay file – refunds"
-msgstr ""
+msgstr "Ffeil Access Pay – ad-daliadau"
 
 #: templates/bank_admin/dashboard.html:25
 #, python-format
 msgid "Download file for %(date)s"
-msgstr ""
+msgstr "Lawrlwytho ffeil ar gyfer %(date)s"
 
 #: templates/bank_admin/dashboard.html:36
 msgid "Previous AccessPay refund files"
-msgstr ""
+msgstr "Ffeiliau ad-dalu AccessPay blaenorol"
 
 #: templates/bank_admin/dashboard.html:55
 msgid "ADI Journal"
-msgstr ""
+msgstr "ADI Journal"
 
 #: templates/bank_admin/dashboard.html:58
 #: templates/bank_admin/dashboard.html:91
 #, python-format
 msgid "Download transactions for %(date)s"
-msgstr ""
+msgstr "Lawrlwytho trafodion ar gyfer %(date)s"
 
 #: templates/bank_admin/dashboard.html:69
 msgid "Previous ADI Journals"
-msgstr ""
+msgstr "ADI Journals blaenorol"
 
 #: templates/bank_admin/dashboard.html:88
 msgid "Bank statement"
-msgstr ""
+msgstr "Cyfriflen banc"
 
 #: templates/bank_admin/dashboard.html:102
 msgid "Previous bank statements"
-msgstr ""
+msgstr "Cyfriflenni banc blaenorol"
 
 #: templates/base.html:11 templates/base.html:13
 #: templates/mtp_auth/login.html:4
 msgid "Bank Admin"
-msgstr ""
+msgstr "Banc - gweinyddol"
 
 #: templates/base.html:21
 msgid "Manage users"
-msgstr ""
+msgstr "Rheoli defnyddwyr"
 
 #: templates/base.html:24
 msgid "Change password"
-msgstr ""
+msgstr "Newid cyfrinair"
 
 #: templates/base.html:27
 #, python-format
 msgid "Sign out %(full_name)s"
-msgstr ""
+msgstr "Allgofnodi %(full_name)s"
