@@ -3,6 +3,8 @@
 {% load dates %}
 {% load mtp_common %}
 
+{% block page_title %}{% trans 'Download files' %} – {{ block.super }}{% endblock %}
+
 {% block inner_content %}
   <div class="mtp-compact">
     {% get_preceding_workdays 3 offset=1 as preceding_days %}
