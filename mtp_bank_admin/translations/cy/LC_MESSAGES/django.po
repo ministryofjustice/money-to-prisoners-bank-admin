@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-07-18 15:12+0100\n"
+"POT-Creation-Date: 2017-07-31 12:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Igor U <igor.ushkarev@digital.justice.gov.uk>, 2017\n"
 "Language-Team: Welsh (https://www.transifex.com/ministry-of-justice/teams/34553/cy/)\n"
@@ -17,7 +17,7 @@ msgstr ""
 #: apps/bank_admin/decorators.py:22 apps/bank_admin/tests/test_views.py:337
 #: apps/bank_admin/tests/test_views.py:419
 msgid "Invalid format for receipt_date"
-msgstr "Fformat annilys ar gyfer y receipt_date"
+msgstr "Fformat annilys ar gyfer"
 
 #: apps/bank_admin/decorators.py:24 apps/bank_admin/tests/test_views.py:349
 #: apps/bank_admin/tests/test_views.py:431
