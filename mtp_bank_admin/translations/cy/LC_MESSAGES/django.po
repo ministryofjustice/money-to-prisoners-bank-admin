@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-31 14:43+0100\n"
+"POT-Creation-Date: 2017-10-16 15:25+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Igor U <igor.ushkarev@digital.justice.gov.uk>, 2017\n"
 "Language-Team: Welsh (https://www.transifex.com/ministry-of-justice/teams/34553/cy/)\n"
@@ -13,6 +13,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n==1) ? 0 : (n==2) ? 1 : (n != 8 && n != 11) ? 2 : 3;\n"
+
+#: apps/bank_admin/context_processors.py:9
+msgid "Go to the homepage"
+msgstr "Ewch i dudalen gartref"
+
+#: apps/bank_admin/context_processors.py:10
+msgid "Bank admin"
+msgstr "Banc gweinyddol"
 
 #: apps/bank_admin/decorators.py:22 apps/bank_admin/tests/test_views.py:337
 #: apps/bank_admin/tests/test_views.py:419
@@ -37,60 +45,68 @@ msgstr "Ni ellir lawrlwytho'r ffeil hon tan y diwrnod gwaith nesaf"
 msgid "There was a problem generating the file. Please try again later."
 msgstr "Roedd yna broblem wrth gynhyrchu'r ffeil. Rhowch gynnig arall arni hwyrach ymlaen. "
 
-#: templates/bank_admin/dashboard.html:6 templates/bank_admin/dashboard.html:14
-#: templates/base.html:19
+#: templates/bank_admin/dashboard.html:6 templates/bank_admin/dashboard.html:13
+#: templates/base.html:21
 msgid "Download files"
 msgstr "Lawrlwytho ffeiliau"
 
-#: templates/bank_admin/dashboard.html:24
+#: templates/bank_admin/dashboard.html:23
 msgid "Access Pay file – refunds"
 msgstr "Ffeil Access Pay – ad-daliadau"
 
-#: templates/bank_admin/dashboard.html:27
+#: templates/bank_admin/dashboard.html:26
 #, python-format
 msgid "Download file for %(date)s"
 msgstr "Lawrlwytho ffeil ar gyfer %(date)s"
 
-#: templates/bank_admin/dashboard.html:38
+#: templates/bank_admin/dashboard.html:37
 msgid "Previous AccessPay refund files"
 msgstr "Ffeiliau ad-dalu AccessPay blaenorol"
 
-#: templates/bank_admin/dashboard.html:57
+#: templates/bank_admin/dashboard.html:56
 msgid "ADI Journal"
 msgstr "ADI Journal"
 
-#: templates/bank_admin/dashboard.html:60
-#: templates/bank_admin/dashboard.html:93
+#: templates/bank_admin/dashboard.html:59
+#: templates/bank_admin/dashboard.html:92
 #, python-format
 msgid "Download transactions for %(date)s"
 msgstr "Lawrlwytho trafodion ar gyfer %(date)s"
 
-#: templates/bank_admin/dashboard.html:71
+#: templates/bank_admin/dashboard.html:70
 msgid "Previous ADI Journals"
 msgstr "ADI Journals blaenorol"
 
-#: templates/bank_admin/dashboard.html:90
+#: templates/bank_admin/dashboard.html:89
 msgid "Bank statement"
 msgstr "Cyfriflen banc"
 
-#: templates/bank_admin/dashboard.html:104
+#: templates/bank_admin/dashboard.html:103
 msgid "Previous bank statements"
 msgstr "Cyfriflenni banc blaenorol"
 
-#: templates/base.html:12 templates/base.html:14
+#: templates/base.html:12 templates/base.html:13
 #: templates/mtp_auth/login.html:5
 msgid "Bank Admin"
 msgstr "Banc - gweinyddol"
 
-#: templates/base.html:22
-msgid "Manage users"
-msgstr "Rheoli defnyddwyr"
+#: templates/base.html:23 templates/base.html:32
+msgid "Get help"
+msgstr ""
 
-#: templates/base.html:25
-msgid "Change password"
-msgstr "Newid cyfrinair"
+#: templates/base.html:34
+msgid "Built by"
+msgstr "Cynhyrchwyd gan"
 
-#: templates/base.html:28
-#, python-format
-msgid "Sign out %(full_name)s"
-msgstr "Allgofnodi %(full_name)s"
+#: templates/base.html:36
+msgid "Ministry of Justice"
+msgstr "Y Weinyddiaeth Cyfiawnder"
+
+#~ msgid "Manage users"
+#~ msgstr "Rheoli defnyddwyr"
+
+#~ msgid "Change password"
+#~ msgstr "Newid cyfrinair"
+
+#~ msgid "Sign out %(full_name)s"
+#~ msgstr "Allgofnodi %(full_name)s"
