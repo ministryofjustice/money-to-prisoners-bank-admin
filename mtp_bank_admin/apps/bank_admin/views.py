@@ -66,10 +66,6 @@ def download_bank_statement(request, receipt_date):
 
     return response
 
-class Q_And_A_View(TemplateView):
+class QAndAView(TemplateView):
 
-    template_name = "q_and_a_page/q_and_a_page.html"
-
-    
-
-
+    template_name = "q_and_a/q_and_a.html"
