@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.utils.dateformat import format as date_format
 
-from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from . import refund, adi, statement
 from .decorators import filter_by_receipt_date, handle_file_download_errors
@@ -65,6 +64,7 @@ def download_bank_statement(request, receipt_date):
     })
 
     return response
+
 
 class QAndAView(TemplateView):
 
