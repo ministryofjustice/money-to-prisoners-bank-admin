@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.conf.urls import url
 from django.views.generic.base import TemplateView
+from bank_admin.views import QAndAView
 
 from . import views
 
@@ -14,5 +15,6 @@ urlpatterns = [
     url(r'^adi/download/$', views.download_adi_journal,
         name='download_adi_journal'),
     url(r'^bank_statement/download/$', views.download_bank_statement,
-        name='download_bank_statement')
+        name='download_bank_statement'),
+    url(r'^q_and_a/$', QAndAView.as_view(), name='q_and_a')
 ]
