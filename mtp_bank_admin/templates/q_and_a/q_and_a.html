@@ -1,71 +1,116 @@
 {% extends 'base.html' %}
+{% load i18n %}
+{% load mtp_common %}
 
 {% block inner_content %}
+{% get_current_language as lang_code %}
+
+<header>
+  {% language_switch %}
+  <h1 class="heading-xlarge">Send money to someone in prison – FAQs</h1>
+</header>
+
 <div class="grid-row">
   <div class="column-two-thirds">
-    <h1 class="heading-xlarge">Send money to a prisoner service - FAQs</h1>
-    <br>
-    <p class="lede">Information for prison switchboard, Zendesk and business hub staff to help answer questions from the public.</p>
-    <h2 class="heading-medium">1. How can I send money to a prisoner using the new service?</h2>
-    <p>Directly with your <strong>debit card</strong>.<br>Or by <strong>bank transfer</strong> using online banking, a mobile banking app or telephone banking.</p>
-    <br>
-    <h2 class="heading-medium">2. What bank cards can I use?</h2>
-    <p>You can use Visa, Mastercard and Maestro.</p>
-    <br>
-    <h2 class="heading-medium">3. What payment methods do not work?</h2>
-    <p>You can <strong>not</strong> use CHAPS.<br>And you can <strong>not</strong> make a payment in-person at a bank using IBAN.</p>
-    <br>
-    <h2 class="heading-medium">4. Can I send money to a prisoner using this service?</h2>
-    <p>Yes. The digital service (bank transfers and debit cards) is now available to all public prisons in England and Wales.<br>The service is <strong>not</strong> available in private prisons.</p>
-    <br>
-    <h2 class="heading-medium">5. How long will it take for the prisoner to receive the money?</h2>
-    <p>Up to 3 working days.</p>
-    <br>
-    <h2 class="heading-medium">6. Has the prisoner received my money?</h2>
-    <p>Ask the prisoner when they call you.</p>
-    <br>
-    <h2 class="heading-medium">7. Why didn’t the money reach the prisoner?</h2>
-    <p>If you paid by <strong>debit card</strong>, contact your bank.<br>If you paid by <strong>bank transfer</strong>, it may be because:</p>
-    <br>
-    <ul class="list list-bullet">
-      <li>the reference you inserted for the bank transfer is wrong - check with the prisoner that you have the prisoner’s correct date of birth and correct prisoner number</li>
-      <li>the prisoner has left prison</li>
-      <li>you paid cash in-branch (not allowed)</li>
-      <li>you made an international transfer (not allowed)</li>
-    </ul>
-    <p>You’ll <strong>ONLY</strong> get a refund if the reference you inserted for the bank transfer is incorrect OR if the prisoner has left prison.</p>
-    <br>
-    <h2 class="heading-medium">8. How long will it take for me to get a refund from my bank transfer?</h2>
-    <p>4 working days from the day you sent the money.</p>
-    <br>
-    <h2 class="heading-medium">9. How will I know I’ve got my refund?</h2>
-    <p>Check your bank account 4 working days after you sent the money.<br>On your bank statement you’ll see the refund appear as ‘GBS RE NOMS AGENCY’.</p>
-    <br>
-    <h2 class="heading-medium">10. How do I check the correct reference number for my bank transfer?</h2>
-    <p>Go to: <a href="https://www.gov.uk/send-prisoner-money">www.gov.uk/send-prisoner-money</a></p>
-    <p>Try to generate the reference.<br> If the reference can’t be generated, check with the prisoner that you have their correct date of birth and correct prisoner number.<br>Sometimes the date of birth is entered incorrectly into the prison system.<br>The prisoner might need to ask an officer on the wing to check it and let you know.</p>
-    <br>
-    <h2 class="heading-medium">11. How do I get my money back if I made a bank transfer in-branch or by international transfer?</h2>
-    <p>You need to talk to the prison business hub staff to identify the payment. When it’s been identified you will need to write to them confirming:</p>
-    <br>
-    <ul class="list list-bullet">
-      <li>who you are</li>
-      <li>your address </li>
-      <li>how you made the payment (in-branch or international transfer)</li>
-      <li>if in-branch, what bank/branch you went to</li>
-      <li>your bank</li>
-      <li>your sort code, account number</li>
-      <li>prisoner’s name</li>
-      <li>prisoner’s prison number</li>
-    </ul>
-    <p>When the prison business hub staff get your letter, they’ll send you a cheque.  </p>
-    <br>
-    <h2 class="heading-medium">12. If I send money using the service how will my data be used or stored?</h2>
-    <p>Go to: <a href="https://www.gov.uk/send-prisoner-money">www.gov.uk/send-prisoner-money</a></p>
-    <p>Click on ‘Terms and Conditions’ at the bottom of the page.</p>
-    <br>
+    <p class="lede">
+      Information for prison switchboard, APVU and business hub staff to help answer questions from the public regarding the <a href="https://www.gov.uk/send-prisoner-money">Send money to someone in prison</a> service.
+    </p>
+
+    <dl class="mtp-qna">
+      <dt>How can I send money to a prisoner using the new service?</dt>
+      <dd>
+        <p>Directly through the service with your <strong>debit card</strong>.</p>
+        <p>Or by <strong>bank transfer</strong> using your online banking website, a mobile banking app or telephone banking. You need to use the service first to get a reference for your bank transfer.</p>
+      </dd>
+
+      <dt>What bank cards can I use?</dt>
+      <dd>
+        <p>You can use Visa, Mastercard and Maestro <strong>debit</strong> cards.</p>
+      </dd>
+
+      <dt>What payment methods do not work?</dt>
+      <dd>
+        <p>You can <strong>not</strong> use CHAPS.</p>
+        <p>You can <strong>not</strong> make a payment in-person at a bank.</p>
+        <p>You can <strong>not</strong> make an international payment using IBAN.</p>
+      </dd>
+
+      <dt>Can I send money to a prisoner using this service?</dt>
+      <dd>
+        <p>Yes. The digital service (bank transfers and debit cards) is now available to all <a href="https://send-money-to-prisoner.service.gov.uk/{{ lang_code }}/help/prisons/">public prisons in England and Wales</a>.</p>
+        <p>The service is <strong>not</strong> available in <a href="https://www.justice.gov.uk/about/hmps/contracted-out">private prisons</a>.</p>
+      </dd>
+
+      <dt>How long will it take for the prisoner to receive the money?</dt>
+      <dd>
+        <p>Up to 3 working days.</p>
+      </dd>
+
+      <dt>Has the prisoner received my money?</dt>
+      <dd>
+        <p>Ask the prisoner when they call you.</p>
+        <p>If you sent money by debit card, you will also receive an email.</p>
+      </dd>
+
+      <dt>Why didn’t the money reach the prisoner?</dt>
+      <dd>
+        <p>If you paid by <strong>debit card</strong>, contact your bank.</p>
+        <p>If you paid by <strong>bank transfer</strong>, it may be because:</p>
+        <ul class="list list-bullet">
+          <li>the reference you inserted for the bank transfer is wrong – check with the prisoner that you have the prisoner’s correct date of birth and correct prisoner number</li>
+          <li>the prisoner has left prison</li>
+          <li>you paid cash in-branch (not allowed)</li>
+          <li>you made an international transfer (not allowed)</li>
+        </ul>
+        <p>You’ll <strong>only</strong> get a refund if the reference you inserted for the bank transfer is incorrect or if the prisoner has left prison.</p>
+      </dd>
+
+      <dt>How do I check the correct reference number for my bank transfer?</dt>
+      <dd>
+        <p>Go to: <a href="https://www.gov.uk/send-prisoner-money">www.gov.uk/send-prisoner-money</a></p>
+        <p>Try to generate the reference.</p>
+        <p>If the reference can’t be generated, check with the prisoner that you have their correct date of birth and correct prisoner number.</p>
+        <p>Sometimes the date of birth is entered incorrectly into the prison system. The prisoner might need to ask an officer on the wing to check it and let you know.</p>
+      </dd>
+
+      <dt>Can I use the bank transfer reference again?</dt>
+      <dd>
+        <p>If you want to send money to the <strong>same prisoner</strong>, you can use the code you generated again.</p>
+      </dd>
+
+      <dt>How long will it take for me to get a refund from my bank transfer?</dt>
+      <dd>
+        <p>If you used an incorrect reference, we will attempt to refund you within 4 working days.</p>
+      </dd>
+
+      <dt>How will I know I’ve got my refund?</dt>
+      <dd>
+        <p>Check your bank account 4 working days after you sent the money.</p>
+        <p>On your bank statement you’ll see the refund appear as ‘GBS RE NOMS AGENCY’.</p>
+      </dd>
+
+      <dt>How do I get my money back if I made a bank transfer in-branch or by international transfer?</dt>
+      <dd>
+        <p>You need to talk to the prison business hub staff to identify the payment. When it’s been identified you will need to write to them confirming:</p>
+        <ul class="list list-bullet">
+          <li>who you are</li>
+          <li>your address</li>
+          <li>how you made the payment (in-branch or international transfer)</li>
+          <li>if in-branch, what bank/branch you went to</li>
+          <li>your bank</li>
+          <li>your sort code, account number</li>
+          <li>prisoner’s name</li>
+          <li>prisoner’s prison number</li>
+        </ul>
+        <p>When the prison business hub staff get your letter, they’ll send you a cheque.</p>
+      </dd>
+
+      <dt>If I send money using the service how will my data be used or stored?</dt>
+      <dd>
+        <p>Go to: <a href="https://send-money-to-prisoner.service.gov.uk/{{ lang_code }}/terms/">send-money-to-prisoner.service.gov.uk/{{ lang_code }}/terms/</a></p>
+      </dd>
+    </dl>
+
   </div>
 </div>
-
 {% endblock %}
-
