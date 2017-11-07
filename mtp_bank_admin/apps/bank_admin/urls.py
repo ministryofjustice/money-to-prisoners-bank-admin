@@ -12,5 +12,5 @@ urlpatterns = [
     url(r'^adi/download/$', views.download_adi_journal, name='download_adi_journal'),
     url(r'^bank_statement/download/$', views.download_bank_statement, name='download_bank_statement'),
 
-    url(r'^q_and_a/$', TemplateView.as_view(template_name='q_and_a/q_and_a.html'), name='q_and_a')
+    url(r'^q_and_a/$', TemplateView.as_view(template_name='faq.html'), name='faq')
 ]
