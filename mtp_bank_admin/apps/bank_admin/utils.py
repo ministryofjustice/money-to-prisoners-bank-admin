@@ -28,10 +28,15 @@ def set_worldpay_cutoff(date):
     return datetime.combine(date, time(0, 0, 0, tzinfo=utc))
 
 
-def reconcile_for_date(request, receipt_date):
+def get_start_and_end_date(date):
     checker = WorkdayChecker()
-    start_date = set_worldpay_cutoff(receipt_date)
-    end_date = set_worldpay_cutoff(checker.get_next_workday(receipt_date))
+    start_date = set_worldpay_cutoff(date)
+    end_date = set_worldpay_cutoff(checker.get_next_workday(date))
+    return start_date, end_date
+
+
+def reconcile_for_date(request, receipt_date):
+    start_date, end_date = get_start_and_end_date(receipt_date)
 
     if start_date.date() >= now().date() or end_date.date() > now().date():
         raise EarlyReconciliationError
