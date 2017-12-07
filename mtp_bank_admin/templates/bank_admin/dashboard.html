@@ -84,6 +84,7 @@
           </div>
         </section>
       </div>
+
       <div class="mtp-compact__row-2">
         <section>
           <h2 class="heading-small">{% trans 'Bank statement' %}</h2>
@@ -112,6 +113,38 @@
                 </a>
               </li>
               {% endif %}
+          {% endfor %}
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="heading-small">{% trans 'Disbursements' %}</h2>
+          {% url 'bank_admin:download_disbursements' as base_download_url %}
+          {% for day in preceding_days %}
+            {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download disbursements for {{ date }}{% endblocktrans %}
+
+            {% if forloop.first %}
+          <div class="mtp-filelink">
+            <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+            {{ download_label }}
+            </a>
+          </div>
+
+          <p>
+            <a class="mtp-disclosure" href="#" aria-controls="previous-disbursements" aria-expanded="false" role="button" data-analytics="pageview,/-help_open/previous-adi-journals/">
+              <span></span>{% trans 'Previous Disbursements' %}
+            </a>
+          </p>
+          <div id="previous-disbursements" class="mtp-disclosure__contents panel panel-border-narrow">
+            <ul class="list list-bullet">
+            {% else %}
+              <li>
+                <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+                  {{ download_label }}
+                </a>
+              </li>
+            {% endif %}
           {% endfor %}
             </ul>
           </div>
