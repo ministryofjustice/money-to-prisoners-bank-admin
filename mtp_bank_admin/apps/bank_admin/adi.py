@@ -5,12 +5,12 @@ import logging
 
 from django.conf import settings
 
-from . import ADI_JOURNAL_LABEL, Journal
+from . import ADI_JOURNAL_LABEL
 from . import adi_config as config
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
 from .utils import (
-    retrieve_all_transactions, retrieve_all_valid_credits,
+    Journal, retrieve_all_transactions, retrieve_all_valid_credits,
     reconcile_for_date, retrieve_prisons, get_full_narrative
 )
 

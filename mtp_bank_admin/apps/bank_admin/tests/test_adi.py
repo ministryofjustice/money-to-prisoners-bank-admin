@@ -1,9 +1,9 @@
 from collections import defaultdict
-from contextlib import contextmanager
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+import json
 import logging
-import os
 from unittest import mock, skip
+from urllib.parse import quote_plus
 
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
@@ -12,23 +12,17 @@ from django.utils.timezone import utc
 from mtp_common.auth.models import MojUser
 from mtp_common.test_utils import silence_logger
 from openpyxl import load_workbook
+import responses
 
 from . import (
-    TEST_PRISONS, TEST_PRISONS_RESPONSE, NO_TRANSACTIONS, TEST_HOLIDAYS,
-    get_test_transactions, get_test_credits,
+    TEST_PRISONS, NO_TRANSACTIONS, mock_list_prisons,
+    get_test_transactions, get_test_credits, temp_file, api_url,
+    mock_bank_holidays, base_urls_equal
 )
-from .. import adi, adi_config
-from ..exceptions import EmptyFileError, EarlyReconciliationError
-from ..types import PaymentType
-
-
-@contextmanager
-def temp_file(name, data):
-    path = '/tmp/' + name
-    with open(path, 'w+b') as f:
-        f.write(data)
-    yield path
-    os.remove(path)
+from bank_admin import adi, adi_config
+from bank_admin.exceptions import EmptyFileError, EarlyReconciliationError
+from bank_admin.types import PaymentType
+from bank_admin.utils import set_worldpay_cutoff
 
 
 def get_cell_value(journal_ws, field, row):
@@ -39,7 +33,6 @@ def get_cell_value(journal_ws, field, row):
     return journal_ws[cell].value
 
 
-@mock.patch('mtp_bank_admin.apps.bank_admin.utils.api_client')
 class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
     def setUp(self):
@@ -54,29 +47,62 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             1, '',
             {'first_name': 'John', 'last_name': 'Smith', 'username': 'jsmith'}
         )
+        request.session = mock.MagicMock()
         return request
 
-    def _generate_test_adi_journal(self, mock_api_client, receipt_date=None):
+    def _generate_test_adi_journal(self, receipt_date=None):
+        if receipt_date is None:
+            receipt_date = date(2016, 9, 13)
+        start_date = quote_plus(str(set_worldpay_cutoff(receipt_date)))
+        end_date = quote_plus(str(set_worldpay_cutoff(receipt_date + timedelta(days=1))))
+
         credits = get_test_credits(20)
         refundable_transactions = get_test_transactions(PaymentType.refund, 5)
         rejected_transactions = get_test_transactions(PaymentType.reject, 2)
 
-        conn = mock_api_client.get_connection()
-        conn.prisons.get.return_value = TEST_PRISONS_RESPONSE
-        conn.credits.get.return_value = credits
-        conn.transactions.get.side_effect = [
-            refundable_transactions,
-            rejected_transactions
-        ]
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        mock_list_prisons()
+        responses.add(
+            responses.GET,
+            api_url('/credits/'),
+            json=credits
+        )
+        responses.add(
+            responses.GET,
+            api_url(
+                '/transactions/?offset=0&limit=500'
+                '&received_at__lt={end_date}'
+                '&received_at__gte={start_date}'
+                '&status=refundable'.format(
+                    start_date=start_date, end_date=end_date
+                )
+            ),
+            json=refundable_transactions,
+            match_querystring=True
+        )
+        responses.add(
+            responses.GET,
+            api_url(
+                '/transactions/?offset=0&limit=500'
+                '&received_at__lt={end_date}'
+                '&received_at__gte={start_date}'
+                '&status=unidentified'.format(
+                    start_date=start_date, end_date=end_date
+                )
+            ),
+            json=rejected_transactions,
+            match_querystring=True
+        )
+        mock_bank_holidays()
 
-        if receipt_date is None:
-            receipt_date = date(2016, 9, 13)
-        with mock.patch('bank_admin.utils.requests') as mock_requests, \
-                silence_logger(name='mtp', level=logging.WARNING):
-            mock_requests.get().status_code = 200
-            mock_requests.get().json.return_value = TEST_HOLIDAYS
-            filename, exceldata = adi.generate_adi_journal(self.get_request(),
-                                                           receipt_date)
+        with silence_logger(name='mtp', level=logging.WARNING):
+            filename, exceldata = adi.generate_adi_journal(
+                self.get_request(), receipt_date
+            )
 
         return filename, exceldata, (credits, refundable_transactions, rejected_transactions)
 
@@ -112,17 +138,19 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         return expected_debit_rows, expected_credit_rows
 
+    @responses.activate
     @skip('Enable to generate an example file for inspection')
-    def test_adi_journal_generation(self, mock_api_client):
-        filename, exceldata, _ = self._generate_test_adi_journal(mock_api_client)
+    def test_adi_journal_generation(self):
+        filename, exceldata, _ = self._generate_test_adi_journal()
         with open(filename, 'wb+') as f:
             f.write(exceldata)
 
-    def test_adi_journal_debits_match_credits(self, mock_api_client):
-        filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
+    @responses.activate
+    def test_adi_journal_debits_match_credits(self):
+        filename, exceldata, test_data = self._generate_test_adi_journal()
         credits, refundable_transactions, rejected_transactions = test_data
 
-        with temp_file(filename, exceldata) as f:
+        with temp_file(exceldata) as f:
             wb = load_workbook(f)
             journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
@@ -142,11 +170,12 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                 row += 1
             self.assertAlmostEqual(0, current_balance)
 
-    def test_adi_journal_number_of_payment_rows_correct(self, mock_api_client):
-        filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
+    @responses.activate
+    def test_adi_journal_number_of_payment_rows_correct(self):
+        filename, exceldata, test_data = self._generate_test_adi_journal()
         credits, refundable_transactions, rejected_transactions = test_data
 
-        with temp_file(filename, exceldata) as f:
+        with temp_file(exceldata) as f:
             wb = load_workbook(f)
             journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
@@ -173,8 +202,9 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             credit = self.assertEqual(expected_credit_rows, file_credit_rows)
             credit = self.assertEqual(expected_debit_rows, file_debit_rows)
 
-    def test_adi_journal_credit_sums_correct(self, mock_api_client):
-        filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
+    @responses.activate
+    def test_adi_journal_credit_sums_correct(self):
+        filename, exceldata, test_data = self._generate_test_adi_journal()
         credits, refundable_transactions, rejected_transactions = test_data
 
         prison_totals = defaultdict(int)
@@ -186,7 +216,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
 
         refund_total = float(sum([t['amount'] for t in refundable_transactions['results']]))/100
 
-        with temp_file(filename, exceldata) as f:
+        with temp_file(exceldata) as f:
             wb = load_workbook(f)
             journal_ws = wb.get_sheet_by_name('130916')
             row = adi_config.ADI_JOURNAL_START_ROW
@@ -209,31 +239,49 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                         self.assertAlmostEqual(credit, prison_totals[bu_code])
                 row += 1
 
-    def test_no_transactions_raises_error(self, mock_api_client):
-        conn = mock_api_client.get_connection()
-        conn.prisons.get.return_value = TEST_PRISONS_RESPONSE
-        conn.credits.get.return_value = NO_TRANSACTIONS
-        conn.transactions.get.return_value = NO_TRANSACTIONS
+    @responses.activate
+    def test_no_transactions_raises_error(self):
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        mock_list_prisons()
+        responses.add(
+            responses.GET,
+            api_url('/credits/'),
+            json=NO_TRANSACTIONS
+        )
+        responses.add(
+            responses.GET,
+            api_url('/transactions/'),
+            json=NO_TRANSACTIONS
+        )
+        responses.add(
+            responses.GET,
+            api_url('/transactions/'),
+            json=NO_TRANSACTIONS
+        )
+        mock_bank_holidays()
 
-        with self.assertRaises(EmptyFileError), mock.patch('bank_admin.utils.requests') as mock_requests, \
-                silence_logger(name='mtp', level=logging.WARNING):
-            mock_requests.get().status_code = 200
-            mock_requests.get().json.return_value = TEST_HOLIDAYS
+        with self.assertRaises(EmptyFileError), silence_logger(name='mtp', level=logging.WARNING):
             _, exceldata = adi.generate_adi_journal(self.get_request(), date(2016, 9, 13))
 
-    def test_adi_journal_reconciles_date(self, mock_api_client):
-        _, _, _ = self._generate_test_adi_journal(
-            mock_api_client, receipt_date=date(2016, 9, 13)
-        )
+    @responses.activate
+    def test_adi_journal_reconciles_date(self):
+        _, _, _ = self._generate_test_adi_journal(receipt_date=date(2016, 9, 13))
 
-        conn = mock_api_client.get_connection().transactions
-        conn.reconcile.post.assert_called_with(
-            {'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
-             'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()}
-        )
+        for call in responses.calls:
+            if base_urls_equal(call.request.url, api_url('/transactions/reconcile/')):
+                self.assertEqual(
+                    json.loads(call.request.body),
+                    {'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
+                     'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()}
+                )
 
-    def test_adi_journal_upload_range_set(self, mock_api_client):
-        filename, exceldata, test_data = self._generate_test_adi_journal(mock_api_client)
+    @responses.activate
+    def test_adi_journal_upload_range_set(self):
+        filename, exceldata, test_data = self._generate_test_adi_journal()
         credits, refundable_transactions, rejected_transactions = test_data
 
         expected_debit_rows, expected_credit_rows = self._get_expected_number_of_rows(
@@ -241,7 +289,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
         )
         expected_rows = expected_debit_rows + expected_credit_rows
 
-        with temp_file(filename, exceldata) as f:
+        with temp_file(exceldata) as f:
             wb = load_workbook(f)
             journal_ws = wb.get_sheet_by_name('130916')
 
@@ -256,24 +304,26 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                 )]
             )
 
-    def test_batch_name_includes_initials(self, mock_api_client):
-        filename, exceldata, _ = self._generate_test_adi_journal(mock_api_client)
+    @responses.activate
+    def test_batch_name_includes_initials(self):
+        filename, exceldata, _ = self._generate_test_adi_journal()
 
-        with temp_file(filename, exceldata) as f:
+        with temp_file(exceldata) as f:
             wb = load_workbook(f)
             journal_ws = wb.get_sheet_by_name('130916')
             self.assertTrue('JS' in journal_ws[adi_config.ADI_BATCH_NAME_CELL].value)
 
-    @mock.patch('mtp_bank_admin.apps.bank_admin.adi.date')
-    def test_accounting_date_is_download_date(self, mock_date, mock_api_client):
+    @responses.activate
+    @mock.patch('bank_admin.adi.date')
+    def test_accounting_date_is_download_date(self, mock_date):
         processing_date = date(2016, 8, 31)
         mock_date.today.return_value = processing_date
         receipt_date = date(2016, 8, 30)
         filename, exceldata, _ = self._generate_test_adi_journal(
-            mock_api_client, receipt_date=receipt_date
+            receipt_date=receipt_date
         )
 
-        with temp_file(filename, exceldata) as f:
+        with temp_file(exceldata) as f:
             wb = load_workbook(f)
             journal_ws = wb.get_sheet_by_name(receipt_date.strftime('%d%m%y'))
             self.assertEqual(
@@ -281,16 +331,17 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                 journal_ws[adi_config.ADI_DATE_CELL].value
             )
 
-    @mock.patch('mtp_bank_admin.apps.bank_admin.adi.date')
-    def test_accounting_date_is_set_back_across_month_boundary(self, mock_date, mock_api_client):
+    @responses.activate
+    @mock.patch('bank_admin.adi.date')
+    def test_accounting_date_is_set_back_across_month_boundary(self, mock_date):
         processing_date = date(2016, 9, 1)
         mock_date.today.return_value = processing_date
         receipt_date = date(2016, 8, 31)
         filename, exceldata, _ = self._generate_test_adi_journal(
-            mock_api_client, receipt_date=receipt_date
+            receipt_date=receipt_date
         )
 
-        with temp_file(filename, exceldata) as f:
+        with temp_file(exceldata) as f:
             wb = load_workbook(f)
             journal_ws = wb.get_sheet_by_name(receipt_date.strftime('%d%m%y'))
             self.assertEqual(
@@ -298,8 +349,7 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
                 journal_ws[adi_config.ADI_DATE_CELL].value
             )
 
-    def test_early_reconciliation_raises_error(self, mock_api_client):
+    @responses.activate
+    def test_early_reconciliation_raises_error(self):
         with self.assertRaises(EarlyReconciliationError):
-            self._generate_test_adi_journal(
-                mock_api_client, receipt_date=date.today()
-            )
+            self._generate_test_adi_journal(receipt_date=date.today())
