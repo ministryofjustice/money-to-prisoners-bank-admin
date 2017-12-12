@@ -1,12 +1,17 @@
+from collections import defaultdict
 from datetime import datetime, time, timedelta
 import time as systime
 
 from django.utils.timezone import now, utc
 from mtp_common.api import retrieve_all_pages
 from mtp_common.auth import api_client
+from openpyxl import load_workbook, styles
+from openpyxl.writer.excel import save_virtual_workbook
 import requests
 
 from .exceptions import EarlyReconciliationError, UpstreamServiceUnavailable
+
+BANK_HOLIDAY_URL = 'https://www.gov.uk/bank-holidays.json'
 
 
 def retrieve_all_transactions(request, **kwargs):
@@ -89,7 +94,7 @@ def get_full_narrative(transaction):
 class WorkdayChecker:
 
     def __init__(self):
-        response = requests.get('https://www.gov.uk/bank-holidays.json')
+        response = requests.get(BANK_HOLIDAY_URL)
         if response.status_code == 200:
             self.holidays = [
                 datetime.strptime(holiday['date'], '%Y-%m-%d').date() for holiday in
@@ -114,3 +119,59 @@ class WorkdayChecker:
         while not self.is_workday(previous_day):
             previous_day -= timedelta(days=1)
         return previous_day
+
+
+class Journal():
+
+    STYLE_TYPES = {
+        'fill': styles.PatternFill,
+        'border': styles.Border,
+        'font': styles.Font,
+        'alignment': styles.Alignment
+    }
+
+    def __init__(self, template_path, sheet_name, start_row, fields):
+        self.wb = load_workbook(template_path, keep_vba=True)
+        self.journal_ws = self.wb.get_sheet_by_name(sheet_name)
+
+        self.start_row = start_row
+        self.current_row = start_row
+        self.fields = fields
+
+    def next_row(self, increment=1):
+        self.current_row += increment
+
+    def get_cell(self, field):
+        return '%s%s' % (self.fields[field]['column'],
+                         self.current_row)
+
+    def set_field(self, field, value, style=None, extra_style={}):
+        cell = self.get_cell(field)
+        self.journal_ws[cell] = value
+
+        computed_style = defaultdict(dict)
+        base_style = style or self.fields[field].get('style', {})
+        for key in base_style:
+            computed_style[key].update(base_style[key])
+
+        for key in extra_style:
+            computed_style[key].update(extra_style[key])
+
+        for key in computed_style:
+            setattr(
+                self.journal_ws[cell],
+                key,
+                self.STYLE_TYPES[key](**computed_style[key])
+            )
+        return self.journal_ws[cell]
+
+    def lookup(self, field, context={}):
+        try:
+            value = self.fields[field]['value']
+            return value.format(**context)
+        except KeyError:
+            pass  # no static value
+        return None
+
+    def create_file(self):
+        return save_virtual_workbook(self.wb)

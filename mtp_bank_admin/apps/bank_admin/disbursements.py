@@ -2,8 +2,8 @@ from django.conf import settings
 from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.auth import api_client
 
-from . import disbursements_config as config, Journal
-from .utils import get_start_and_end_date
+from . import disbursements_config as config
+from .utils import get_start_and_end_date, retrieve_prisons, Journal
 
 
 class DisbursementJournal(Journal):
@@ -33,7 +33,9 @@ def generate_disbursements_journal(request, date):
         config.DISBURSEMENTS_JOURNAL_START_ROW,
         config.DISBURSEMENT_FIELDS
     )
+    prisons = retrieve_prisons(request)
     for disbursement in disbursements:
+        disbursement['cost_centre'] = prisons[disbursement['prison']]['general_ledger_code']
         journal.add_disbursement_row(**disbursement)
 
     return (

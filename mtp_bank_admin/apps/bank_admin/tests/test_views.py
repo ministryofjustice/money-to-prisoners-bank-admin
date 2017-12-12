@@ -1,6 +1,7 @@
-import datetime
+from datetime import date, datetime, timedelta
 import logging
 from unittest import mock
+from urllib.parse import quote_plus
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -8,16 +9,20 @@ from django.test import SimpleTestCase
 from django.utils.encoding import escape_uri_path
 from django.utils.timezone import utc
 from django.utils.translation import ugettext_lazy as _
-from mtp_common.auth.exceptions import Unauthorized, Forbidden
+from mtp_common.auth.exceptions import Forbidden
 from mtp_common.auth.test_utils import generate_tokens
 from mtp_common.test_utils import silence_logger
+import responses
 
 from . import (
-    get_test_transactions, get_test_credits, NO_TRANSACTIONS, TEST_PRISONS_RESPONSE,
-    mock_balance
+    get_test_transactions, get_test_credits, NO_TRANSACTIONS,
+    mock_balance, api_url, mock_bank_holidays, mock_list_prisons,
+    base_urls_equal, get_query_dict
 )
 from .test_refund import REFUND_TRANSACTIONS, expected_output
-from ..types import PaymentType
+from .test_statement import mock_test_transactions
+from bank_admin.types import PaymentType
+from bank_admin.utils import set_worldpay_cutoff
 
 
 class BankAdminViewTestCase(SimpleTestCase):
@@ -37,10 +42,10 @@ class BankAdminViewTestCase(SimpleTestCase):
         response = self.client.post(
             reverse('login'),
             data={'username': 'shall', 'password': 'pass'},
-            follow=True
+            follow=False
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def check_login_redirect(self, attempted_url):
         response = self.client.get(attempted_url)
@@ -137,13 +142,26 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
     def test_download_refund_file_requires_login(self):
         self.check_login_redirect(reverse('bank_admin:download_refund_file'))
 
-    @mock.patch('bank_admin.refund.api_client')
-    @mock.patch('bank_admin.utils.api_client')
-    def test_download_refund_file(self, mock_api_client, mock_refund_api_client):
+    @responses.activate
+    def test_download_refund_file(self):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.side_effect = REFUND_TRANSACTIONS
+        mock_bank_holidays()
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        responses.add(
+            responses.GET,
+            api_url('/transactions/'),
+            json=REFUND_TRANSACTIONS
+        )
+        responses.add(
+            responses.PATCH,
+            api_url('/transactions/'),
+            status=200
+        )
 
         response = self.client.get(reverse('bank_admin:download_refund_file') +
                                    '?receipt_date=2014-12-11')
@@ -155,51 +173,83 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
             response.content
         )
 
-    @mock.patch('bank_admin.refund.api_client')
-    @mock.patch('bank_admin.utils.api_client')
-    def test_accesspay_queries_by_date(self, mock_api_client, mock_refund_api_client):
+    @responses.activate
+    def test_accesspay_queries_by_date(self):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.side_effect = {
-            'count': 1,
-            'results': [{
-                'id': '3',
-                'amount': 2568,
-                'sender_account_number': '22222222',
-                'sender_sort_code': '111111',
-                'sender_name': 'John Doe',
-                'ref_code': '900001',
-                'reference': 'for birthday',
-                'credited': False,
-                'refunded': False,
-                'received_at': '2014-11-12'
-            }]
-        },
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        responses.add(
+            responses.GET,
+            api_url('/transactions/'),
+            json={
+                'count': 1,
+                'results': [{
+                    'id': '3',
+                    'amount': 2568,
+                    'sender_account_number': '22222222',
+                    'sender_sort_code': '111111',
+                    'sender_name': 'John Doe',
+                    'ref_code': '900001',
+                    'reference': 'for birthday',
+                    'credited': False,
+                    'refunded': False,
+                    'received_at': '2014-11-12'
+                }]
+            }
+        )
+        responses.add(
+            responses.PATCH,
+            api_url('/transactions/'),
+            status=200
+        )
+        mock_bank_holidays()
 
         self.client.get(
             reverse('bank_admin:download_refund_file') +
             '?receipt_date=2014-11-12'
         )
 
-        conn.get.assert_called_with(
-            limit=settings.REQUEST_PAGE_SIZE,
-            offset=0,
-            status='refundable',
-            received_at__gte=datetime.datetime(2014, 11, 12, 0, 0, tzinfo=utc),
-            received_at__lt=datetime.datetime(2014, 11, 13, 0, 0, tzinfo=utc)
-        )
+        for call in responses.calls:
+            if (base_urls_equal(call.request.url, api_url('/transactions/')) and
+                    call.request.method == 'GET'):
+                self.assertEqual(
+                    get_query_dict(call.request.url),
+                    dict(
+                        limit=str(settings.REQUEST_PAGE_SIZE),
+                        offset='0',
+                        status='refundable',
+                        received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=utc)),
+                        received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=utc))
+                    )
+                )
 
 
-@mock.patch('bank_admin.utils.api_client')
 class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
 
-    @mock.patch('mtp_common.auth.backends.api_client')
-    def test_download_refund_file_unauthorized(self, auth_api_client, mock_api_client):
+    @responses.activate
+    def test_download_refund_file_unauthorized(self):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.side_effect = Unauthorized()
+        mock_bank_holidays()
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        responses.add(
+            responses.GET,
+            api_url('/transactions/'),
+            status=401
+        )
+        responses.add(
+            responses.POST,
+            api_url('/oauth2/revoke_token/'),
+            status=200
+        )
 
         response = self.client.get(reverse('bank_admin:download_refund_file') +
                                    '?receipt_date=2014-12-11',
@@ -207,11 +257,21 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
 
         self.assertRedirects(response, reverse('login'))
 
-    def test_download_refund_file_no_transactions_error_message(self, mock_api_client):
+    @responses.activate
+    def test_download_refund_file_no_transactions_error_message(self):
         self.login()
 
-        conn = mock_api_client.get_connection()
-        conn.transactions.get.return_value = NO_TRANSACTIONS
+        mock_bank_holidays()
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        responses.add(
+            responses.GET,
+            api_url('/transactions/'),
+            json=NO_TRANSACTIONS
+        )
 
         response = self.client.get(
             reverse('bank_admin:download_refund_file') + '?receipt_date=2014-12-11',
@@ -224,20 +284,53 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
 
 class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
 
-    def _set_returned_transactions(self, mock_api_client):
+    def _set_returned_transactions(self):
         credits = get_test_credits(20)
         refundable_transactions = get_test_transactions(PaymentType.refund, 5)
         rejected_transactions = get_test_transactions(PaymentType.reject, 2)
 
-        conn = mock_api_client.get_connection()
-        conn.prisons.get.return_value = TEST_PRISONS_RESPONSE
-        conn.credits.get.return_value = credits
-        conn.transactions.get.side_effect = [
-            refundable_transactions,
-            rejected_transactions
-        ]
+        receipt_date = date(2014, 12, 11)
+        start_date = quote_plus(str(set_worldpay_cutoff(receipt_date)))
+        end_date = quote_plus(str(set_worldpay_cutoff(receipt_date + timedelta(days=1))))
 
-        return conn
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        mock_list_prisons()
+        responses.add(
+            responses.GET,
+            api_url('/credits/'),
+            json=credits
+        )
+        responses.add(
+            responses.GET,
+            api_url(
+                '/transactions/?offset=0&limit=500'
+                '&received_at__lt={end_date}'
+                '&received_at__gte={start_date}'
+                '&status=refundable'.format(
+                    start_date=start_date, end_date=end_date
+                )
+            ),
+            json=refundable_transactions,
+            match_querystring=True
+        )
+        responses.add(
+            responses.GET,
+            api_url(
+                '/transactions/?offset=0&limit=500'
+                '&received_at__lt={end_date}'
+                '&received_at__gte={start_date}'
+                '&status=unidentified'.format(
+                    start_date=start_date, end_date=end_date
+                )
+            ),
+            json=rejected_transactions,
+            match_querystring=True
+        )
+        mock_bank_holidays()
 
     def test_dashboard_requires_login(self):
         self.check_login_redirect(reverse('bank_admin:dashboard'))
@@ -246,11 +339,11 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         self.check_login_redirect(reverse('bank_admin:download_adi_journal') +
                                   '?receipt_date=2014-12-11')
 
-    @mock.patch('bank_admin.utils.api_client')
-    def test_download_adi_journal(self, mock_api_client):
+    @responses.activate
+    def test_download_adi_journal(self):
         self.login()
 
-        self._set_returned_transactions(mock_api_client)
+        self._set_returned_transactions()
 
         response = self.client.get(reverse('bank_admin:download_adi_journal') +
                                    '?receipt_date=2014-12-11')
@@ -258,51 +351,81 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response['Content-Type'])
 
-    @mock.patch('bank_admin.utils.api_client')
-    def test_adi_journal_queries_by_date(self, mock_api_client):
+    @responses.activate
+    def test_adi_journal_queries_by_date(self):
         self.login()
 
-        conn = self._set_returned_transactions(mock_api_client)
+        self._set_returned_transactions()
 
         self.client.get(
             reverse('bank_admin:download_adi_journal') +
-            '?receipt_date=2014-11-12'
+            '?receipt_date=2014-12-11'
         )
 
-        conn.credits.get.assert_called_with(
-            limit=settings.REQUEST_PAGE_SIZE,
-            offset=0,
-            valid=True,
-            received_at__gte=datetime.datetime(2014, 11, 12, 0, 0, tzinfo=utc),
-            received_at__lt=datetime.datetime(2014, 11, 13, 0, 0, tzinfo=utc)
-        )
-        conn.transactions.get.assert_has_calls([
-            mock.call(
-                limit=settings.REQUEST_PAGE_SIZE,
-                offset=0,
-                status='refundable',
-                received_at__gte=datetime.datetime(2014, 11, 12, 0, 0, tzinfo=utc),
-                received_at__lt=datetime.datetime(2014, 11, 13, 0, 0, tzinfo=utc)
-            ),
-            mock.call(
-                limit=settings.REQUEST_PAGE_SIZE,
-                offset=0,
-                status='unidentified',
-                received_at__gte=datetime.datetime(2014, 11, 12, 0, 0, tzinfo=utc),
-                received_at__lt=datetime.datetime(2014, 11, 13, 0, 0, tzinfo=utc)
-            )
-        ])
+        start_date = str(datetime(2014, 12, 11, 0, 0, tzinfo=utc))
+        end_date = str(datetime(2014, 12, 12, 0, 0, tzinfo=utc))
+
+        refunds_retrieved = False
+        rejected_retrieved = False
+        for call in responses.calls:
+            if base_urls_equal(call.request.url, api_url('/credits/')):
+                self.assertEqual(
+                    get_query_dict(call.request.url),
+                    dict(
+                        limit=str(settings.REQUEST_PAGE_SIZE),
+                        offset='0',
+                        valid='True',
+                        received_at__gte=start_date,
+                        received_at__lt=end_date
+                    )
+                )
+            elif (base_urls_equal(call.request.url, api_url('/transactions/')) and
+                    call.request.method == 'GET'):
+                refunds_retrieved = refunds_retrieved or (
+                    get_query_dict(call.request.url) == dict(
+                        limit=str(settings.REQUEST_PAGE_SIZE),
+                        offset='0',
+                        status='refundable',
+                        received_at__gte=start_date,
+                        received_at__lt=end_date
+                    )
+                )
+                rejected_retrieved = rejected_retrieved or (
+                    get_query_dict(call.request.url) == dict(
+                        limit=str(settings.REQUEST_PAGE_SIZE),
+                        offset='0',
+                        status='unidentified',
+                        received_at__gte=start_date,
+                        received_at__lt=end_date
+                    )
+                )
+
+        self.assertTrue(refunds_retrieved)
+        self.assertTrue(rejected_retrieved)
 
 
-@mock.patch('bank_admin.utils.api_client')
 class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 
-    @mock.patch('mtp_common.auth.backends.api_client')
-    def test_download_adi_journal_unauthorized(self, auth_api_client, mock_api_client):
+    @responses.activate
+    def test_download_adi_journal_unauthorized(self):
         self.login()
 
-        conn = mock_api_client.get_connection().credits
-        conn.get.side_effect = Unauthorized()
+        mock_bank_holidays()
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        responses.add(
+            responses.GET,
+            api_url('/credits/'),
+            status=401
+        )
+        responses.add(
+            responses.POST,
+            api_url('/oauth2/revoke_token/'),
+            status=200
+        )
 
         response = self.client.get(reverse('bank_admin:download_adi_journal') +
                                    '?receipt_date=2014-12-11',
@@ -310,13 +433,27 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 
         self.assertRedirects(response, reverse('login'))
 
-    def test_download_adi_journal_no_transactions_error_message(self, mock_api_client):
+    @responses.activate
+    def test_download_adi_journal_no_transactions_error_message(self):
         self.login()
 
-        conn = mock_api_client.get_connection()
-        conn.prisons.get.return_value = TEST_PRISONS_RESPONSE
-        conn.credits.get.return_value = NO_TRANSACTIONS
-        conn.transactions.get.return_value = NO_TRANSACTIONS
+        mock_bank_holidays()
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        mock_list_prisons()
+        responses.add(
+            responses.GET,
+            api_url('/credits/'),
+            json=NO_TRANSACTIONS
+        )
+        responses.add(
+            responses.GET,
+            api_url('/transactions/'),
+            json=NO_TRANSACTIONS
+        )
 
         response = self.client.get(reverse('bank_admin:download_adi_journal') +
                                    '?receipt_date=2014-12-11',
@@ -325,7 +462,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
         self.assertContains(response, _('No transactions available'),
                             status_code=200)
 
-    def test_download_adi_journal_invalid_receipt_date(self, mock_api_client):
+    def test_download_adi_journal_invalid_receipt_date(self):
         self.login()
 
         response = self.client.get(
@@ -337,7 +474,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
                             _("Invalid format for receipt_date"),
                             status_code=400)
 
-    def test_download_adi_journal_missing_receipt_date(self, mock_api_client):
+    def test_download_adi_journal_missing_receipt_date(self):
         self.login()
 
         response = self.client.get(
@@ -352,17 +489,25 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 
 class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
 
+    def _generate_bank_statement(self):
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        mock_test_transactions()
+        mock_balance()
+        mock_bank_holidays()
+
     def test_download_bank_statement_requires_login(self):
         self.check_login_redirect(reverse('bank_admin:download_bank_statement') +
                                   '?receipt_date=2014-12-11')
 
-    @mock.patch('bank_admin.utils.api_client')
-    def test_download_bank_statement(self, mock_api_client):
+    @responses.activate
+    def test_download_bank_statement(self):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.return_value = get_test_transactions()
-        mock_balance(mock_api_client)
+        self._generate_bank_statement()
 
         response = self.client.get(reverse('bank_admin:download_bank_statement') +
                                    '?receipt_date=2014-12-11')
@@ -370,36 +515,53 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/octet-stream', response['Content-Type'])
 
-    @mock.patch('bank_admin.utils.api_client')
-    def test_bank_statement_queries_by_date(self, mock_api_client):
+    @responses.activate
+    def test_bank_statement_queries_by_date(self):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.return_value = get_test_transactions()
-        mock_balance(mock_api_client)
+        self._generate_bank_statement()
 
         self.client.get(
             reverse('bank_admin:download_bank_statement') +
             '?receipt_date=2014-11-12'
         )
 
-        conn.get.assert_called_with(
-            limit=settings.REQUEST_PAGE_SIZE,
-            offset=0,
-            received_at__gte=datetime.datetime(2014, 11, 12, 0, 0, tzinfo=utc),
-            received_at__lt=datetime.datetime(2014, 11, 13, 0, 0, tzinfo=utc)
-        )
+        for call in responses.calls:
+            if (base_urls_equal(call.request.url, api_url('/transactions/')) and
+                    call.request.method == 'GET'):
+                self.assertEqual(
+                    get_query_dict(call.request.url),
+                    dict(
+                        limit=str(settings.REQUEST_PAGE_SIZE),
+                        offset='0',
+                        received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=utc)),
+                        received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=utc))
+                    )
+                )
 
 
-@mock.patch('bank_admin.utils.api_client')
 class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
 
-    @mock.patch('mtp_common.auth.backends.api_client')
-    def test_unauthorized(self, auth_api_client, mock_api_client):
+    @responses.activate
+    def test_unauthorized(self):
         self.login()
 
-        conn = mock_api_client.get_connection().transactions
-        conn.get.side_effect = Unauthorized()
+        mock_bank_holidays()
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        responses.add(
+            responses.GET,
+            api_url('/transactions/'),
+            status=401
+        )
+        responses.add(
+            responses.POST,
+            api_url('/oauth2/revoke_token/'),
+            status=200
+        )
 
         response = self.client.get(reverse('bank_admin:download_bank_statement') +
                                    '?receipt_date=2014-12-11',
@@ -407,7 +569,7 @@ class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
 
         self.assertRedirects(response, reverse('login'))
 
-    def test_invalid_receipt_date_returns_error(self, mock_api_client):
+    def test_invalid_receipt_date_returns_error(self):
         self.login()
 
         response = self.client.get(
@@ -419,7 +581,7 @@ class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
                             _("Invalid format for receipt_date"),
                             status_code=400)
 
-    def test_missing_receipt_date_returns_error(self, mock_api_client):
+    def test_missing_receipt_date_returns_error(self):
         self.login()
 
         response = self.client.get(
