@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import json
 import random
 import tempfile
 from urllib.parse import urljoin, urlparse, parse_qsl
@@ -188,3 +189,18 @@ def temp_file(data):
     with tempfile.TemporaryFile() as f:
         f.write(data)
         yield f
+
+
+def assert_called_with(testcase, url, method, expected_data):
+    called = False
+    for call in responses.calls:
+        if (base_urls_equal(call.request.url, url) and call.request.method == method):
+            request_data = call.request.body
+            if method == responses.GET:
+                request_data = get_query_dict(call.request.url)
+            else:
+                request_data = json.loads(call.request.body.decode('utf-8'))
+            called = called or request_data == expected_data
+    testcase.assertTrue(called, msg='{url} not called with data {data}'.format(
+        url=url, data=expected_data
+    ))

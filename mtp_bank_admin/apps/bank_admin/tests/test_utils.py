@@ -1,5 +1,4 @@
 from datetime import date, datetime
-import json
 from unittest import mock
 
 from django.test import SimpleTestCase
@@ -8,7 +7,7 @@ from mtp_common.auth.test_utils import generate_tokens
 import responses
 
 from bank_admin.utils import WorkdayChecker, reconcile_for_date
-from . import mock_bank_holidays, api_url, base_urls_equal
+from . import mock_bank_holidays, api_url, assert_called_with
 
 
 class ReconcileForDateTestCase(SimpleTestCase):
@@ -31,13 +30,13 @@ class ReconcileForDateTestCase(SimpleTestCase):
 
         start_date, end_date = reconcile_for_date(self.request, date(2016, 9, 15))
 
-        for call in responses.calls:
-            if base_urls_equal(call.request.url, api_url('/transactions/reconcile/')):
-                self.assertEqual(
-                    json.loads(call.request.body),
-                    {'received_at__gte': datetime(2016, 9, 15, 0, 0, tzinfo=utc).isoformat(),
-                     'received_at__lt': datetime(2016, 9, 16, 0, 0, tzinfo=utc).isoformat()}
-                )
+        assert_called_with(
+            self, api_url('/transactions/reconcile/'), responses.POST,
+            {
+                'received_at__gte': datetime(2016, 9, 15, 0, 0, tzinfo=utc).isoformat(),
+                'received_at__lt': datetime(2016, 9, 16, 0, 0, tzinfo=utc).isoformat()
+            }
+        )
 
         self.assertEqual(start_date, datetime(2016, 9, 15, 0, 0, tzinfo=utc))
         self.assertEqual(end_date, datetime(2016, 9, 16, 0, 0, tzinfo=utc))
@@ -53,30 +52,27 @@ class ReconcileForDateTestCase(SimpleTestCase):
 
         start_date, end_date = reconcile_for_date(self.request, date(2016, 10, 7))
 
-        friday_reconciled = False
-        saturday_reconciled = False
-        sunday_reconciled = False
-        for call in responses.calls:
-            if base_urls_equal(call.request.url, api_url('/transactions/reconcile/')):
-                friday_reconciled = friday_reconciled or (
-                    json.loads(call.request.body) ==
-                    {'received_at__gte': datetime(2016, 10, 7, 0, 0, tzinfo=utc).isoformat(),
-                     'received_at__lt': datetime(2016, 10, 8, 0, 0, tzinfo=utc).isoformat()}
-                )
-                saturday_reconciled = saturday_reconciled or (
-                    json.loads(call.request.body) ==
-                    {'received_at__gte': datetime(2016, 10, 8, 0, 0, tzinfo=utc).isoformat(),
-                     'received_at__lt': datetime(2016, 10, 9, 0, 0, tzinfo=utc).isoformat()}
-                )
-                sunday_reconciled = sunday_reconciled or (
-                    json.loads(call.request.body) ==
-                    {'received_at__gte': datetime(2016, 10, 9, 0, 0, tzinfo=utc).isoformat(),
-                     'received_at__lt': datetime(2016, 10, 10, 0, 0, tzinfo=utc).isoformat()}
-                )
-
-        self.assertTrue(friday_reconciled)
-        self.assertTrue(saturday_reconciled)
-        self.assertTrue(sunday_reconciled)
+        assert_called_with(
+            self, api_url('/transactions/reconcile/'), responses.POST,
+            {
+                'received_at__gte': datetime(2016, 10, 7, 0, 0, tzinfo=utc).isoformat(),
+                'received_at__lt': datetime(2016, 10, 8, 0, 0, tzinfo=utc).isoformat()
+            }
+        )
+        assert_called_with(
+            self, api_url('/transactions/reconcile/'), responses.POST,
+            {
+                'received_at__gte': datetime(2016, 10, 8, 0, 0, tzinfo=utc).isoformat(),
+                'received_at__lt': datetime(2016, 10, 9, 0, 0, tzinfo=utc).isoformat()
+            }
+        )
+        assert_called_with(
+            self, api_url('/transactions/reconcile/'), responses.POST,
+            {
+                'received_at__gte': datetime(2016, 10, 9, 0, 0, tzinfo=utc).isoformat(),
+                'received_at__lt': datetime(2016, 10, 10, 0, 0, tzinfo=utc).isoformat()
+            }
+        )
 
         self.assertEqual(start_date, datetime(2016, 10, 7, 0, 0, tzinfo=utc))
         self.assertEqual(end_date, datetime(2016, 10, 10, 0, 0, tzinfo=utc))

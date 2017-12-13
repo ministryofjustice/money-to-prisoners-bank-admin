@@ -17,7 +17,7 @@ import responses
 from . import (
     get_test_transactions, get_test_credits, NO_TRANSACTIONS,
     mock_balance, api_url, mock_bank_holidays, mock_list_prisons,
-    base_urls_equal, get_query_dict
+    assert_called_with
 )
 from .test_refund import REFUND_TRANSACTIONS, expected_output
 from .test_statement import mock_test_transactions
@@ -213,19 +213,16 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
             '?receipt_date=2014-11-12'
         )
 
-        for call in responses.calls:
-            if (base_urls_equal(call.request.url, api_url('/transactions/')) and
-                    call.request.method == 'GET'):
-                self.assertEqual(
-                    get_query_dict(call.request.url),
-                    dict(
-                        limit=str(settings.REQUEST_PAGE_SIZE),
-                        offset='0',
-                        status='refundable',
-                        received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=utc)),
-                        received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=utc))
-                    )
-                )
+        assert_called_with(
+            self, api_url('/transactions/'), responses.GET,
+            dict(
+                limit=str(settings.REQUEST_PAGE_SIZE),
+                offset='0',
+                status='refundable',
+                received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=utc)),
+                received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=utc))
+            )
+        )
 
 
 class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
@@ -365,43 +362,38 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         start_date = str(datetime(2014, 12, 11, 0, 0, tzinfo=utc))
         end_date = str(datetime(2014, 12, 12, 0, 0, tzinfo=utc))
 
-        refunds_retrieved = False
-        rejected_retrieved = False
-        for call in responses.calls:
-            if base_urls_equal(call.request.url, api_url('/credits/')):
-                self.assertEqual(
-                    get_query_dict(call.request.url),
-                    dict(
-                        limit=str(settings.REQUEST_PAGE_SIZE),
-                        offset='0',
-                        valid='True',
-                        received_at__gte=start_date,
-                        received_at__lt=end_date
-                    )
-                )
-            elif (base_urls_equal(call.request.url, api_url('/transactions/')) and
-                    call.request.method == 'GET'):
-                refunds_retrieved = refunds_retrieved or (
-                    get_query_dict(call.request.url) == dict(
-                        limit=str(settings.REQUEST_PAGE_SIZE),
-                        offset='0',
-                        status='refundable',
-                        received_at__gte=start_date,
-                        received_at__lt=end_date
-                    )
-                )
-                rejected_retrieved = rejected_retrieved or (
-                    get_query_dict(call.request.url) == dict(
-                        limit=str(settings.REQUEST_PAGE_SIZE),
-                        offset='0',
-                        status='unidentified',
-                        received_at__gte=start_date,
-                        received_at__lt=end_date
-                    )
-                )
+        assert_called_with(
+            self, api_url('/credits/'), responses.GET,
+            dict(
+                limit=str(settings.REQUEST_PAGE_SIZE),
+                offset='0',
+                valid='True',
+                received_at__gte=start_date,
+                received_at__lt=end_date
+            )
+        )
 
-        self.assertTrue(refunds_retrieved)
-        self.assertTrue(rejected_retrieved)
+        assert_called_with(
+            self, api_url('/transactions/'), responses.GET,
+            dict(
+                limit=str(settings.REQUEST_PAGE_SIZE),
+                offset='0',
+                status='refundable',
+                received_at__gte=start_date,
+                received_at__lt=end_date
+            )
+        )
+
+        assert_called_with(
+            self, api_url('/transactions/'), responses.GET,
+            dict(
+                limit=str(settings.REQUEST_PAGE_SIZE),
+                offset='0',
+                status='unidentified',
+                received_at__gte=start_date,
+                received_at__lt=end_date
+            )
+        )
 
 
 class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
@@ -526,18 +518,15 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
             '?receipt_date=2014-11-12'
         )
 
-        for call in responses.calls:
-            if (base_urls_equal(call.request.url, api_url('/transactions/')) and
-                    call.request.method == 'GET'):
-                self.assertEqual(
-                    get_query_dict(call.request.url),
-                    dict(
-                        limit=str(settings.REQUEST_PAGE_SIZE),
-                        offset='0',
-                        received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=utc)),
-                        received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=utc))
-                    )
-                )
+        assert_called_with(
+            self, api_url('/transactions/'), responses.GET,
+            dict(
+                limit=str(settings.REQUEST_PAGE_SIZE),
+                offset='0',
+                received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=utc)),
+                received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=utc))
+            )
+        )
 
 
 class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):

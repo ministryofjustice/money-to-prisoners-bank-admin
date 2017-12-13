@@ -1,6 +1,5 @@
 from collections import defaultdict
 from datetime import date, datetime, timedelta
-import json
 import logging
 from unittest import mock, skip
 from urllib.parse import quote_plus
@@ -17,7 +16,7 @@ import responses
 from . import (
     TEST_PRISONS, NO_TRANSACTIONS, mock_list_prisons,
     get_test_transactions, get_test_credits, temp_file, api_url,
-    mock_bank_holidays, base_urls_equal
+    mock_bank_holidays, assert_called_with
 )
 from bank_admin import adi, adi_config
 from bank_admin.exceptions import EmptyFileError, EarlyReconciliationError
@@ -271,13 +270,13 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
     def test_adi_journal_reconciles_date(self):
         _, _, _ = self._generate_test_adi_journal(receipt_date=date(2016, 9, 13))
 
-        for call in responses.calls:
-            if base_urls_equal(call.request.url, api_url('/transactions/reconcile/')):
-                self.assertEqual(
-                    json.loads(call.request.body),
-                    {'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
-                     'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()}
-                )
+        assert_called_with(
+            self, api_url('/transactions/reconcile/'), responses.POST,
+            {
+                'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
+                'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()
+            }
+        )
 
     @responses.activate
     def test_adi_journal_upload_range_set(self):

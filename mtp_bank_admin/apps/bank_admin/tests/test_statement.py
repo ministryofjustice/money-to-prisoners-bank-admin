@@ -1,5 +1,4 @@
 from datetime import date, datetime
-import json
 import random
 from unittest import mock
 
@@ -13,7 +12,7 @@ import responses
 
 from . import (
     get_test_transactions, NO_TRANSACTIONS, ORIGINAL_REF, SENDER_NAME,
-    mock_balance, OPENING_BALANCE, api_url, mock_bank_holidays, base_urls_equal
+    mock_balance, OPENING_BALANCE, api_url, mock_bank_holidays, assert_called_with
 )
 from bank_admin.statement import generate_bank_statement
 
@@ -134,13 +133,13 @@ class BankStatementGenerationTestCase(BankStatementTestCase):
     def test_reconciles_date(self):
         _, _ = self._generate_and_parse_bank_statement(receipt_date=date(2016, 9, 13))
 
-        for call in responses.calls:
-            if base_urls_equal(call.request.url, api_url('/transactions/reconcile/')):
-                self.assertEqual(
-                    json.loads(call.request.body),
-                    {'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
-                     'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()}
-                )
+        assert_called_with(
+            self, api_url('/transactions/reconcile/'), responses.POST,
+            {
+                'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
+                'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()
+            }
+        )
 
 
 class NoTransactionsTestCase(BankStatementTestCase):

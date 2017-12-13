@@ -3,7 +3,7 @@ from datetime import datetime, time, timedelta
 import time as systime
 
 from django.utils.timezone import now, utc
-from mtp_common.api import retrieve_all_pages
+from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.auth import api_client
 from openpyxl import load_workbook, styles
 from openpyxl.writer.excel import save_virtual_workbook
@@ -15,18 +15,21 @@ BANK_HOLIDAY_URL = 'https://www.gov.uk/bank-holidays.json'
 
 
 def retrieve_all_transactions(request, **kwargs):
-    endpoint = api_client.get_connection(request).transactions.get
-    return retrieve_all_pages(endpoint, **kwargs)
+    session = api_client.get_api_session(request)
+    return retrieve_all_pages_for_path(
+        session, 'transactions/', **kwargs)
 
 
 def retrieve_all_valid_credits(request, **kwargs):
-    endpoint = api_client.get_connection(request).credits.get
-    return retrieve_all_pages(endpoint, valid=True, **kwargs)
+    session = api_client.get_api_session(request)
+    return retrieve_all_pages_for_path(
+        session, 'credits/', valid=True, **kwargs)
 
 
 def retrieve_prisons(request):
-    endpoint = api_client.get_connection(request).prisons.get
-    return {prison['nomis_id']: prison for prison in retrieve_all_pages(endpoint)}
+    session = api_client.get_api_session(request)
+    prisons = retrieve_all_pages_for_path(session, 'prisons/')
+    return {prison['nomis_id']: prison for prison in prisons}
 
 
 def set_worldpay_cutoff(date):
@@ -49,19 +52,27 @@ def reconcile_for_date(request, receipt_date):
     reconciliation_date = start_date
     while reconciliation_date < end_date:
         end_of_day = reconciliation_date + timedelta(days=1)
-        client = api_client.get_connection(request)
-        client.transactions.reconcile.post({
-            'received_at__gte': reconciliation_date.isoformat(),
-            'received_at__lt': end_of_day.isoformat(),
-        })
+        session = api_client.get_api_session(request)
+        session.post(
+            'transactions/reconcile/',
+            json={
+                'received_at__gte': reconciliation_date.isoformat(),
+                'received_at__lt': end_of_day.isoformat(),
+            }
+        )
         reconciliation_date = end_of_day
 
     return start_date, end_date
 
 
 def retrieve_last_balance(request, date):
-    client = api_client.get_connection(request)
-    response = client.balances.get(limit=1, date__lt=date.isoformat())
+    session = api_client.get_api_session(request)
+    response = session.get(
+        'balances/', params={
+            'limit': 1,
+            'date__lt': date.isoformat()
+        }
+    ).json()
     if response.get('results'):
         return response['results'][0]
     else:
@@ -94,7 +105,7 @@ def get_full_narrative(transaction):
 class WorkdayChecker:
 
     def __init__(self):
-        response = requests.get(BANK_HOLIDAY_URL)
+        response = requests.get(BANK_HOLIDAY_URL, timeout=15)
         if response.status_code == 200:
             self.holidays = [
                 datetime.strptime(holiday['date'], '%Y-%m-%d').date() for holiday in

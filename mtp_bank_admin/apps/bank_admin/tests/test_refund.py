@@ -1,6 +1,5 @@
 from copy import deepcopy
 from datetime import datetime, date
-import json
 from unittest import mock
 
 from django.test.client import RequestFactory
@@ -10,7 +9,7 @@ from django.utils.timezone import utc
 from mtp_common.auth.models import MojUser
 import responses
 
-from . import NO_TRANSACTIONS, api_url, mock_bank_holidays, base_urls_equal
+from . import NO_TRANSACTIONS, api_url, mock_bank_holidays, assert_called_with
 from bank_admin import refund
 from bank_admin.exceptions import EmptyFileError
 
@@ -118,23 +117,21 @@ class ValidTransactionsTestCase(RefundFileTestCase):
     def test_generate_refund_file(self):
         csvdata = self._generate_refund_file(refund_date=date(2016, 9, 13))
 
-        for call in responses.calls:
-            if base_urls_equal(call.request.url, api_url('/transactions/reconcile/')):
-                self.assertEqual(
-                    json.loads(call.request.body),
-                    {'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
-                     'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()}
-                )
-            elif (base_urls_equal(call.request.url, api_url('/transactions/')) and
-                  call.request.method == 'PATCH'):
-                self.assertEqual(
-                    json.loads(call.request.body),
-                    [
-                        {'id': '3', 'refunded': True},
-                        {'id': '4', 'refunded': True},
-                        {'id': '5', 'refunded': True}
-                    ]
-                )
+        assert_called_with(
+            self, api_url('/transactions/reconcile/'), responses.POST,
+            {
+                'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
+                'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()
+            }
+        )
+        assert_called_with(
+            self, api_url('/transactions/'), responses.PATCH,
+            [
+                {'id': '3', 'refunded': True},
+                {'id': '4', 'refunded': True},
+                {'id': '5', 'refunded': True}
+            ]
+        )
 
         self.assertEqual(expected_output(), csvdata)
 
