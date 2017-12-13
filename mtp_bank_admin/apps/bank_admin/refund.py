@@ -5,7 +5,7 @@ import io
 import logging
 
 from django.conf import settings
-from mtp_common.auth.backends import api_client
+from mtp_common.auth.api_client import get_api_session
 
 from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
@@ -33,8 +33,8 @@ def generate_refund_file_for_date(request, receipt_date):
     ]
 
     # mark transactions as refunded
-    client = api_client.get_connection(request)
-    client.transactions.patch(refunded_transactions)
+    session = get_api_session(request)
+    session.patch('transactions/', json=refunded_transactions)
 
     logger.info('{user} downloaded {label} containing {count} records'.format(
         user=request.user.username,
