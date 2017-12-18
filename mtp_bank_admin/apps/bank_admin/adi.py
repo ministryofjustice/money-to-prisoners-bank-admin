@@ -52,13 +52,15 @@ class AdiJournal(Journal):
         self._add_column_sum('debit')
         self._add_column_sum('credit')
 
-        self.wb.get_named_range('BNE_UPLOAD').destinations = [(
+        self.journal_ws.title = receipt_date.strftime('%d%m%y')
+        self.wb.create_named_range(
+            'BNE_UPLOAD',
             self.journal_ws,
-            "$B$%(start)s:$B$%(end)s" % {
+            '$B$%(start)s:$B$%(end)s' % {
                 'start': self.start_row,
                 'end': self.current_row - 1,
             }
-        )]
+        )
 
         self.next_row(increment=2)
         self.set_field('description', 'Uploaded by:', style=config._light_blue_style, extra_style=bold)
@@ -78,7 +80,6 @@ class AdiJournal(Journal):
         if accounting_date.month != receipt_date.month:
             accounting_date = receipt_date
         self.journal_ws[config.ADI_DATE_CELL] = accounting_date.strftime(config.ADI_DATE_FORMAT)
-        self.journal_ws.title = receipt_date.strftime('%d%m%y')
 
     def add_payment_row(self, amount, payment_type, record_type, **kwargs):
         for field in self.fields:

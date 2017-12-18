@@ -1,5 +1,10 @@
-DISBURSEMENTS_JOURNAL_SHEET = 'Sheet1'
-DISBURSEMENTS_JOURNAL_START_ROW = 19
+DISBURSEMENTS_JOURNAL_SHEET = 'Data'
+DISBURSEMENTS_JOURNAL_START_ROW = 3
+
+
+BANK_DETAILS_FIELDS = [
+    'sort_code', 'account_number', 'name_of_bank', 'account_name', 'roll_number'
+]
 
 
 DISBURSEMENT_FIELDS = {
@@ -13,31 +18,31 @@ DISBURSEMENT_FIELDS = {
     },
     'site_name': {
         'column': 'C',
-        'value': '{prison_name}'
+        'value': ''
     },
     'payee_type': {
         'column': 'D',
-        'value': '?'
+        'value': 'Client'
     },
     'unique_payee_reference': {
         'column': 'E',
-        'value': '{recipient_id}'
+        'value': '{id}'
     },
-    'payee_fornemae': {
+    'payee_forname': {
         'column': 'F',
-        'value': '{recipient_forename}'
+        'value': '{recipient_first_name}'
     },
     'payee_surname': {
         'column': 'G',
-        'value': '{recipient_surname}'
+        'value': '{recipient_last_name}'
     },
     'payee_address_line1': {
         'column': 'H',
-        'value': '{line1}'
+        'value': '{address_line1}'
     },
     'payee_address_line2': {
         'column': 'I',
-        'value': '{line2}'
+        'value': '{address_line2}'
     },
     'payee_address_city': {
         'column': 'J',
@@ -69,11 +74,11 @@ DISBURSEMENT_FIELDS = {
     },
     'name_of_bank': {
         'column': 'Q',
-        'value': ''
+        'value': 'Unknown Bank'
     },
     'account_name': {
         'column': 'R',
-        'value': '{recipient_forename} {recipient_surname}'
+        'value': '{recipient_first_name} {recipient_last_name}'
     },
     'roll_number': {
         'column': 'S',
@@ -85,7 +90,7 @@ DISBURSEMENT_FIELDS = {
     },
     'invoice_number': {
         'column': 'U',
-        'value': ''
+        'value': '{id}'
     },
     'description': {
         'column': 'V',
@@ -101,7 +106,7 @@ DISBURSEMENT_FIELDS = {
     },
     'account': {
         'column': 'Y',
-        'value': '?'
+        'value': '2617902085'
     },
     'objective': {
         'column': 'Z',
@@ -113,7 +118,7 @@ DISBURSEMENT_FIELDS = {
     },
     'vat_rate': {
         'column': 'AB',
-        'value': '0'
+        'value': 'UK OUT OF SCOPE'
     },
     'line_description': {
         'column': 'AC',
@@ -121,7 +126,7 @@ DISBURSEMENT_FIELDS = {
     },
     'net_amount': {
         'column': 'AD',
-        'value': '{amount}'
+        'value': '{amount_pounds}'
     },
     'vat_amount': {
         'column': 'AE',
@@ -129,14 +134,14 @@ DISBURSEMENT_FIELDS = {
     },
     'total_amount': {
         'column': 'AF',
-        'value': '{amount}'
+        'value': '{amount_pounds}'
     },
     'completer_id': {
         'column': 'AG',
-        'value': ''
+        'value': '{creator}'
     },
     'approver_id': {
         'column': 'AH',
-        'value': ''
+        'value': '{confirmer}'
     },
 }

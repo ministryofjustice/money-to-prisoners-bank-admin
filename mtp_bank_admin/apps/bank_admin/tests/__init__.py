@@ -100,7 +100,7 @@ def get_test_disbursements(count=20):
         disbursement = {
             'id': i,
             'amount': random.randint(500, 5000),
-            'prisoner': 'A' + random.randint(1000, 9999) + 'AE',
+            'prisoner': 'A' + str(random.randint(1000, 9999)) + 'AE',
             'recipient_first_name': 'Stan',
             'recipient_last_name': 'White',
             'address_line1': '50 Fake Street',
@@ -109,7 +109,23 @@ def get_test_disbursements(count=20):
             'postcode': 'N17 9LK',
             'country': 'United Kingdom',
             'resolution': 'confirmed',
-            'email': 'person@mtp.local'
+            'email': 'person@mtp.local',
+            'log_set': [
+                {
+                    'user': {
+                        'first_name': 'John',
+                        'last_name': 'Smith'
+                    },
+                    'action': 'created',
+                },
+                {
+                    'user': {
+                        'first_name': 'Pearl',
+                        'last_name': 'Vance'
+                    },
+                    'action': 'confirmed',
+                }
+            ]
         }
 
         if i % 4 == 0:

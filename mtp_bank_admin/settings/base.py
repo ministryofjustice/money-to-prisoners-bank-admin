@@ -241,6 +241,9 @@ BANK_STMT_OUTPUT_FILENAME = 'NMS{account_number}%d%m%Y.dat'.format(
     account_number=BANK_STMT_ACCOUNT_NUMBER
 )
 
+DISBURSEMENT_TEMPLATE_FILEPATH = 'local_files/disbursement_template.xlsm'
+DISBURSEMENT_OUTPUT_FILENAME = 'mtp_disbursements_{date:%d%m%Y}.xlsm'
+
 REQUEST_PAGE_SIZE = 500
 
 ZENDESK_BASE_URL = 'https://ministryofjustice.zendesk.com'
