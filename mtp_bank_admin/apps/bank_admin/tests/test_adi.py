@@ -293,9 +293,9 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
             journal_ws = wb.get_sheet_by_name('130916')
 
             self.assertEqual(
-                wb.get_named_range('BNE_UPLOAD').destinations,
+                list(wb.get_named_range('BNE_UPLOAD').destinations),
                 [(
-                    journal_ws,
+                    journal_ws.title,
                     '$B$%(start)s:$B$%(end)s' % {
                         'start': adi_config.ADI_JOURNAL_START_ROW,
                         'end': adi_config.ADI_JOURNAL_START_ROW + expected_rows - 1

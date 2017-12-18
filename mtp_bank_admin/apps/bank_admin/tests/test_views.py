@@ -17,7 +17,7 @@ import responses
 from . import (
     get_test_transactions, get_test_credits, NO_TRANSACTIONS,
     mock_balance, api_url, mock_bank_holidays, mock_list_prisons,
-    assert_called_with
+    assert_called_with, get_test_disbursements
 )
 from .test_refund import REFUND_TRANSACTIONS, expected_output
 from .test_statement import mock_test_transactions
@@ -575,6 +575,136 @@ class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
 
         response = self.client.get(
             reverse('bank_admin:download_bank_statement'),
+            follow=True
+        )
+
+        self.assertContains(response,
+                            _("'receipt_date' parameter required"),
+                            status_code=400)
+
+
+class DownloadDisbursementsFileViewTestCase(BankAdminViewTestCase):
+
+    def _set_returned_disbursements(self):
+        disbursements = get_test_disbursements(20)
+
+        mock_bank_holidays()
+        mock_list_prisons()
+        responses.add(
+            responses.GET,
+            api_url('/disbursements/'),
+            json=disbursements
+        )
+        responses.add(
+            responses.POST,
+            api_url('/disbursements/actions/send/'),
+            status=200
+        )
+
+    def test_download_disbursements_requires_login(self):
+        self.check_login_redirect(reverse('bank_admin:download_disbursements') +
+                                  '?receipt_date=2014-12-11')
+
+    @responses.activate
+    def test_download_disbursements(self):
+        self.login()
+
+        self._set_returned_disbursements()
+
+        response = self.client.get(reverse('bank_admin:download_disbursements') +
+                                   '?receipt_date=2014-12-11')
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', response['Content-Type'])
+
+    @responses.activate
+    def test_disbursements_queries_by_date(self):
+        self.login()
+
+        self._set_returned_disbursements()
+
+        self.client.get(
+            reverse('bank_admin:download_disbursements') +
+            '?receipt_date=2014-12-11'
+        )
+
+        start_date = str(datetime(2014, 12, 11, 0, 0, tzinfo=utc))
+        end_date = str(datetime(2014, 12, 12, 0, 0, tzinfo=utc))
+
+        assert_called_with(
+            self, api_url('/disbursements/'), responses.GET,
+            dict(
+                limit=str(settings.REQUEST_PAGE_SIZE),
+                offset='0',
+                log__action='confirmed',
+                logged_at__gte=start_date,
+                logged_at__lt=end_date
+            )
+        )
+
+
+class DownloadDisbursementsFileErrorViewTestCase(BankAdminViewTestCase):
+
+    @responses.activate
+    def test_download_disbursements_unauthorized(self):
+        self.login()
+
+        mock_bank_holidays()
+        responses.add(
+            responses.GET,
+            api_url('/disbursements/'),
+            status=401
+        )
+        responses.add(
+            responses.POST,
+            api_url('/oauth2/revoke_token/'),
+            status=200
+        )
+
+        response = self.client.get(reverse('bank_admin:download_disbursements') +
+                                   '?receipt_date=2014-12-11',
+                                   follow=False)
+
+        self.assertRedirects(response, reverse('login'))
+
+    @responses.activate
+    def test_download_disbursements_no_transactions_error_message(self):
+        self.login()
+
+        mock_bank_holidays()
+        responses.add(
+            responses.GET,
+            api_url('/disbursements/'),
+            json=NO_TRANSACTIONS
+        )
+        mock_list_prisons()
+
+        response = self.client.get(reverse('bank_admin:download_disbursements') +
+                                   '?receipt_date=2014-12-11',
+                                   follow=True)
+
+        self.assertContains(response, _('No transactions available'),
+                            status_code=200)
+
+    def test_download_disbursements_invalid_receipt_date(self):
+        self.login()
+
+        mock_bank_holidays()
+        response = self.client.get(
+            reverse('bank_admin:download_disbursements') + '?receipt_date=bleh',
+            follow=True
+        )
+
+        self.assertContains(response,
+                            _("Invalid format for receipt_date"),
+                            status_code=400)
+
+    def test_download_disbursements_missing_receipt_date(self):
+        self.login()
+
+        mock_bank_holidays()
+        response = self.client.get(
+            reverse('bank_admin:download_disbursements'),
             follow=True
         )
 
