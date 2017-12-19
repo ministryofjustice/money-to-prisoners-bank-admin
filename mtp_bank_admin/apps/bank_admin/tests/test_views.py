@@ -13,7 +13,7 @@ from mtp_common.auth.test_utils import generate_tokens
 from mtp_common.test_utils import silence_logger
 import responses
 
-from . import (
+from .utils import (
     get_test_transactions, get_test_credits, NO_TRANSACTIONS,
     mock_balance, api_url, mock_bank_holidays, mock_list_prisons,
     ResponsesTestCase, get_test_disbursements

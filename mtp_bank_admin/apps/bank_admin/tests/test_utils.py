@@ -6,7 +6,7 @@ from mtp_common.auth.test_utils import generate_tokens
 import responses
 
 from bank_admin.utils import WorkdayChecker, reconcile_for_date
-from . import mock_bank_holidays, api_url, ResponsesTestCase
+from .utils import mock_bank_holidays, api_url, ResponsesTestCase
 
 
 class ReconcileForDateTestCase(ResponsesTestCase):

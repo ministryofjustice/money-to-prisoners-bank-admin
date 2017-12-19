@@ -8,7 +8,7 @@ from django.utils.timezone import utc
 from mtp_common.auth.models import MojUser
 import responses
 
-from . import NO_TRANSACTIONS, api_url, mock_bank_holidays, ResponsesTestCase
+from .utils import NO_TRANSACTIONS, api_url, mock_bank_holidays, ResponsesTestCase
 from bank_admin import refund
 from bank_admin.exceptions import EmptyFileError
 
