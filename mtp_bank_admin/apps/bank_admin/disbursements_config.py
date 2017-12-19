@@ -106,7 +106,7 @@ DISBURSEMENT_FIELDS = {
     },
     'account': {
         'column': 'Y',
-        'value': '2617902085'
+        'value': '2617902085'  # MTP SOP account code
     },
     'objective': {
         'column': 'Z',
