@@ -1,16 +1,15 @@
 from datetime import date, datetime
 from unittest import mock
 
-from django.test import SimpleTestCase
 from django.utils.timezone import utc
 from mtp_common.auth.test_utils import generate_tokens
 import responses
 
 from bank_admin.utils import WorkdayChecker, reconcile_for_date
-from . import mock_bank_holidays, api_url, assert_called_with
+from . import mock_bank_holidays, api_url, ResponsesTestCase
 
 
-class ReconcileForDateTestCase(SimpleTestCase):
+class ReconcileForDateTestCase(ResponsesTestCase):
 
     def setUp(self):
         self.request = mock.MagicMock(
@@ -30,8 +29,8 @@ class ReconcileForDateTestCase(SimpleTestCase):
 
         start_date, end_date = reconcile_for_date(self.request, date(2016, 9, 15))
 
-        assert_called_with(
-            self, api_url('/transactions/reconcile/'), responses.POST,
+        self.assert_called_with(
+            api_url('/transactions/reconcile/'), responses.POST,
             {
                 'received_at__gte': datetime(2016, 9, 15, 0, 0, tzinfo=utc).isoformat(),
                 'received_at__lt': datetime(2016, 9, 16, 0, 0, tzinfo=utc).isoformat()
@@ -52,22 +51,22 @@ class ReconcileForDateTestCase(SimpleTestCase):
 
         start_date, end_date = reconcile_for_date(self.request, date(2016, 10, 7))
 
-        assert_called_with(
-            self, api_url('/transactions/reconcile/'), responses.POST,
+        self.assert_called_with(
+            api_url('/transactions/reconcile/'), responses.POST,
             {
                 'received_at__gte': datetime(2016, 10, 7, 0, 0, tzinfo=utc).isoformat(),
                 'received_at__lt': datetime(2016, 10, 8, 0, 0, tzinfo=utc).isoformat()
             }
         )
-        assert_called_with(
-            self, api_url('/transactions/reconcile/'), responses.POST,
+        self.assert_called_with(
+            api_url('/transactions/reconcile/'), responses.POST,
             {
                 'received_at__gte': datetime(2016, 10, 8, 0, 0, tzinfo=utc).isoformat(),
                 'received_at__lt': datetime(2016, 10, 9, 0, 0, tzinfo=utc).isoformat()
             }
         )
-        assert_called_with(
-            self, api_url('/transactions/reconcile/'), responses.POST,
+        self.assert_called_with(
+            api_url('/transactions/reconcile/'), responses.POST,
             {
                 'received_at__gte': datetime(2016, 10, 9, 0, 0, tzinfo=utc).isoformat(),
                 'received_at__lt': datetime(2016, 10, 10, 0, 0, tzinfo=utc).isoformat()
@@ -78,7 +77,7 @@ class ReconcileForDateTestCase(SimpleTestCase):
         self.assertEqual(end_date, datetime(2016, 10, 10, 0, 0, tzinfo=utc))
 
 
-class WorkdayCheckerTestCase(SimpleTestCase):
+class WorkdayCheckerTestCase(ResponsesTestCase):
 
     def setUp(self):
         mock_bank_holidays()

@@ -3,7 +3,6 @@ import random
 from unittest import mock
 
 from django.core.urlresolvers import reverse
-from django.test import SimpleTestCase
 from django.test.client import RequestFactory
 from django.utils.timezone import utc
 import mt940
@@ -12,7 +11,7 @@ import responses
 
 from . import (
     get_test_transactions, NO_TRANSACTIONS, ORIGINAL_REF, SENDER_NAME,
-    mock_balance, OPENING_BALANCE, api_url, mock_bank_holidays, assert_called_with
+    mock_balance, OPENING_BALANCE, api_url, mock_bank_holidays, ResponsesTestCase
 )
 from bank_admin.statement import generate_bank_statement
 
@@ -41,7 +40,7 @@ def mock_test_transactions(count=20):
     return test_data
 
 
-class BankStatementTestCase(SimpleTestCase):
+class BankStatementTestCase(ResponsesTestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
@@ -133,8 +132,8 @@ class BankStatementGenerationTestCase(BankStatementTestCase):
     def test_reconciles_date(self):
         _, _ = self._generate_and_parse_bank_statement(receipt_date=date(2016, 9, 13))
 
-        assert_called_with(
-            self, api_url('/transactions/reconcile/'), responses.POST,
+        self.assert_called_with(
+            api_url('/transactions/reconcile/'), responses.POST,
             {
                 'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
                 'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()

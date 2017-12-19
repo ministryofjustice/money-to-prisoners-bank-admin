@@ -5,6 +5,7 @@ import tempfile
 from urllib.parse import urljoin, urlparse, parse_qsl
 
 from django.conf import settings
+from django.test import SimpleTestCase
 import responses
 
 from bank_admin.types import PaymentType
@@ -207,16 +208,18 @@ def temp_file(data):
         yield f
 
 
-def assert_called_with(testcase, url, method, expected_data):
-    called = False
-    for call in responses.calls:
-        if (base_urls_equal(call.request.url, url) and call.request.method == method):
-            request_data = call.request.body
-            if method == responses.GET:
-                request_data = get_query_dict(call.request.url)
-            else:
-                request_data = json.loads(call.request.body.decode('utf-8'))
-            called = called or request_data == expected_data
-    testcase.assertTrue(called, msg='{url} not called with data {data}'.format(
-        url=url, data=expected_data
-    ))
+class ResponsesTestCase(SimpleTestCase):
+
+    def assert_called_with(self, url, method, expected_data):
+        called = False
+        for call in responses.calls:
+            if (base_urls_equal(call.request.url, url) and call.request.method == method):
+                request_data = call.request.body
+                if method == responses.GET:
+                    request_data = get_query_dict(call.request.url)
+                else:
+                    request_data = json.loads(call.request.body.decode('utf-8'))
+                called = called or request_data == expected_data
+        self.assertTrue(called, msg='{url} not called with data {data}'.format(
+            url=url, data=expected_data
+        ))

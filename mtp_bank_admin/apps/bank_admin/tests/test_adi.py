@@ -6,7 +6,6 @@ from urllib.parse import quote_plus
 
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
-from django.test import SimpleTestCase
 from django.utils.timezone import utc
 from mtp_common.auth.models import MojUser
 from mtp_common.test_utils import silence_logger
@@ -16,7 +15,7 @@ import responses
 from . import (
     TEST_PRISONS, NO_TRANSACTIONS, mock_list_prisons,
     get_test_transactions, get_test_credits, temp_file, api_url,
-    mock_bank_holidays, assert_called_with
+    mock_bank_holidays, ResponsesTestCase
 )
 from bank_admin import adi, adi_config
 from bank_admin.exceptions import EmptyFileError, EarlyReconciliationError
@@ -32,7 +31,7 @@ def get_cell_value(journal_ws, field, row):
     return journal_ws[cell].value
 
 
-class AdiPaymentFileGenerationTestCase(SimpleTestCase):
+class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
@@ -270,8 +269,8 @@ class AdiPaymentFileGenerationTestCase(SimpleTestCase):
     def test_adi_journal_reconciles_date(self):
         _, _, _ = self._generate_test_adi_journal(receipt_date=date(2016, 9, 13))
 
-        assert_called_with(
-            self, api_url('/transactions/reconcile/'), responses.POST,
+        self.assert_called_with(
+            api_url('/transactions/reconcile/'), responses.POST,
             {
                 'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
                 'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()
