@@ -4,81 +4,37 @@ from decimal import Decimal
 import logging
 
 from django.conf import settings
-from openpyxl import load_workbook, styles
-from openpyxl.writer.excel import save_virtual_workbook
 
 from . import ADI_JOURNAL_LABEL
 from . import adi_config as config
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
 from .utils import (
-    retrieve_all_transactions, retrieve_all_valid_credits,
+    Journal, retrieve_all_transactions, retrieve_all_valid_credits,
     reconcile_for_date, retrieve_prisons, get_full_narrative
 )
 
 logger = logging.getLogger('mtp')
 
 
-class AdiJournal(object):
-
-    STYLE_TYPES = {
-        'fill': styles.PatternFill,
-        'border': styles.Border,
-        'font': styles.Font,
-        'alignment': styles.Alignment
-    }
-
-    def __init__(self, *args, **kwargs):
-        self.wb = load_workbook(settings.ADI_TEMPLATE_FILEPATH, keep_vba=True)
-        self.journal_ws = self.wb.get_sheet_by_name(config.ADI_JOURNAL_SHEET)
-
-        self.current_row = config.ADI_JOURNAL_START_ROW
-
-    def _next_row(self, increment=1):
-        self.current_row += increment
-
-    def _get_cell(self, field):
-        return '%s%s' % (config.ADI_JOURNAL_FIELDS[field]['column'],
-                         self.current_row)
-
-    def _set_field(self, field, value, style=None, extra_style=None):
-        cell = self._get_cell(field)
-        self.journal_ws[cell] = value
-
-        computed_style = defaultdict(dict)
-        base_style = style or config.ADI_JOURNAL_FIELDS[field]['style']
-        for key in base_style:
-            computed_style[key].update(base_style[key])
-
-        if extra_style:
-            for key in extra_style:
-                computed_style[key].update(extra_style[key])
-
-        for key in computed_style:
-            setattr(
-                self.journal_ws[cell],
-                key,
-                self.STYLE_TYPES[key](**computed_style[key])
-            )
-        return self.journal_ws[cell]
-
+class AdiJournal(Journal):
     def _add_column_sum(self, field):
-        self._set_field(
+        self.set_field(
             field,
             ('=SUM(%(column)s%(start)s:%(column)s%(end)s)'
                 % {
-                    'column': config.ADI_JOURNAL_FIELDS[field]['column'],
-                    'start': config.ADI_JOURNAL_START_ROW,
+                    'column': self.fields[field]['column'],
+                    'start': self.start_row,
                     'end': self.current_row - 1
                 }),
             extra_style=config.ADI_FINAL_ROW_STYLE
         )
-        cell = self._get_cell(field)
+        cell = self.get_cell(field)
         self.journal_ws[cell].number_format = '£#,##0.00_-'
 
-    def _lookup(self, field, payment_type, record_type, context={}):
+    def lookup(self, field, payment_type, record_type, context={}):
         try:
-            value_dict = config.ADI_JOURNAL_FIELDS[field]['value']
+            value_dict = self.fields[field]['value']
             value = value_dict[payment_type.name][record_type.name]
             if value:
                 return value.format(**context)
@@ -86,32 +42,34 @@ class AdiJournal(object):
             pass  # no static value
         return None
 
-    def _finish_journal(self, receipt_date, user):
-        for field in config.ADI_JOURNAL_FIELDS:
-            self._set_field(field, '', extra_style=config.ADI_FINAL_ROW_STYLE)
+    def finish_journal(self, receipt_date, user):
+        for field in self.fields:
+            self.set_field(field, '', extra_style=config.ADI_FINAL_ROW_STYLE)
         bold = {'font': {'name': 'Arial', 'bold': True},
                 'alignment': {'horizontal': 'left'}}
 
-        self._set_field('upload', 'Totals:', extra_style=dict(config.ADI_FINAL_ROW_STYLE, **bold))
+        self.set_field('upload', 'Totals:', extra_style=dict(config.ADI_FINAL_ROW_STYLE, **bold))
         self._add_column_sum('debit')
         self._add_column_sum('credit')
 
-        self.wb.get_named_range('BNE_UPLOAD').destinations = [(
+        self.journal_ws.title = receipt_date.strftime('%d%m%y')
+        self.wb.create_named_range(
+            'BNE_UPLOAD',
             self.journal_ws,
-            "$B$%(start)s:$B$%(end)s" % {
-                'start': config.ADI_JOURNAL_START_ROW,
+            '$B$%(start)s:$B$%(end)s' % {
+                'start': self.start_row,
                 'end': self.current_row - 1,
             }
-        )]
+        )
 
-        self._next_row(increment=2)
-        self._set_field('description', 'Uploaded by:', style=config._light_blue_style, extra_style=bold)
+        self.next_row(increment=2)
+        self.set_field('description', 'Uploaded by:', style=config._light_blue_style, extra_style=bold)
 
-        self._next_row(increment=2)
-        self._set_field('description', 'Checked by:', style=config._light_blue_style, extra_style=bold)
+        self.next_row(increment=2)
+        self.set_field('description', 'Checked by:', style=config._light_blue_style, extra_style=bold)
 
-        self._next_row(increment=2)
-        self._set_field('description', 'Posted by:', style=config._light_blue_style, extra_style=bold)
+        self.next_row(increment=2)
+        self.set_field('description', 'Posted by:', style=config._light_blue_style, extra_style=bold)
 
         batch_date = date.today().strftime(config.ADI_BATCH_DATE_FORMAT)
         self.journal_ws[config.ADI_BATCH_NAME_CELL] = config.ADI_BATCH_NAME_FORMAT % {
@@ -122,25 +80,18 @@ class AdiJournal(object):
         if accounting_date.month != receipt_date.month:
             accounting_date = receipt_date
         self.journal_ws[config.ADI_DATE_CELL] = accounting_date.strftime(config.ADI_DATE_FORMAT)
-        self.journal_ws.title = receipt_date.strftime('%d%m%y')
 
     def add_payment_row(self, amount, payment_type, record_type, **kwargs):
-        for field in config.ADI_JOURNAL_FIELDS:
-            static_value = self._lookup(field, payment_type, record_type, context=kwargs)
-            self._set_field(field, static_value)
+        for field in self.fields:
+            static_value = self.lookup(field, payment_type, record_type, context=kwargs)
+            self.set_field(field, static_value)
 
         if record_type == RecordType.debit:
-            self._set_field('debit', float(amount))
+            self.set_field('debit', float(amount))
         elif record_type == RecordType.credit:
-            self._set_field('credit', float(amount))
+            self.set_field('credit', float(amount))
 
-        self._next_row()
-
-    def create_file(self, receipt_date, user):
-        self._finish_journal(receipt_date, user)
-        return settings.ADI_OUTPUT_FILENAME.format(
-            initials=user.get_initials() or config.DEFAULT_INITIALS, date=date.today()
-        ), save_virtual_workbook(self.wb)
+        self.next_row()
 
 
 def generate_adi_journal(request, receipt_date):
@@ -170,7 +121,12 @@ def generate_adi_journal(request, receipt_date):
         raise EmptyFileError()
 
     journal_date = receipt_date.strftime('%d/%m/%Y')
-    journal = AdiJournal()
+    journal = AdiJournal(
+        settings.ADI_TEMPLATE_FILEPATH,
+        config.ADI_JOURNAL_SHEET,
+        config.ADI_JOURNAL_START_ROW,
+        config.ADI_JOURNAL_FIELDS
+    )
 
     prisons = retrieve_prisons(request)
     bu_lookup = {prison['general_ledger_code']: nomis_id for nomis_id, prison in prisons.items()}
@@ -239,7 +195,14 @@ def generate_adi_journal(request, receipt_date):
             reference=reference, date=journal_date
         )
 
-    created_journal = journal.create_file(receipt_date, request.user)
+    journal.finish_journal(receipt_date, request.user)
+    created_journal = (
+        settings.ADI_OUTPUT_FILENAME.format(
+            initials=request.user.get_initials() or config.DEFAULT_INITIALS,
+            date=date.today()
+        ),
+        journal.create_file()
+    )
     logger.info('{user} downloaded {label} containing {count} records'.format(
         user=request.user.username,
         label=ADI_JOURNAL_LABEL,
