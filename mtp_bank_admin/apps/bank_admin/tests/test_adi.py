@@ -12,7 +12,7 @@ from mtp_common.test_utils import silence_logger
 from openpyxl import load_workbook
 import responses
 
-from . import (
+from .utils import (
     TEST_PRISONS, NO_TRANSACTIONS, mock_list_prisons,
     get_test_transactions, get_test_credits, temp_file, api_url,
     mock_bank_holidays, ResponsesTestCase

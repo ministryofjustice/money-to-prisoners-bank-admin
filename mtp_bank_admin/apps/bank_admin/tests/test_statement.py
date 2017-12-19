@@ -9,7 +9,7 @@ import mt940
 from mtp_common.auth.models import MojUser
 import responses
 
-from . import (
+from .utils import (
     get_test_transactions, NO_TRANSACTIONS, ORIGINAL_REF, SENDER_NAME,
     mock_balance, OPENING_BALANCE, api_url, mock_bank_holidays, ResponsesTestCase
 )
