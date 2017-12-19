@@ -4,7 +4,6 @@ from unittest import mock, skip
 
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
-from django.test import SimpleTestCase
 from mtp_common.auth.models import MojUser
 from mtp_common.test_utils import silence_logger
 from openpyxl import load_workbook
@@ -13,7 +12,7 @@ import responses
 from . import (
     NO_TRANSACTIONS, mock_list_prisons,
     get_test_disbursements, temp_file, api_url,
-    mock_bank_holidays, assert_called_with
+    mock_bank_holidays, ResponsesTestCase
 )
 from bank_admin import disbursements, disbursements_config
 from bank_admin.exceptions import EmptyFileError
@@ -27,7 +26,7 @@ def get_cell_value(journal_ws, field, row):
     return journal_ws[cell].value
 
 
-class DisbursementsFileGenerationTestCase(SimpleTestCase):
+class DisbursementsFileGenerationTestCase(ResponsesTestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
@@ -118,7 +117,7 @@ class DisbursementsFileGenerationTestCase(SimpleTestCase):
     def test_disbursements_marked_as_sent(self):
         _, _, data = self._generate_test_disbursements_file(receipt_date=date(2016, 9, 13))
 
-        assert_called_with(
-            self, api_url('disbursements/actions/send/'), responses.POST,
+        self.assert_called_with(
+            api_url('disbursements/actions/send/'), responses.POST,
             {'disbursement_ids': [d['id'] for d in data['results']]}
         )

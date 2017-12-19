@@ -5,7 +5,6 @@ from urllib.parse import quote_plus
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.test import SimpleTestCase
 from django.utils.encoding import escape_uri_path
 from django.utils.timezone import utc
 from django.utils.translation import ugettext_lazy as _
@@ -17,7 +16,7 @@ import responses
 from . import (
     get_test_transactions, get_test_credits, NO_TRANSACTIONS,
     mock_balance, api_url, mock_bank_holidays, mock_list_prisons,
-    assert_called_with, get_test_disbursements
+    ResponsesTestCase, get_test_disbursements
 )
 from .test_refund import REFUND_TRANSACTIONS, expected_output
 from .test_statement import mock_test_transactions
@@ -25,7 +24,7 @@ from bank_admin.types import PaymentType
 from bank_admin.utils import set_worldpay_cutoff
 
 
-class BankAdminViewTestCase(SimpleTestCase):
+class BankAdminViewTestCase(ResponsesTestCase):
     @mock.patch('mtp_common.auth.backends.api_client')
     def login(self, mock_api_client):
         mock_api_client.authenticate.return_value = {
@@ -213,8 +212,8 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
             '?receipt_date=2014-11-12'
         )
 
-        assert_called_with(
-            self, api_url('/transactions/'), responses.GET,
+        self.assert_called_with(
+            api_url('/transactions/'), responses.GET,
             dict(
                 limit=str(settings.REQUEST_PAGE_SIZE),
                 offset='0',
@@ -362,8 +361,8 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
         start_date = str(datetime(2014, 12, 11, 0, 0, tzinfo=utc))
         end_date = str(datetime(2014, 12, 12, 0, 0, tzinfo=utc))
 
-        assert_called_with(
-            self, api_url('/credits/'), responses.GET,
+        self.assert_called_with(
+            api_url('/credits/'), responses.GET,
             dict(
                 limit=str(settings.REQUEST_PAGE_SIZE),
                 offset='0',
@@ -373,8 +372,8 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
             )
         )
 
-        assert_called_with(
-            self, api_url('/transactions/'), responses.GET,
+        self.assert_called_with(
+            api_url('/transactions/'), responses.GET,
             dict(
                 limit=str(settings.REQUEST_PAGE_SIZE),
                 offset='0',
@@ -384,8 +383,8 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
             )
         )
 
-        assert_called_with(
-            self, api_url('/transactions/'), responses.GET,
+        self.assert_called_with(
+            api_url('/transactions/'), responses.GET,
             dict(
                 limit=str(settings.REQUEST_PAGE_SIZE),
                 offset='0',
@@ -518,8 +517,8 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
             '?receipt_date=2014-11-12'
         )
 
-        assert_called_with(
-            self, api_url('/transactions/'), responses.GET,
+        self.assert_called_with(
+            api_url('/transactions/'), responses.GET,
             dict(
                 limit=str(settings.REQUEST_PAGE_SIZE),
                 offset='0',
@@ -631,8 +630,8 @@ class DownloadDisbursementsFileViewTestCase(BankAdminViewTestCase):
         start_date = str(datetime(2014, 12, 11, 0, 0, tzinfo=utc))
         end_date = str(datetime(2014, 12, 12, 0, 0, tzinfo=utc))
 
-        assert_called_with(
-            self, api_url('/disbursements/'), responses.GET,
+        self.assert_called_with(
+            api_url('/disbursements/'), responses.GET,
             dict(
                 limit=str(settings.REQUEST_PAGE_SIZE),
                 offset='0',
