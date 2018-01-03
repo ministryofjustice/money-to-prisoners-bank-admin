@@ -1,20 +1,16 @@
 from django.conf import settings
 from django.conf.urls import url
 from django.core.urlresolvers import reverse_lazy
-from zendesk_tickets import views
-from zendesk_tickets.forms import EmailTicketForm
+from mtp_common.views import GetHelpView as BaseGetHelpView, GetHelpSuccessView
+
+
+class GetHelpView(BaseGetHelpView):
+    success_url = reverse_lazy('feedback_success')
+    ticket_subject = 'MTP Bank Admin Feedback'
+    ticket_tags = ['feedback', 'mtp', 'bank-admin', settings.ENVIRONMENT]
+
 
 urlpatterns = [
-    url(r'^feedback/$', views.ticket,
-        {
-            'form_class': EmailTicketForm,
-            'template_name': 'mtp_common/feedback/submit_feedback.html',
-            'success_redirect_url': reverse_lazy('feedback_success'),
-            'subject': 'MTP Bank Admin Feedback',
-            'tags': ['feedback', 'mtp', 'bank-admin', settings.ENVIRONMENT],
-        }, name='submit_ticket'),
-    url(r'^feedback/success/$', views.success,
-        {
-            'template_name': 'mtp_common/feedback/success.html',
-        }, name='feedback_success'),
+    url(r'^feedback/$', GetHelpView.as_view(), name='submit_ticket'),
+    url(r'^feedback/success/$', GetHelpSuccessView.as_view(), name='feedback_success'),
 ]
