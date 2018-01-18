@@ -2,7 +2,6 @@ from decimal import Decimal
 
 from django.conf import settings
 from mtp_common.api import retrieve_all_pages_for_path
-from mtp_common.auth import api_client
 
 from . import disbursements_config as config
 from .exceptions import EmptyFileError
@@ -25,24 +24,22 @@ class DisbursementJournal(Journal):
         self.next_row()
 
 
-def retrieve_all_disbursements(request, **kwargs):
-    session = api_client.get_api_session(request)
+def retrieve_all_disbursements(api_session, **kwargs):
     return retrieve_all_pages_for_path(
-        session, 'disbursements/', **kwargs)
+        api_session, 'disbursements/', **kwargs)
 
 
-def mark_as_sent(request, disbursements):
-    session = api_client.get_api_session(request)
-    session.post(
+def mark_as_sent(api_session, disbursements):
+    api_session.post(
         'disbursements/actions/send/',
         json={'disbursement_ids': [d['id'] for d in disbursements]}
     )
 
 
-def generate_disbursements_journal(request, date):
+def generate_disbursements_journal(api_session, date):
     start_date, end_date = get_start_and_end_date(date)
     disbursements = retrieve_all_disbursements(
-        request,
+        api_session,
         log__action='confirmed',
         logged_at__gte=start_date,
         logged_at__lt=end_date
@@ -57,7 +54,7 @@ def generate_disbursements_journal(request, date):
         config.DISBURSEMENTS_JOURNAL_START_ROW,
         config.DISBURSEMENT_FIELDS
     )
-    prisons = retrieve_prisons(request)
+    prisons = retrieve_prisons(api_session)
     for disbursement in disbursements:
         for field in disbursement:
             if disbursement[field] is None:
@@ -86,7 +83,7 @@ def generate_disbursements_journal(request, date):
             **disbursement
         )
 
-    mark_as_sent(request, disbursements)
+    mark_as_sent(api_session, disbursements)
 
     return (
         settings.DISBURSEMENT_OUTPUT_FILENAME.format(date=date.today()),

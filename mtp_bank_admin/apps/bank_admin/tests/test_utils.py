@@ -2,6 +2,7 @@ from datetime import date, datetime
 from unittest import mock
 
 from django.utils.timezone import utc
+from mtp_common.auth.api_client import get_api_session
 from mtp_common.auth.test_utils import generate_tokens
 import responses
 
@@ -12,11 +13,11 @@ from .utils import mock_bank_holidays, api_url, ResponsesTestCase
 class ReconcileForDateTestCase(ResponsesTestCase):
 
     def setUp(self):
-        self.request = mock.MagicMock(
+        self.api_session = get_api_session(mock.MagicMock(
             user=mock.MagicMock(
                 token=generate_tokens()
             )
-        )
+        ))
 
     @responses.activate
     def test_reconciles_midweek(self):
@@ -27,7 +28,7 @@ class ReconcileForDateTestCase(ResponsesTestCase):
             status=200
         )
 
-        start_date, end_date = reconcile_for_date(self.request, date(2016, 9, 15))
+        start_date, end_date = reconcile_for_date(self.api_session, date(2016, 9, 15))
 
         self.assert_called_with(
             api_url('/transactions/reconcile/'), responses.POST,
@@ -49,7 +50,7 @@ class ReconcileForDateTestCase(ResponsesTestCase):
             status=200
         )
 
-        start_date, end_date = reconcile_for_date(self.request, date(2016, 10, 7))
+        start_date, end_date = reconcile_for_date(self.api_session, date(2016, 10, 7))
 
         self.assert_called_with(
             api_url('/transactions/reconcile/'), responses.POST,

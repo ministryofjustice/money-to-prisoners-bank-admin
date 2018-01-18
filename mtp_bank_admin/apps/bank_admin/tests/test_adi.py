@@ -7,6 +7,7 @@ from urllib.parse import quote_plus
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
 from django.utils.timezone import utc
+from mtp_common.auth.api_client import get_api_session
 from mtp_common.auth.models import MojUser
 from mtp_common.test_utils import silence_logger
 from openpyxl import load_workbook
@@ -36,7 +37,7 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
     def setUp(self):
         self.factory = RequestFactory()
 
-    def get_request(self, **kwargs):
+    def get_api_session(self, **kwargs):
         request = self.factory.get(
             reverse('bank_admin:download_adi_journal'),
             **kwargs
@@ -46,9 +47,15 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
             {'first_name': 'John', 'last_name': 'Smith', 'username': 'jsmith'}
         )
         request.session = mock.MagicMock()
-        return request
+        return get_api_session(request)
 
-    def _generate_test_adi_journal(self, receipt_date=None):
+    def get_user(self):
+        return MojUser(
+            1, '',
+            {'first_name': 'John', 'last_name': 'Smith', 'username': 'jsmith'}
+        )
+
+    def _generate_test_adi_journal(self, receipt_date=None, user=None):
         if receipt_date is None:
             receipt_date = date(2016, 9, 13)
         start_date = quote_plus(str(set_worldpay_cutoff(receipt_date)))
@@ -99,7 +106,7 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
 
         with silence_logger(name='mtp', level=logging.WARNING):
             filename, exceldata = adi.generate_adi_journal(
-                self.get_request(), receipt_date
+                self.get_api_session(), receipt_date, user=user
             )
 
         return filename, exceldata, (credits, refundable_transactions, rejected_transactions)
@@ -263,7 +270,7 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
         mock_bank_holidays()
 
         with self.assertRaises(EmptyFileError), silence_logger(name='mtp', level=logging.WARNING):
-            _, exceldata = adi.generate_adi_journal(self.get_request(), date(2016, 9, 13))
+            _, exceldata = adi.generate_adi_journal(self.get_api_session(), date(2016, 9, 13))
 
     @responses.activate
     def test_adi_journal_reconciles_date(self):
@@ -304,7 +311,7 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
 
     @responses.activate
     def test_batch_name_includes_initials(self):
-        filename, exceldata, _ = self._generate_test_adi_journal()
+        filename, exceldata, _ = self._generate_test_adi_journal(user=self.get_user())
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)

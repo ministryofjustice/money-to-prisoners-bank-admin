@@ -4,6 +4,7 @@ from unittest import mock, skip
 
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
+from mtp_common.auth.api_client import get_api_session
 from mtp_common.auth.models import MojUser
 from mtp_common.test_utils import silence_logger
 from openpyxl import load_workbook
@@ -31,7 +32,7 @@ class DisbursementsFileGenerationTestCase(ResponsesTestCase):
     def setUp(self):
         self.factory = RequestFactory()
 
-    def get_request(self, **kwargs):
+    def get_api_session(self, **kwargs):
         request = self.factory.get(
             reverse('bank_admin:download_disbursements'),
             **kwargs
@@ -41,7 +42,7 @@ class DisbursementsFileGenerationTestCase(ResponsesTestCase):
             {'first_name': 'John', 'last_name': 'Smith', 'username': 'jsmith'}
         )
         request.session = mock.MagicMock()
-        return request
+        return get_api_session(request)
 
     def _generate_test_disbursements_file(self, receipt_date=None):
         if receipt_date is None:
@@ -65,7 +66,7 @@ class DisbursementsFileGenerationTestCase(ResponsesTestCase):
 
         with silence_logger(name='mtp', level=logging.WARNING):
             filename, exceldata = disbursements.generate_disbursements_journal(
-                self.get_request(), receipt_date
+                self.get_api_session(), receipt_date
             )
 
         return filename, exceldata, test_disbursements
@@ -111,7 +112,7 @@ class DisbursementsFileGenerationTestCase(ResponsesTestCase):
 
         with self.assertRaises(EmptyFileError), silence_logger(name='mtp', level=logging.WARNING):
             _, exceldata = disbursements.generate_disbursements_journal(
-                self.get_request(), date(2016, 9, 13))
+                self.get_api_session(), date(2016, 9, 13))
 
     @responses.activate
     def test_disbursements_marked_as_sent(self):

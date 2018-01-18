@@ -4,7 +4,6 @@ import time as systime
 
 from django.utils.timezone import now, utc
 from mtp_common.api import retrieve_all_pages_for_path
-from mtp_common.auth import api_client
 from openpyxl import load_workbook, styles
 from openpyxl.writer.excel import save_virtual_workbook
 import requests
@@ -14,21 +13,18 @@ from .exceptions import EarlyReconciliationError, UpstreamServiceUnavailable
 BANK_HOLIDAY_URL = 'https://www.gov.uk/bank-holidays.json'
 
 
-def retrieve_all_transactions(request, **kwargs):
-    session = api_client.get_api_session(request)
+def retrieve_all_transactions(api_session, **kwargs):
     return retrieve_all_pages_for_path(
-        session, 'transactions/', **kwargs)
+        api_session, 'transactions/', **kwargs)
 
 
-def retrieve_all_valid_credits(request, **kwargs):
-    session = api_client.get_api_session(request)
+def retrieve_all_valid_credits(api_session, **kwargs):
     return retrieve_all_pages_for_path(
-        session, 'credits/', valid=True, **kwargs)
+        api_session, 'credits/', valid=True, **kwargs)
 
 
-def retrieve_prisons(request):
-    session = api_client.get_api_session(request)
-    prisons = retrieve_all_pages_for_path(session, 'prisons/')
+def retrieve_prisons(api_session):
+    prisons = retrieve_all_pages_for_path(api_session, 'prisons/')
     return {prison['nomis_id']: prison for prison in prisons}
 
 
@@ -43,7 +39,7 @@ def get_start_and_end_date(date):
     return start_date, end_date
 
 
-def reconcile_for_date(request, receipt_date):
+def reconcile_for_date(api_session, receipt_date):
     start_date, end_date = get_start_and_end_date(receipt_date)
 
     if start_date.date() >= now().date() or end_date.date() > now().date():
@@ -52,8 +48,7 @@ def reconcile_for_date(request, receipt_date):
     reconciliation_date = start_date
     while reconciliation_date < end_date:
         end_of_day = reconciliation_date + timedelta(days=1)
-        session = api_client.get_api_session(request)
-        session.post(
+        api_session.post(
             'transactions/reconcile/',
             json={
                 'received_at__gte': reconciliation_date.isoformat(),
@@ -65,9 +60,8 @@ def reconcile_for_date(request, receipt_date):
     return start_date, end_date
 
 
-def retrieve_last_balance(request, date):
-    session = api_client.get_api_session(request)
-    response = session.get(
+def retrieve_last_balance(api_session, date):
+    response = api_session.get(
         'balances/', params={
             'limit': 1,
             'date__lt': date.isoformat()
