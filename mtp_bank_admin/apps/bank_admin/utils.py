@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime, time, timedelta
 import time as systime
+import os
 
 from django.utils.timezone import now, utc
 from mtp_common.api import retrieve_all_pages_for_path
@@ -180,3 +181,22 @@ class Journal():
 
     def create_file(self):
         return save_virtual_workbook(self.wb)
+
+
+def get_cached_file_path(label, date, extension=None):
+    filepath = 'local_files/cache/{label}/{date:%Y%m%d}'.format(label=label, date=date)
+    if extension:
+        filepath = '.'.join([filepath, extension])
+    return filepath
+
+
+def get_or_create_file(label, date, creation_func, f_args=[], f_kwargs={}, file_extension=None):
+    filepath = get_cached_file_path(label, date, extension=file_extension)
+    if not os.path.isfile(filepath):
+        filedata = creation_func(*f_args, **f_kwargs)
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        with open(filepath, 'wb+') as f:
+            if isinstance(filedata, str):
+                filedata = filedata.encode('utf-8')
+            f.write(filedata)
+    return filepath

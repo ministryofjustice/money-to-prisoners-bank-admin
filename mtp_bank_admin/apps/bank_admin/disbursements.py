@@ -3,14 +3,27 @@ from decimal import Decimal
 from django.conf import settings
 from mtp_common.api import retrieve_all_pages_for_path
 
-from . import disbursements_config as config
+from . import disbursements_config as config, DISBURSEMENTS_LABEL
 from .exceptions import EmptyFileError
-from .utils import get_start_and_end_date, retrieve_prisons, Journal
+from .utils import (
+    get_start_and_end_date, retrieve_prisons, Journal, get_or_create_file
+)
 
 PAYMENT_METHODS = {
     'cheque': 'Cheque',
     'bank_transfer': 'New Bank Details'
 }
+
+
+def get_disbursements_file(api_session, receipt_date):
+    filepath = get_or_create_file(
+        DISBURSEMENTS_LABEL,
+        receipt_date,
+        generate_disbursements_journal,
+        f_args=[api_session, receipt_date],
+        file_extension='xlsm'
+    )
+    return open(filepath, 'rb')
 
 
 class DisbursementJournal(Journal):
@@ -85,7 +98,4 @@ def generate_disbursements_journal(api_session, date):
 
     mark_as_sent(api_session, disbursements)
 
-    return (
-        settings.DISBURSEMENT_OUTPUT_FILENAME.format(date=date.today()),
-        journal.create_file()
-    )
+    return journal.create_file()

@@ -5,12 +5,23 @@ from django.conf import settings
 from django.utils.dateparse import parse_date
 from mt940_writer import Account, Balance, Statement, Transaction, TransactionType
 
+from . import MT940_STMT_LABEL
 from .utils import (
-    retrieve_all_transactions, get_daily_file_uid,
+    retrieve_all_transactions, get_daily_file_uid, get_or_create_file,
     reconcile_for_date, retrieve_last_balance, get_full_narrative
 )
 
 logger = logging.getLogger('mtp')
+
+
+def get_bank_statement_file(api_session, receipt_date):
+    filepath = get_or_create_file(
+        MT940_STMT_LABEL,
+        receipt_date,
+        generate_bank_statement,
+        f_args=[api_session, receipt_date]
+    )
+    return open(filepath, 'rb')
 
 
 def generate_bank_statement(api_session, receipt_date):
@@ -68,9 +79,4 @@ def generate_bank_statement(api_session, receipt_date):
         closing_balance, transaction_records
     )
 
-    return (
-        settings.BANK_STMT_OUTPUT_FILENAME.format(
-            account_number=settings.BANK_STMT_ACCOUNT_NUMBER, date=receipt_date
-        ),
-        str(statement)
-    )
+    return str(statement)

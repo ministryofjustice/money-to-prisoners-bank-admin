@@ -12,7 +12,7 @@ import responses
 
 from .utils import (
     get_test_transactions, NO_TRANSACTIONS, ORIGINAL_REF, SENDER_NAME,
-    mock_balance, OPENING_BALANCE, api_url, mock_bank_holidays, ResponsesTestCase
+    mock_balance, OPENING_BALANCE, api_url, mock_bank_holidays, BankAdminTestCase
 )
 from bank_admin.statement import generate_bank_statement
 
@@ -41,7 +41,7 @@ def mock_test_transactions(count=20):
     return test_data
 
 
-class BankStatementTestCase(ResponsesTestCase):
+class BankStatementTestCase(BankAdminTestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
@@ -70,7 +70,7 @@ class BankStatementTestCase(ResponsesTestCase):
 
         if receipt_date is None:
             receipt_date = date(2016, 9, 13)
-        _, mt940_file = generate_bank_statement(self.get_api_session(), receipt_date)
+        mt940_file = generate_bank_statement(self.get_api_session(), receipt_date)
         return mt940.parse(mt940_file), test_data
 
 
@@ -160,7 +160,7 @@ class NoTransactionsTestCase(BankStatementTestCase):
         mock_bank_holidays()
 
         today = date(2016, 9, 13)
-        _, mt940_file = generate_bank_statement(self.get_api_session(), today)
+        mt940_file = generate_bank_statement(self.get_api_session(), today)
         parsed_file = mt940.parse(mt940_file)
         self.assertEqual(len(parsed_file.transactions), 1)
         self.assertEqual(parsed_file.transactions[0].data, {})

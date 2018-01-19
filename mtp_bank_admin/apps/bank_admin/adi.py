@@ -5,15 +5,35 @@ import logging
 
 from django.conf import settings
 
-from . import adi_config as config
+from . import adi_config as config, ADI_JOURNAL_LABEL
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
 from .utils import (
     Journal, retrieve_all_transactions, retrieve_all_valid_credits,
-    reconcile_for_date, retrieve_prisons, get_full_narrative
+    reconcile_for_date, retrieve_prisons, get_full_narrative,
+    get_or_create_file
 )
 
 logger = logging.getLogger('mtp')
+
+
+def get_adi_journal_file(api_session, receipt_date, user=None):
+    filepath = get_or_create_file(
+        ADI_JOURNAL_LABEL,
+        receipt_date,
+        generate_adi_journal,
+        f_args=[api_session, receipt_date],
+        f_kwargs={'user': user},
+        file_extension='xlsm'
+    )
+    journal = AdiJournal(
+        filepath,
+        receipt_date.strftime('%d%m%y'),
+        config.ADI_JOURNAL_START_ROW,
+        config.ADI_JOURNAL_FIELDS
+    )
+    journal.set_batch_name(user=user)
+    return journal.create_file()
 
 
 class AdiJournal(Journal):
@@ -40,6 +60,13 @@ class AdiJournal(Journal):
         except KeyError:
             pass  # no static value
         return None
+
+    def set_batch_name(self, user=None):
+        batch_date = date.today().strftime(config.ADI_BATCH_DATE_FORMAT)
+        self.journal_ws[config.ADI_BATCH_NAME_CELL] = config.ADI_BATCH_NAME_FORMAT % {
+            'date': batch_date,
+            'initials': user.get_initials() if user else '<initials>',
+        }
 
     def finish_journal(self, receipt_date, user=None):
         for field in self.fields:
@@ -70,11 +97,7 @@ class AdiJournal(Journal):
         self.next_row(increment=2)
         self.set_field('description', 'Posted by:', style=config._light_blue_style, extra_style=bold)
 
-        batch_date = date.today().strftime(config.ADI_BATCH_DATE_FORMAT)
-        self.journal_ws[config.ADI_BATCH_NAME_CELL] = config.ADI_BATCH_NAME_FORMAT % {
-            'date': batch_date,
-            'initials': user.get_initials() if user else '<initials>',
-        }
+        self.set_batch_name(user=user)
         accounting_date = date.today()
         if accounting_date.month != receipt_date.month:
             accounting_date = receipt_date
@@ -195,7 +218,4 @@ def generate_adi_journal(api_session, receipt_date, user=None):
         )
 
     journal.finish_journal(receipt_date, user)
-    return (
-        settings.ADI_CACHED_OUTPUT_FILENAME.format(date=date.today()),
-        journal.create_file()
-    )
+    return journal.create_file()

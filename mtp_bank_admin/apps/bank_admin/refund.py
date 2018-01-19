@@ -1,17 +1,29 @@
 import csv
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 import io
 import logging
 
 from django.conf import settings
 
+from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
 from .utils import (
-    retrieve_all_transactions, escape_csv_formula, reconcile_for_date
+    retrieve_all_transactions, escape_csv_formula, reconcile_for_date,
+    get_or_create_file
 )
 
 logger = logging.getLogger('mtp')
+
+
+def get_refund_file(api_session, receipt_date):
+    filepath = get_or_create_file(
+        ACCESSPAY_LABEL,
+        receipt_date,
+        generate_refund_file_for_date,
+        f_args=[api_session, receipt_date]
+    )
+    return open(filepath, 'rb')
 
 
 def generate_refund_file_for_date(api_session, receipt_date):
@@ -33,7 +45,7 @@ def generate_refund_file_for_date(api_session, receipt_date):
     # mark transactions as refunded
     api_session.patch('transactions/', json=refunded_transactions)
 
-    return (settings.REFUND_OUTPUT_FILENAME.format(date=date.today()), filedata)
+    return filedata
 
 
 def generate_refund_file(transactions):

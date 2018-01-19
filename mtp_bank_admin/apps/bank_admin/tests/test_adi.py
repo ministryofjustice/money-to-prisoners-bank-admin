@@ -16,7 +16,7 @@ import responses
 from .utils import (
     TEST_PRISONS, NO_TRANSACTIONS, mock_list_prisons,
     get_test_transactions, get_test_credits, temp_file, api_url,
-    mock_bank_holidays, ResponsesTestCase
+    mock_bank_holidays, BankAdminTestCase
 )
 from bank_admin import adi, adi_config
 from bank_admin.exceptions import EmptyFileError, EarlyReconciliationError
@@ -32,7 +32,7 @@ def get_cell_value(journal_ws, field, row):
     return journal_ws[cell].value
 
 
-class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
+class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
@@ -105,11 +105,11 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
         mock_bank_holidays()
 
         with silence_logger(name='mtp', level=logging.WARNING):
-            filename, exceldata = adi.generate_adi_journal(
+            exceldata = adi.generate_adi_journal(
                 self.get_api_session(), receipt_date, user=user
             )
 
-        return filename, exceldata, (credits, refundable_transactions, rejected_transactions)
+        return exceldata, (credits, refundable_transactions, rejected_transactions)
 
     def _get_expected_number_of_rows(self, credits, refundable_transactions, rejected_transactions):
         expected_credits = 0
@@ -146,13 +146,13 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
     @responses.activate
     @skip('Enable to generate an example file for inspection')
     def test_adi_journal_generation(self):
-        filename, exceldata, _ = self._generate_test_adi_journal()
-        with open(filename, 'wb+') as f:
+        exceldata, _ = self._generate_test_adi_journal()
+        with open('test_journal.xlsm', 'wb+') as f:
             f.write(exceldata)
 
     @responses.activate
     def test_adi_journal_debits_match_credits(self):
-        filename, exceldata, test_data = self._generate_test_adi_journal()
+        exceldata, test_data = self._generate_test_adi_journal()
         credits, refundable_transactions, rejected_transactions = test_data
 
         with temp_file(exceldata) as f:
@@ -177,7 +177,7 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
 
     @responses.activate
     def test_adi_journal_number_of_payment_rows_correct(self):
-        filename, exceldata, test_data = self._generate_test_adi_journal()
+        exceldata, test_data = self._generate_test_adi_journal()
         credits, refundable_transactions, rejected_transactions = test_data
 
         with temp_file(exceldata) as f:
@@ -209,7 +209,7 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
 
     @responses.activate
     def test_adi_journal_credit_sums_correct(self):
-        filename, exceldata, test_data = self._generate_test_adi_journal()
+        exceldata, test_data = self._generate_test_adi_journal()
         credits, refundable_transactions, rejected_transactions = test_data
 
         prison_totals = defaultdict(int)
@@ -270,11 +270,11 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
         mock_bank_holidays()
 
         with self.assertRaises(EmptyFileError), silence_logger(name='mtp', level=logging.WARNING):
-            _, exceldata = adi.generate_adi_journal(self.get_api_session(), date(2016, 9, 13))
+            adi.generate_adi_journal(self.get_api_session(), date(2016, 9, 13))
 
     @responses.activate
     def test_adi_journal_reconciles_date(self):
-        _, _, _ = self._generate_test_adi_journal(receipt_date=date(2016, 9, 13))
+        _, _ = self._generate_test_adi_journal(receipt_date=date(2016, 9, 13))
 
         self.assert_called_with(
             api_url('/transactions/reconcile/'), responses.POST,
@@ -286,7 +286,7 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
 
     @responses.activate
     def test_adi_journal_upload_range_set(self):
-        filename, exceldata, test_data = self._generate_test_adi_journal()
+        exceldata, test_data = self._generate_test_adi_journal()
         credits, refundable_transactions, rejected_transactions = test_data
 
         expected_debit_rows, expected_credit_rows = self._get_expected_number_of_rows(
@@ -311,7 +311,7 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
 
     @responses.activate
     def test_batch_name_includes_initials(self):
-        filename, exceldata, _ = self._generate_test_adi_journal(user=self.get_user())
+        exceldata, _ = self._generate_test_adi_journal(user=self.get_user())
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
@@ -324,7 +324,7 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
         processing_date = date(2016, 8, 31)
         mock_date.today.return_value = processing_date
         receipt_date = date(2016, 8, 30)
-        filename, exceldata, _ = self._generate_test_adi_journal(
+        exceldata, _ = self._generate_test_adi_journal(
             receipt_date=receipt_date
         )
 
@@ -342,7 +342,7 @@ class AdiPaymentFileGenerationTestCase(ResponsesTestCase):
         processing_date = date(2016, 9, 1)
         mock_date.today.return_value = processing_date
         receipt_date = date(2016, 8, 31)
-        filename, exceldata, _ = self._generate_test_adi_journal(
+        exceldata, _ = self._generate_test_adi_journal(
             receipt_date=receipt_date
         )
 

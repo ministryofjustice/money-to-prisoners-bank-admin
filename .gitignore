@@ -20,6 +20,7 @@ mtp_bank_admin/settings/local.py
 static/
 media/
 spooler/
+local_files/cache/
 
 # selenium
 geckodriver.log

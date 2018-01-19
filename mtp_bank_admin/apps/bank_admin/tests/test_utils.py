@@ -7,10 +7,10 @@ from mtp_common.auth.test_utils import generate_tokens
 import responses
 
 from bank_admin.utils import WorkdayChecker, reconcile_for_date
-from .utils import mock_bank_holidays, api_url, ResponsesTestCase
+from .utils import mock_bank_holidays, api_url, BankAdminTestCase
 
 
-class ReconcileForDateTestCase(ResponsesTestCase):
+class ReconcileForDateTestCase(BankAdminTestCase):
 
     def setUp(self):
         self.api_session = get_api_session(mock.MagicMock(
@@ -78,7 +78,7 @@ class ReconcileForDateTestCase(ResponsesTestCase):
         self.assertEqual(end_date, datetime(2016, 10, 10, 0, 0, tzinfo=utc))
 
 
-class WorkdayCheckerTestCase(ResponsesTestCase):
+class WorkdayCheckerTestCase(BankAdminTestCase):
 
     def setUp(self):
         mock_bank_holidays()

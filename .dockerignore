@@ -28,3 +28,4 @@ static/
 media/
 venv/
 spooler/
+local_files/cache/

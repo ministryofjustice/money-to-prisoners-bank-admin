@@ -13,7 +13,7 @@ import responses
 from .utils import (
     NO_TRANSACTIONS, mock_list_prisons,
     get_test_disbursements, temp_file, api_url,
-    mock_bank_holidays, ResponsesTestCase
+    mock_bank_holidays, BankAdminTestCase
 )
 from bank_admin import disbursements, disbursements_config
 from bank_admin.exceptions import EmptyFileError
@@ -27,7 +27,7 @@ def get_cell_value(journal_ws, field, row):
     return journal_ws[cell].value
 
 
-class DisbursementsFileGenerationTestCase(ResponsesTestCase):
+class DisbursementsFileGenerationTestCase(BankAdminTestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
@@ -65,22 +65,22 @@ class DisbursementsFileGenerationTestCase(ResponsesTestCase):
         )
 
         with silence_logger(name='mtp', level=logging.WARNING):
-            filename, exceldata = disbursements.generate_disbursements_journal(
+            exceldata = disbursements.generate_disbursements_journal(
                 self.get_api_session(), receipt_date
             )
 
-        return filename, exceldata, test_disbursements
+        return exceldata, test_disbursements
 
     @responses.activate
     @skip('Enable to generate an example file for inspection')
     def test_disbursements_file_generation(self):
-        filename, exceldata, _ = self._generate_test_disbursements_file()
-        with open(filename, 'wb+') as f:
+        exceldata, _ = self._generate_test_disbursements_file()
+        with open('test_disbursements', 'wb+') as f:
             f.write(exceldata)
 
     @responses.activate
     def test_disbursements_file_number_of_payment_rows_correct(self):
-        filename, exceldata, test_data = self._generate_test_disbursements_file()
+        exceldata, test_data = self._generate_test_disbursements_file()
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
@@ -111,12 +111,13 @@ class DisbursementsFileGenerationTestCase(ResponsesTestCase):
         )
 
         with self.assertRaises(EmptyFileError), silence_logger(name='mtp', level=logging.WARNING):
-            _, exceldata = disbursements.generate_disbursements_journal(
-                self.get_api_session(), date(2016, 9, 13))
+            disbursements.generate_disbursements_journal(
+                self.get_api_session(), date(2016, 9, 13)
+            )
 
     @responses.activate
     def test_disbursements_marked_as_sent(self):
-        _, _, data = self._generate_test_disbursements_file(receipt_date=date(2016, 9, 13))
+        _, data = self._generate_test_disbursements_file(receipt_date=date(2016, 9, 13))
 
         self.assert_called_with(
             api_url('disbursements/actions/send/'), responses.POST,
