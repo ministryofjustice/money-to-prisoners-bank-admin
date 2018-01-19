@@ -259,6 +259,9 @@ ZENDESK_CUSTOM_FIELDS = {
 
 SHOW_LANGUAGE_SWITCH = os.environ.get('SHOW_LANGUAGE_SWITCH', 'False') == 'True'
 
+BANK_ADMIN_USERNAME = os.environ.get('BANK_ADMIN_USERNAME', '')
+BANK_ADMIN_PASSWORD = os.environ.get('BANK_ADMIN_PASSWORD', '')
+
 try:
     from .local import *  # noqa
 except ImportError:
