@@ -52,6 +52,7 @@
         </section>
         {% endif %}
 
+        {% if perms.credit.view_any_credit %}
         <section>
           <h2 class="heading-small">{% trans 'ADI Journal' %}</h2>
           {% url 'bank_admin:download_adi_journal' as base_download_url %}
@@ -83,9 +84,11 @@
             </ul>
           </div>
         </section>
+        {% endif %}
       </div>
 
       <div class="mtp-compact__row-2">
+        {% if perms.transaction.view_transaction %}
         <section>
           <h2 class="heading-small">{% trans 'Bank statement' %}</h2>
           {% url 'bank_admin:download_bank_statement' as base_download_url %}
@@ -117,7 +120,9 @@
             </ul>
           </div>
         </section>
+        {% endif %}
 
+        {% if perms.disbursement.view_disbursement %}
         <section>
           <h2 class="heading-small">{% trans 'Disbursements' %}</h2>
           {% url 'bank_admin:download_disbursements' as base_download_url %}
@@ -149,6 +154,7 @@
             </ul>
           </div>
         </section>
+        {% endif %}
       </div>
     </div>
   </div>
