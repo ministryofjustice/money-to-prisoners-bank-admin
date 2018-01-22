@@ -229,17 +229,16 @@ OAUTHLIB_INSECURE_TRANSPORT = True
 GOOGLE_ANALYTICS_ID = os.environ.get('GOOGLE_ANALYTICS_ID', None)
 
 REFUND_REFERENCE = 'Refund %s %s'
-REFUND_OUTPUT_FILENAME = 'mtp_accesspay_%d%m%y.txt'
+REFUND_OUTPUT_FILENAME = 'mtp_accesspay_{date:%d%m%y}.txt'
 
 ADI_TEMPLATE_FILEPATH = 'local_files/adi_template.xlsm'
+ADI_CACHED_OUTPUT_FILENAME = 'adi_journal_{date:%d%m%Y}_MTP01.xlsm'
 ADI_OUTPUT_FILENAME = '0210_SSCL_{initials}_{date:%d%m%Y}_MTP01.xlsm'
 
 BANK_STMT_ACCOUNT_NUMBER = os.environ.get('BANK_STMT_ACCOUNT_NUMBER', '')
 BANK_STMT_SORT_CODE = os.environ.get('BANK_STMT_SORT_CODE', '')
 BANK_STMT_CURRENCY = os.environ.get('BANK_STMT_CURRENCY', 'GBP')
-BANK_STMT_OUTPUT_FILENAME = 'NMS{account_number}%d%m%Y.dat'.format(
-    account_number=BANK_STMT_ACCOUNT_NUMBER
-)
+BANK_STMT_OUTPUT_FILENAME = 'NMS{account_number}{date:%d%m%Y}.dat'
 
 DISBURSEMENT_TEMPLATE_FILEPATH = 'local_files/disbursement_template.xlsm'
 DISBURSEMENT_OUTPUT_FILENAME = 'mtp_disbursements_{date:%d%m%Y}.xlsm'
@@ -259,6 +258,9 @@ ZENDESK_CUSTOM_FIELDS = {
 }
 
 SHOW_LANGUAGE_SWITCH = os.environ.get('SHOW_LANGUAGE_SWITCH', 'False') == 'True'
+
+BANK_ADMIN_USERNAME = os.environ.get('BANK_ADMIN_USERNAME', 'refund-bank-admin')
+BANK_ADMIN_PASSWORD = os.environ.get('BANK_ADMIN_PASSWORD', 'refund-bank-admin')
 
 try:
     from .local import *  # noqa

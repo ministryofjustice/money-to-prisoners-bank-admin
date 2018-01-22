@@ -1,52 +1,54 @@
 import csv
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 import io
 import logging
 
 from django.conf import settings
-from mtp_common.auth.api_client import get_api_session
 
 from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
 from .utils import (
-    retrieve_all_transactions, escape_csv_formula, reconcile_for_date
+    retrieve_all_transactions, escape_csv_formula, reconcile_for_date,
+    get_or_create_file
 )
 
 logger = logging.getLogger('mtp')
 
 
-def generate_refund_file_for_date(request, receipt_date):
-    start_date, end_date = reconcile_for_date(request, receipt_date)
+def get_refund_file(api_session, receipt_date):
+    filepath = get_or_create_file(
+        ACCESSPAY_LABEL,
+        receipt_date,
+        generate_refund_file_for_date,
+        f_args=[api_session, receipt_date]
+    )
+    return open(filepath, 'rb')
+
+
+def generate_refund_file_for_date(api_session, receipt_date):
+    start_date, end_date = reconcile_for_date(api_session, receipt_date)
 
     transactions_to_refund = retrieve_all_transactions(
-        request,
+        api_session,
         status='refundable',
         received_at__gte=start_date,
         received_at__lt=end_date
     )
 
-    filedata = generate_refund_file(request, transactions_to_refund)
+    filedata = generate_refund_file(transactions_to_refund)
 
     refunded_transactions = [
         {'id': t['id'], 'refunded': True} for t in transactions_to_refund if not t['refunded']
     ]
 
     # mark transactions as refunded
-    session = get_api_session(request)
-    session.patch('transactions/', json=refunded_transactions)
+    api_session.patch('transactions/', json=refunded_transactions)
 
-    logger.info('{user} downloaded {label} containing {count} records'.format(
-        user=request.user.username,
-        label=ACCESSPAY_LABEL,
-        count=len(transactions_to_refund)
-    ))
-
-    return (date.today().strftime(settings.REFUND_OUTPUT_FILENAME),
-            filedata)
+    return filedata
 
 
-def generate_refund_file(request, transactions):
+def generate_refund_file(transactions):
     if len(transactions) == 0:
         raise EmptyFileError()
 

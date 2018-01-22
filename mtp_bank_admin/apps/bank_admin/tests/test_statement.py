@@ -6,12 +6,13 @@ from django.core.urlresolvers import reverse
 from django.test.client import RequestFactory
 from django.utils.timezone import utc
 import mt940
+from mtp_common.auth.api_client import get_api_session
 from mtp_common.auth.models import MojUser
 import responses
 
 from .utils import (
     get_test_transactions, NO_TRANSACTIONS, ORIGINAL_REF, SENDER_NAME,
-    mock_balance, OPENING_BALANCE, api_url, mock_bank_holidays, ResponsesTestCase
+    mock_balance, OPENING_BALANCE, api_url, mock_bank_holidays, BankAdminTestCase
 )
 from bank_admin.statement import generate_bank_statement
 
@@ -40,12 +41,12 @@ def mock_test_transactions(count=20):
     return test_data
 
 
-class BankStatementTestCase(ResponsesTestCase):
+class BankStatementTestCase(BankAdminTestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
 
-    def get_request(self, **kwargs):
+    def get_api_session(self, **kwargs):
         request = self.factory.get(
             reverse('bank_admin:download_bank_statement'),
             **kwargs
@@ -55,7 +56,7 @@ class BankStatementTestCase(ResponsesTestCase):
             {'first_name': 'John', 'last_name': 'Smith', 'username': 'jsmith'}
         )
         request.session = mock.MagicMock()
-        return request
+        return get_api_session(request)
 
     def _generate_and_parse_bank_statement(self, receipt_date=None):
         responses.add(
@@ -69,7 +70,7 @@ class BankStatementTestCase(ResponsesTestCase):
 
         if receipt_date is None:
             receipt_date = date(2016, 9, 13)
-        _, mt940_file = generate_bank_statement(self.get_request(), receipt_date)
+        mt940_file = generate_bank_statement(self.get_api_session(), receipt_date)
         return mt940.parse(mt940_file), test_data
 
 
@@ -159,7 +160,7 @@ class NoTransactionsTestCase(BankStatementTestCase):
         mock_bank_holidays()
 
         today = date(2016, 9, 13)
-        _, mt940_file = generate_bank_statement(self.get_request(), today)
+        mt940_file = generate_bank_statement(self.get_api_session(), today)
         parsed_file = mt940.parse(mt940_file)
         self.assertEqual(len(parsed_file.transactions), 1)
         self.assertEqual(parsed_file.transactions[0].data, {})

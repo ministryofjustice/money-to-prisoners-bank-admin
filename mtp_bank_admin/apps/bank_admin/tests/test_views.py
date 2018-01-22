@@ -16,7 +16,7 @@ import responses
 from .utils import (
     get_test_transactions, get_test_credits, NO_TRANSACTIONS,
     mock_balance, api_url, mock_bank_holidays, mock_list_prisons,
-    ResponsesTestCase, get_test_disbursements
+    BankAdminTestCase, get_test_disbursements
 )
 from .test_refund import REFUND_TRANSACTIONS, expected_output
 from .test_statement import mock_test_transactions
@@ -24,7 +24,7 @@ from bank_admin.types import PaymentType
 from bank_admin.utils import set_worldpay_cutoff
 
 
-class BankAdminViewTestCase(ResponsesTestCase):
+class BankAdminViewTestCase(BankAdminTestCase):
     @mock.patch('mtp_common.auth.backends.api_client')
     def login(self, mock_api_client):
         mock_api_client.authenticate.return_value = {
@@ -168,7 +168,7 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/plain', response['Content-Type'])
         self.assertEqual(
-            bytes(expected_output(), 'utf8'),
+            expected_output().encode('utf8'),
             response.content
         )
 

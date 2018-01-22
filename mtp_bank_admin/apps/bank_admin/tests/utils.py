@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 import json
 import random
+import shutil
 import tempfile
 from urllib.parse import urljoin, urlparse, parse_qsl
 
@@ -208,7 +209,11 @@ def temp_file(data):
         yield f
 
 
-class ResponsesTestCase(SimpleTestCase):
+class BankAdminTestCase(SimpleTestCase):
+
+    def tearDown(self, *args, **kwargs):
+        super().tearDown(*args, **kwargs)
+        shutil.rmtree('local_files/cache/', ignore_errors=True)
 
     def assert_called_with(self, url, method, expected_data):
         called = False

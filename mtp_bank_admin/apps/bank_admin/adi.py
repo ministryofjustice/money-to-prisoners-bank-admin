@@ -5,16 +5,35 @@ import logging
 
 from django.conf import settings
 
-from . import ADI_JOURNAL_LABEL
-from . import adi_config as config
+from . import adi_config as config, ADI_JOURNAL_LABEL
 from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
 from .utils import (
     Journal, retrieve_all_transactions, retrieve_all_valid_credits,
-    reconcile_for_date, retrieve_prisons, get_full_narrative
+    reconcile_for_date, retrieve_prisons, get_full_narrative,
+    get_or_create_file
 )
 
 logger = logging.getLogger('mtp')
+
+
+def get_adi_journal_file(api_session, receipt_date, user=None):
+    filepath = get_or_create_file(
+        ADI_JOURNAL_LABEL,
+        receipt_date,
+        generate_adi_journal,
+        f_args=[api_session, receipt_date],
+        f_kwargs={'user': user},
+        file_extension='xlsm'
+    )
+    journal = AdiJournal(
+        filepath,
+        receipt_date.strftime('%d%m%y'),
+        config.ADI_JOURNAL_START_ROW,
+        config.ADI_JOURNAL_FIELDS
+    )
+    journal.set_batch_name(user=user)
+    return journal.create_file()
 
 
 class AdiJournal(Journal):
@@ -42,7 +61,14 @@ class AdiJournal(Journal):
             pass  # no static value
         return None
 
-    def finish_journal(self, receipt_date, user):
+    def set_batch_name(self, user=None):
+        batch_date = date.today().strftime(config.ADI_BATCH_DATE_FORMAT)
+        self.journal_ws[config.ADI_BATCH_NAME_CELL] = config.ADI_BATCH_NAME_FORMAT % {
+            'date': batch_date,
+            'initials': user.get_initials() if user else '<initials>',
+        }
+
+    def finish_journal(self, receipt_date, user=None):
         for field in self.fields:
             self.set_field(field, '', extra_style=config.ADI_FINAL_ROW_STYLE)
         bold = {'font': {'name': 'Arial', 'bold': True},
@@ -71,11 +97,7 @@ class AdiJournal(Journal):
         self.next_row(increment=2)
         self.set_field('description', 'Posted by:', style=config._light_blue_style, extra_style=bold)
 
-        batch_date = date.today().strftime(config.ADI_BATCH_DATE_FORMAT)
-        self.journal_ws[config.ADI_BATCH_NAME_CELL] = config.ADI_BATCH_NAME_FORMAT % {
-            'date': batch_date,
-            'initials': user.get_initials() or '<initials>',
-        }
+        self.set_batch_name(user=user)
         accounting_date = date.today()
         if accounting_date.month != receipt_date.month:
             accounting_date = receipt_date
@@ -94,22 +116,22 @@ class AdiJournal(Journal):
         self.next_row()
 
 
-def generate_adi_journal(request, receipt_date):
-    start_date, end_date = reconcile_for_date(request, receipt_date)
+def generate_adi_journal(api_session, receipt_date, user=None):
+    start_date, end_date = reconcile_for_date(api_session, receipt_date)
 
     credits = retrieve_all_valid_credits(
-        request,
+        api_session,
         received_at__gte=start_date,
         received_at__lt=end_date
     )
     refundable_transactions = retrieve_all_transactions(
-        request,
+        api_session,
         status='refundable',
         received_at__gte=start_date,
         received_at__lt=end_date
     )
     rejected_transactions = retrieve_all_transactions(
-        request,
+        api_session,
         status='unidentified',
         received_at__gte=start_date,
         received_at__lt=end_date
@@ -128,7 +150,7 @@ def generate_adi_journal(request, receipt_date):
         config.ADI_JOURNAL_FIELDS
     )
 
-    prisons = retrieve_prisons(request)
+    prisons = retrieve_prisons(api_session)
     bu_lookup = {prison['general_ledger_code']: nomis_id for nomis_id, prison in prisons.items()}
 
     debit_card_batches = defaultdict(int)
@@ -195,18 +217,5 @@ def generate_adi_journal(request, receipt_date):
             reference=reference, date=journal_date
         )
 
-    journal.finish_journal(receipt_date, request.user)
-    created_journal = (
-        settings.ADI_OUTPUT_FILENAME.format(
-            initials=request.user.get_initials() or config.DEFAULT_INITIALS,
-            date=date.today()
-        ),
-        journal.create_file()
-    )
-    logger.info('{user} downloaded {label} containing {count} records'.format(
-        user=request.user.username,
-        label=ADI_JOURNAL_LABEL,
-        count=len(credits) + len(rejected_transactions) + len(refundable_transactions)
-    ))
-
-    return created_journal
+    journal.finish_journal(receipt_date, user)
+    return journal.create_file()

@@ -5,10 +5,11 @@ from unittest import mock
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
 from django.utils.timezone import utc
+from mtp_common.auth.api_client import get_api_session
 from mtp_common.auth.models import MojUser
 import responses
 
-from .utils import NO_TRANSACTIONS, api_url, mock_bank_holidays, ResponsesTestCase
+from .utils import NO_TRANSACTIONS, api_url, mock_bank_holidays, BankAdminTestCase
 from bank_admin import refund
 from bank_admin.exceptions import EmptyFileError
 
@@ -66,14 +67,14 @@ def get_base_ref():
     return datetime.now().strftime('Refund %d%m ')
 
 
-class RefundFileTestCase(ResponsesTestCase):
+class RefundFileTestCase(BankAdminTestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
 
-    def get_request(self, **kwargs):
+    def get_api_session(self, **kwargs):
         request = self.factory.get(
-            reverse('bank_admin:download_refund_file'),
+            reverse('bank_admin:download_bank_statement'),
             **kwargs
         )
         request.user = MojUser(
@@ -81,7 +82,7 @@ class RefundFileTestCase(ResponsesTestCase):
             {'first_name': 'John', 'last_name': 'Smith', 'username': 'jsmith'}
         )
         request.session = mock.MagicMock()
-        return request
+        return get_api_session(request)
 
     def _generate_refund_file(self, transactions=None, refund_date=None):
         responses.add(
@@ -103,8 +104,8 @@ class RefundFileTestCase(ResponsesTestCase):
 
         if refund_date is None:
             refund_date = date(2016, 9, 13)
-        _, csvdata = refund.generate_refund_file_for_date(
-            self.get_request(), refund_date
+        csvdata = refund.generate_refund_file_for_date(
+            self.get_api_session(), refund_date
         )
 
         return csvdata
@@ -172,6 +173,6 @@ class NoTransactionsTestCase(RefundFileTestCase):
         mock_bank_holidays()
 
         with self.assertRaises(EmptyFileError):
-            _, csvdata = refund.generate_refund_file_for_date(
-                self.get_request(), date(2016, 9, 13)
+            refund.generate_refund_file_for_date(
+                self.get_api_session(), date(2016, 9, 13)
             )

@@ -7,18 +7,28 @@ from mt940_writer import Account, Balance, Statement, Transaction, TransactionTy
 
 from . import MT940_STMT_LABEL
 from .utils import (
-    retrieve_all_transactions, get_daily_file_uid,
+    retrieve_all_transactions, get_daily_file_uid, get_or_create_file,
     reconcile_for_date, retrieve_last_balance, get_full_narrative
 )
 
 logger = logging.getLogger('mtp')
 
 
-def generate_bank_statement(request, receipt_date):
-    start_date, end_date = reconcile_for_date(request, receipt_date)
+def get_bank_statement_file(api_session, receipt_date):
+    filepath = get_or_create_file(
+        MT940_STMT_LABEL,
+        receipt_date,
+        generate_bank_statement,
+        f_args=[api_session, receipt_date]
+    )
+    return open(filepath, 'rb')
+
+
+def generate_bank_statement(api_session, receipt_date):
+    start_date, end_date = reconcile_for_date(api_session, receipt_date)
 
     transactions = retrieve_all_transactions(
-        request,
+        api_session,
         received_at__gte=start_date,
         received_at__lt=end_date
     )
@@ -52,7 +62,7 @@ def generate_bank_statement(request, receipt_date):
 
     account = Account(settings.BANK_STMT_ACCOUNT_NUMBER, settings.BANK_STMT_SORT_CODE)
 
-    last_balance = retrieve_last_balance(request, receipt_date)
+    last_balance = retrieve_last_balance(api_session, receipt_date)
     if last_balance:
         opening_date = parse_date(last_balance['date']) or receipt_date
         opening_amount = Decimal(last_balance['closing_balance']) / 100
@@ -69,11 +79,4 @@ def generate_bank_statement(request, receipt_date):
         closing_balance, transaction_records
     )
 
-    logger.info('{user} downloaded {label} containing {count} records'.format(
-        user=request.user.username,
-        label=MT940_STMT_LABEL,
-        count=len(transactions)
-    ))
-
-    return (receipt_date.strftime(settings.BANK_STMT_OUTPUT_FILENAME),
-            str(statement))
+    return str(statement)
