@@ -40,6 +40,7 @@ RUN venv/bin/pip install -r requirements/docker.txt
 
 # add app and build it
 ADD . /app
+RUN set -ex; chown www-data:www-data local_files
 RUN venv/bin/python run.py --requirements-file requirements/docker.txt build
 
 # run uwsgi on 8080
