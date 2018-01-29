@@ -84,7 +84,7 @@ def download_bank_statement(request, receipt_date):
 @handle_file_download_errors
 def download_disbursements(request, receipt_date):
     filedata = disbursements.get_disbursements_file(
-        get_api_session(request), receipt_date
+        get_api_session(request), receipt_date, mark_sent=True
     )
     filename = settings.DISBURSEMENT_OUTPUT_FILENAME.format(date=receipt_date)
 

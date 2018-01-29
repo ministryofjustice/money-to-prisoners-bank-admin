@@ -114,12 +114,3 @@ class DisbursementsFileGenerationTestCase(BankAdminTestCase):
             disbursements.generate_disbursements_journal(
                 self.get_api_session(), date(2016, 9, 13)
             )
-
-    @responses.activate
-    def test_disbursements_marked_as_sent(self):
-        _, data = self._generate_test_disbursements_file(receipt_date=date(2016, 9, 13))
-
-        self.assert_called_with(
-            api_url('disbursements/actions/send/'), responses.POST,
-            {'disbursement_ids': [d['id'] for d in data['results']]}
-        )

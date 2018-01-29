@@ -600,6 +600,8 @@ class DownloadDisbursementsFileViewTestCase(BankAdminViewTestCase):
             status=200
         )
 
+        return disbursements
+
     def test_download_disbursements_requires_login(self):
         self.check_login_redirect(reverse('bank_admin:download_disbursements') +
                                   '?receipt_date=2014-12-11')
@@ -639,6 +641,20 @@ class DownloadDisbursementsFileViewTestCase(BankAdminViewTestCase):
                 logged_at__gte=start_date,
                 logged_at__lt=end_date
             )
+        )
+
+    @responses.activate
+    def test_disbursements_marked_as_sent(self):
+        self.login()
+
+        disbursements = self._set_returned_disbursements()
+
+        self.client.get(reverse('bank_admin:download_disbursements') +
+                        '?receipt_date=2014-12-11')
+
+        self.assert_called_with(
+            api_url('disbursements/actions/send/'), responses.POST,
+            {'disbursement_ids': [d['id'] for d in disbursements['results']]}
         )
 
 

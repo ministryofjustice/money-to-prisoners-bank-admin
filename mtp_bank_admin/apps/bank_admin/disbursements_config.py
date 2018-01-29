@@ -90,7 +90,7 @@ DISBURSEMENT_FIELDS = {
     },
     'invoice_number': {
         'column': 'U',
-        'value': '{id}'
+        'value': '{invoice_number}'
     },
     'description': {
         'column': 'V',
