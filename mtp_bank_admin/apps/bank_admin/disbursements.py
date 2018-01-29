@@ -103,6 +103,7 @@ def generate_disbursements_journal(api_session, date):
             payment_method=PAYMENT_METHODS[disbursement['method']],
             date=date.strftime('%d/%m/%Y'),
             description='',
+            invoice_number=1000000 + int(disbursement['id']),
             **disbursement
         )
 
