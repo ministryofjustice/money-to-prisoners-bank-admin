@@ -22,6 +22,8 @@ class FileGenerationCommand(BaseCommand):
                 raise CommandError('Date %s cannot be parsed, use YYYY-MM-DD format' % date)
         else:
             workdays = WorkdayChecker()
+            if not workdays.is_workday(date.today()):
+                return
             receipt_date = workdays.get_previous_workday(date.today())
 
         api_session = api_client.get_authenticated_api_session(
