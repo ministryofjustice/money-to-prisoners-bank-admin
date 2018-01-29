@@ -1,7 +1,8 @@
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 import logging
-from unittest import mock, skip
+import os
+from unittest import mock, skipUnless
 from urllib.parse import quote_plus
 
 from django.test.client import RequestFactory
@@ -144,7 +145,7 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
         return expected_debit_rows, expected_credit_rows
 
     @responses.activate
-    @skip('Enable to generate an example file for inspection')
+    @skipUnless(os.environ.get('GENERATE_SAMPLES'), 'Enable to generate an example file for inspection')
     def test_adi_journal_generation(self):
         exceldata, _ = self._generate_test_adi_journal()
         with open('test_journal.xlsm', 'wb+') as f:

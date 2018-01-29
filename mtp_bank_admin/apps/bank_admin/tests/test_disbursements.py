@@ -1,6 +1,7 @@
 from datetime import date
 import logging
-from unittest import mock, skip
+import os
+from unittest import mock, skipUnless
 
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
@@ -72,10 +73,10 @@ class DisbursementsFileGenerationTestCase(BankAdminTestCase):
         return exceldata, test_disbursements
 
     @responses.activate
-    @skip('Enable to generate an example file for inspection')
+    @skipUnless(os.environ.get('GENERATE_SAMPLES'), 'Enable to generate an example file for inspection')
     def test_disbursements_file_generation(self):
         exceldata, _ = self._generate_test_disbursements_file()
-        with open('test_disbursements', 'wb+') as f:
+        with open('test_disbursements.xlsm', 'wb+') as f:
             f.write(exceldata)
 
     @responses.activate
