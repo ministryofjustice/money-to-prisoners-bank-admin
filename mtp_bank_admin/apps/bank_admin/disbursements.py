@@ -15,7 +15,7 @@ PAYMENT_METHODS = {
 }
 
 
-def get_disbursements_file(api_session, receipt_date):
+def get_disbursements_file(api_session, receipt_date, mark_sent=False):
     filepath = get_or_create_file(
         DISBURSEMENTS_LABEL,
         receipt_date,
@@ -23,6 +23,8 @@ def get_disbursements_file(api_session, receipt_date):
         f_args=[api_session, receipt_date],
         file_extension='xlsm'
     )
+    if mark_sent:
+        mark_as_sent(api_session, receipt_date)
     return open(filepath, 'rb')
 
 
@@ -42,11 +44,19 @@ def retrieve_all_disbursements(api_session, **kwargs):
         api_session, 'disbursements/', **kwargs)
 
 
-def mark_as_sent(api_session, disbursements):
-    api_session.post(
-        'disbursements/actions/send/',
-        json={'disbursement_ids': [d['id'] for d in disbursements]}
+def mark_as_sent(api_session, date):
+    start_date, end_date = get_start_and_end_date(date)
+    disbursements = retrieve_all_disbursements(
+        api_session,
+        log__action='confirmed',
+        logged_at__gte=start_date,
+        logged_at__lt=end_date
     )
+    if len(disbursements) != 0:
+        api_session.post(
+            'disbursements/actions/send/',
+            json={'disbursement_ids': [d['id'] for d in disbursements]}
+        )
 
 
 def generate_disbursements_journal(api_session, date):
@@ -95,7 +105,5 @@ def generate_disbursements_journal(api_session, date):
             description='',
             **disbursement
         )
-
-    mark_as_sent(api_session, disbursements)
 
     return journal.create_file()
