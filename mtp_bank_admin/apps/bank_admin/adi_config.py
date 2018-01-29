@@ -1,6 +1,6 @@
 from openpyxl import styles
 
-ADI_JOURNAL_SHEET = 'Sheet1'
+ADI_JOURNAL_SHEET = 'WebADI'
 
 
 ADI_DATE_CELL = 'E12'
