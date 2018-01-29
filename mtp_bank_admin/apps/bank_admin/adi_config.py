@@ -27,8 +27,8 @@ _white_style = {
 
 _light_blue_style = {
     'fill': {
-        'start_color': 'E6EFF8',
-        'end_color': 'E6EFF8',
+        'start_color': 'F7F9FC',
+        'end_color': 'F7F9FC',
         'fill_type': 'solid',
     },
     'font': {
@@ -43,8 +43,8 @@ ADI_FINAL_ROW_STYLE = {
         'bottom': styles.Side(style='thin', color='C7C7C7'),
     },
     'fill': {
-        'start_color': 'A1C2E1',
-        'end_color': 'A1C2E1',
+        'start_color': 'F2F4F7',
+        'end_color': 'F2F4F7',
         'fill_type': 'solid',
     },
     'font': {
@@ -179,28 +179,8 @@ ADI_JOURNAL_FIELDS = {
             **_white_style
         )
     },
-    'line_dff_1': {
-        'column': 'M',
-        'style': dict(
-            border={
-                'left': styles.Side(style='thin', color='C7C7C7'),
-                'right': styles.Side(style='thin', color='C7C7C7')
-            },
-            **_white_style
-        )
-    },
-    'line_dff_2': {
-        'column': 'N',
-        'style': dict(
-            border={
-                'left': styles.Side(style='thin', color='C7C7C7'),
-                'right': styles.Side(style='thin', color='C7C7C7')
-            },
-            **_white_style
-        )
-    },
     'resolution': {
-        'column': 'O',
+        'column': 'M',
         'style': dict(
             _light_blue_style,
             font={
@@ -213,7 +193,7 @@ ADI_JOURNAL_FIELDS = {
         )
     },
     'messages': {
-        'column': 'Q',
+        'column': 'O',
         'style': dict(
             _light_blue_style,
             border={
