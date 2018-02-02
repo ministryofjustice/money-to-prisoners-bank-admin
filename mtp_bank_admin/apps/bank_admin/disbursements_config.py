@@ -10,7 +10,7 @@ BANK_DETAILS_FIELDS = [
 DISBURSEMENT_FIELDS = {
     'operating_unit': {
         'column': 'A',
-        'value': 'MOJ'
+        'value': 'NMS'
     },
     'supplier_number': {
         'column': 'B',
