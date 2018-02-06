@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'django.contrib.auth',
 )
 PROJECT_APPS = (
+    'anymail',
     'mtp_common',
     'widget_tweaks',
     'bank_admin',
@@ -256,6 +257,18 @@ ZENDESK_CUSTOM_FIELDS = {
     'user_agent': 23791776,
     'contact_email': 30769508,
 }
+
+EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
+ANYMAIL = {
+    'MAILGUN_API_KEY': os.environ.get('MAILGUN_ACCESS_KEY', ''),
+    'MAILGUN_SENDER_DOMAIN': os.environ.get('MAILGUN_SERVER_NAME', ''),
+    'SEND_DEFAULTS': {
+        'tags': [APP, ENVIRONMENT],
+    },
+}
+MAILGUN_FROM_ADDRESS = os.environ.get('MAILGUN_FROM_ADDRESS', '')
+if MAILGUN_FROM_ADDRESS:
+    DEFAULT_FROM_EMAIL = MAILGUN_FROM_ADDRESS
 
 SHOW_LANGUAGE_SWITCH = os.environ.get('SHOW_LANGUAGE_SWITCH', 'False') == 'True'
 
