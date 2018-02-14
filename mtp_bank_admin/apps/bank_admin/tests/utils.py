@@ -99,9 +99,16 @@ def get_test_transactions(trans_type=None, count=20):
 def get_test_disbursements(count=20):
     disbursements = []
     for i in range(count):
+        disbursement_id = i + 95
+        invoice_number = 1000000 + disbursement_id
+        if invoice_number < 1000100:
+            invoice_number = str(invoice_number)
+        else:
+            invoice_number = 'PMD%s' % invoice_number
         disbursement = {
-            'id': i,
+            'id': disbursement_id,
             'amount': random.randint(500, 5000),
+            'invoice_number': invoice_number,
             'prisoner': 'A' + str(random.randint(1000, 9999)) + 'AE',
             'recipient_first_name': 'Stan',
             'recipient_last_name': 'White',
