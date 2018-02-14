@@ -89,17 +89,20 @@ class DisbursementsFileGenerationTestCase(BankAdminTestCase):
                 disbursements_config.DISBURSEMENTS_JOURNAL_SHEET)
 
             row = disbursements_config.DISBURSEMENTS_JOURNAL_START_ROW
-            disbursement_ref = 1
             lines = 0
+            invoice_numbers = []
             while True:
                 disbursement_ref = get_cell_value(journal_ws, 'unique_payee_reference', row)
-                if disbursement_ref:
-                    lines += 1
-                    row += 1
-                else:
+                if not disbursement_ref:
                     break
+                invoice_numbers.append(get_cell_value(journal_ws, 'invoice_number', row))
+                lines += 1
+                row += 1
 
-            self.assertEqual(lines, len(test_data['results']))
+        self.assertEqual(lines, len(test_data['results']))
+        expected_invoice_numbers = [str(i) for i in range(1000095, 1000100)] + \
+                                   ['PMD%d' % i for i in range(1000100, 1000115)]
+        self.assertListEqual(invoice_numbers, expected_invoice_numbers)
 
     @responses.activate
     def test_no_transactions_raises_error(self):
