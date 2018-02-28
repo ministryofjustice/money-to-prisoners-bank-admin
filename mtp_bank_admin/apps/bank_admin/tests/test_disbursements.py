@@ -85,8 +85,7 @@ class DisbursementsFileGenerationTestCase(BankAdminTestCase):
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(
-                disbursements_config.DISBURSEMENTS_JOURNAL_SHEET)
+            journal_ws = wb[disbursements_config.DISBURSEMENTS_JOURNAL_SHEET]
 
             row = disbursements_config.DISBURSEMENTS_JOURNAL_START_ROW
             lines = 0

@@ -158,7 +158,7 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name('130916')
+            journal_ws = wb['130916']
             row = adi_config.ADI_JOURNAL_START_ROW
 
             current_balance = 0
@@ -183,7 +183,7 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name('130916')
+            journal_ws = wb['130916']
             row = adi_config.ADI_JOURNAL_START_ROW
 
             expected_debit_rows, expected_credit_rows = self._get_expected_number_of_rows(
@@ -224,7 +224,7 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name('130916')
+            journal_ws = wb['130916']
             row = adi_config.ADI_JOURNAL_START_ROW
 
             refund_bu_code = adi_config.ADI_JOURNAL_FIELDS['cost_centre']['value']['refund']['credit']
@@ -297,10 +297,10 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name('130916')
+            journal_ws = wb['130916']
 
             self.assertEqual(
-                list(wb.get_named_range('BNE_UPLOAD').destinations),
+                list(wb.defined_names['BNE_UPLOAD'].destinations),
                 [(
                     journal_ws.title,
                     '$B$%(start)s:$B$%(end)s' % {
@@ -316,7 +316,7 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name('130916')
+            journal_ws = wb['130916']
             self.assertTrue('JS' in journal_ws[adi_config.ADI_BATCH_NAME_CELL].value)
 
     @responses.activate
@@ -331,7 +331,7 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(receipt_date.strftime('%d%m%y'))
+            journal_ws = wb[receipt_date.strftime('%d%m%y')]
             self.assertEqual(
                 processing_date.strftime(adi_config.ADI_DATE_FORMAT),
                 journal_ws[adi_config.ADI_DATE_CELL].value
@@ -349,7 +349,7 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
-            journal_ws = wb.get_sheet_by_name(receipt_date.strftime('%d%m%y'))
+            journal_ws = wb[receipt_date.strftime('%d%m%y')]
             self.assertEqual(
                 receipt_date.strftime(adi_config.ADI_DATE_FORMAT),
                 journal_ws[adi_config.ADI_DATE_CELL].value
