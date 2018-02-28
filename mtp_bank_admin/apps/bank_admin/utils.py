@@ -138,7 +138,7 @@ class Journal():
 
     def __init__(self, template_path, sheet_name, start_row, fields):
         self.wb = load_workbook(template_path, keep_vba=True)
-        self.journal_ws = self.wb.get_sheet_by_name(sheet_name)
+        self.journal_ws = self.wb[sheet_name]
 
         self.start_row = start_row
         self.current_row = start_row
