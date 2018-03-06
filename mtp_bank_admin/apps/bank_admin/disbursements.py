@@ -102,7 +102,7 @@ def generate_disbursements_journal(api_session, date):
             prison_ledger_code=prisons[disbursement['prison']]['general_ledger_code'],
             payment_method=PAYMENT_METHODS[disbursement['method']],
             date=date.strftime('%d/%m/%Y'),
-            description='',
+            description=disbursement.get('remittance_description') or '',
             **disbursement
         )
 
