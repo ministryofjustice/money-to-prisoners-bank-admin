@@ -10,41 +10,49 @@ from . import ACCESSPAY_LABEL
 from .exceptions import EmptyFileError
 from .utils import (
     retrieve_all_transactions, escape_csv_formula, reconcile_for_date,
-    get_or_create_file
+    get_or_create_file, get_start_and_end_date
 )
 
 logger = logging.getLogger('mtp')
 
 
-def get_refund_file(api_session, receipt_date):
+def get_refund_file(api_session, receipt_date, mark_refunded=False):
     filepath = get_or_create_file(
         ACCESSPAY_LABEL,
         receipt_date,
         generate_refund_file_for_date,
         f_args=[api_session, receipt_date]
     )
+    if mark_refunded:
+        mark_as_refunded(api_session, receipt_date)
     return open(filepath, 'rb')
 
 
-def generate_refund_file_for_date(api_session, receipt_date):
-    start_date, end_date = reconcile_for_date(api_session, receipt_date)
-
+def mark_as_refunded(api_session, date):
+    start_date, end_date = get_start_and_end_date(date)
     transactions_to_refund = retrieve_all_transactions(
         api_session,
         status='refundable',
         received_at__gte=start_date,
         received_at__lt=end_date
     )
+    if len(transactions_to_refund) != 0:
+        refunded_transactions = [
+            {'id': t['id'], 'refunded': True}
+            for t in transactions_to_refund if not t['refunded']
+        ]
+        api_session.patch('transactions/', json=refunded_transactions)
 
+
+def generate_refund_file_for_date(api_session, receipt_date):
+    start_date, end_date = reconcile_for_date(api_session, receipt_date)
+    transactions_to_refund = retrieve_all_transactions(
+        api_session,
+        status='refundable',
+        received_at__gte=start_date,
+        received_at__lt=end_date
+    )
     filedata = generate_refund_file(transactions_to_refund)
-
-    refunded_transactions = [
-        {'id': t['id'], 'refunded': True} for t in transactions_to_refund if not t['refunded']
-    ]
-
-    # mark transactions as refunded
-    api_session.patch('transactions/', json=refunded_transactions)
-
     return filedata
 
 

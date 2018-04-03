@@ -17,7 +17,9 @@ logger = logging.getLogger('mtp')
 @filter_by_receipt_date
 @handle_file_download_errors
 def download_refund_file(request, receipt_date):
-    csvfile = refund.get_refund_file(get_api_session(request), receipt_date)
+    csvfile = refund.get_refund_file(
+        get_api_session(request), receipt_date, mark_refunded=True
+    )
     filename = settings.REFUND_OUTPUT_FILENAME.format(date=date.today())
 
     response = HttpResponse(csvfile, content_type='text/plain')
