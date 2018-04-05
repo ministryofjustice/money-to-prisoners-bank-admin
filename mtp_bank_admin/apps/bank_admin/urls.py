@@ -6,7 +6,7 @@ from . import views
 
 app_name = 'bank_admin'
 urlpatterns = [
-    url(r'^$', login_required(TemplateView.as_view(template_name='bank_admin/dashboard.html')), name='dashboard'),
+    url(r'^$', login_required(views.DashboardView.as_view()), name='dashboard'),
 
     url(r'^refund_pending/download/$', views.download_refund_file, name='download_refund_file'),
     url(r'^adi/download/$', views.download_adi_journal, name='download_adi_journal'),

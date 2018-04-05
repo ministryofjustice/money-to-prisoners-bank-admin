@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime, time, timedelta
+from itertools import count, islice
 import time as systime
 import os
 
@@ -125,6 +126,25 @@ class WorkdayChecker:
         while not self.is_workday(previous_day):
             previous_day -= timedelta(days=1)
         return previous_day
+
+
+def get_preceding_workday_list(number_of_days, offset=0):
+    """
+    Returns a list of weekdays counting backwards from today
+    :param number_of_days: number of weekdays to include in total
+    :param offset: number of days ago to start from; if 0 today is included
+    """
+
+    def day_generator():
+        current = now().date()
+        for day in count():
+            yield current - timedelta(days=day)
+    days = day_generator()
+    checker = WorkdayChecker()
+    days = filter(checker.is_workday, days)
+    days = islice(days, offset, number_of_days + offset)
+
+    return list(days)
 
 
 class Journal():

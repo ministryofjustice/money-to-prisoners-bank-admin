@@ -124,14 +124,6 @@ class ValidTransactionsTestCase(RefundFileTestCase):
                 'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()
             }
         )
-        self.assert_called_with(
-            api_url('/transactions/'), responses.PATCH,
-            [
-                {'id': '3', 'refunded': True},
-                {'id': '4', 'refunded': True},
-                {'id': '5', 'refunded': True}
-            ]
-        )
 
         self.assertEqual(expected_output(), csvdata)
 
