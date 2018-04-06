@@ -20,8 +20,20 @@ from .utils import (
 )
 from .test_refund import REFUND_TRANSACTIONS, expected_output
 from .test_statement import mock_test_transactions
+from bank_admin import (
+    ADI_JOURNAL_LABEL, ACCESSPAY_LABEL, MT940_STMT_LABEL, DISBURSEMENTS_LABEL
+)
 from bank_admin.types import PaymentType
 from bank_admin.utils import set_worldpay_cutoff
+
+
+def mock_missing_download_check():
+    mock_bank_holidays()
+    responses.add(
+        responses.GET,
+        api_url('/file-downloads/missing/'),
+        json={'missing_dates': []}
+    )
 
 
 class BankAdminViewTestCase(BankAdminTestCase):
@@ -88,6 +100,7 @@ class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context['form'].is_valid())
 
+    @responses.activate
     @mock.patch('mtp_common.auth.backends.api_client')
     def test_can_see_refund_download_with_perm(self, mock_api_client):
         mock_api_client.authenticate.return_value = {
@@ -100,6 +113,7 @@ class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
                 'permissions': ['transaction.view_bank_details_transaction']
             }
         }
+        mock_missing_download_check()
 
         response = self.client.post(
             reverse('login'),
@@ -135,17 +149,7 @@ class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
 
 class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
 
-    def test_dashboard_requires_login(self):
-        self.check_login_redirect(reverse('bank_admin:dashboard'))
-
-    def test_download_refund_file_requires_login(self):
-        self.check_login_redirect(reverse('bank_admin:download_refund_file'))
-
-    @responses.activate
-    def test_download_refund_file(self):
-        self.login()
-
-        mock_bank_holidays()
+    def _set_returned_refunds(self):
         responses.add(
             responses.POST,
             api_url('/transactions/reconcile/'),
@@ -161,6 +165,26 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
             api_url('/transactions/'),
             status=200
         )
+        responses.add(
+            responses.POST,
+            api_url('/file-downloads/'),
+            status=200
+        )
+        mock_bank_holidays()
+
+        return REFUND_TRANSACTIONS
+
+    def test_dashboard_requires_login(self):
+        self.check_login_redirect(reverse('bank_admin:dashboard'))
+
+    def test_download_refund_file_requires_login(self):
+        self.check_login_redirect(reverse('bank_admin:download_refund_file'))
+
+    @responses.activate
+    def test_download_refund_file(self):
+        self.login()
+
+        self._set_returned_refunds()
 
         response = self.client.get(reverse('bank_admin:download_refund_file') +
                                    '?receipt_date=2014-12-11')
@@ -176,36 +200,7 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
     def test_accesspay_queries_by_date(self):
         self.login()
 
-        responses.add(
-            responses.POST,
-            api_url('/transactions/reconcile/'),
-            status=200
-        )
-        responses.add(
-            responses.GET,
-            api_url('/transactions/'),
-            json={
-                'count': 1,
-                'results': [{
-                    'id': '3',
-                    'amount': 2568,
-                    'sender_account_number': '22222222',
-                    'sender_sort_code': '111111',
-                    'sender_name': 'John Doe',
-                    'ref_code': '900001',
-                    'reference': 'for birthday',
-                    'credited': False,
-                    'refunded': False,
-                    'received_at': '2014-11-12'
-                }]
-            }
-        )
-        responses.add(
-            responses.PATCH,
-            api_url('/transactions/'),
-            status=200
-        )
-        mock_bank_holidays()
+        self._set_returned_refunds()
 
         self.client.get(
             reverse('bank_admin:download_refund_file') +
@@ -221,6 +216,27 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
                 received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=utc)),
                 received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=utc))
             )
+        )
+        self.assert_called_with(
+            api_url('/file-downloads/'), responses.POST,
+            dict(
+                label=ACCESSPAY_LABEL,
+                date='2014-11-12'
+            )
+        )
+
+    @responses.activate
+    def test_disbursements_marked_as_sent(self):
+        self.login()
+
+        refunds = self._set_returned_refunds()
+
+        self.client.get(reverse('bank_admin:download_refund_file') +
+                        '?receipt_date=2014-12-11')
+
+        self.assert_called_with(
+            api_url('transactions/'), responses.PATCH,
+            [{'id': r['id'], 'refunded': True} for r in refunds['results']]
         )
 
 
@@ -268,6 +284,12 @@ class DownloadRefundFileErrorViewTestCase(BankAdminViewTestCase):
             api_url('/transactions/'),
             json=NO_TRANSACTIONS
         )
+        responses.add(
+            responses.POST,
+            api_url('/file-downloads/'),
+            status=200
+        )
+        mock_missing_download_check()
 
         response = self.client.get(
             reverse('bank_admin:download_refund_file') + '?receipt_date=2014-12-11',
@@ -325,6 +347,11 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
             ),
             json=rejected_transactions,
             match_querystring=True
+        )
+        responses.add(
+            responses.POST,
+            api_url('/file-downloads/'),
+            status=200
         )
         mock_bank_holidays()
 
@@ -394,6 +421,14 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
             )
         )
 
+        self.assert_called_with(
+            api_url('/file-downloads/'), responses.POST,
+            dict(
+                label=ADI_JOURNAL_LABEL,
+                date='2014-12-11'
+            )
+        )
+
 
 class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
 
@@ -445,6 +480,12 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
             api_url('/transactions/'),
             json=NO_TRANSACTIONS
         )
+        responses.add(
+            responses.POST,
+            api_url('/file-downloads/'),
+            status=200
+        )
+        mock_missing_download_check()
 
         response = self.client.get(reverse('bank_admin:download_adi_journal') +
                                    '?receipt_date=2014-12-11',
@@ -488,6 +529,11 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
         )
         mock_test_transactions()
         mock_balance()
+        responses.add(
+            responses.POST,
+            api_url('/file-downloads/'),
+            status=200
+        )
         mock_bank_holidays()
 
     def test_download_bank_statement_requires_login(self):
@@ -524,6 +570,13 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
                 offset='0',
                 received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=utc)),
                 received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=utc))
+            )
+        )
+        self.assert_called_with(
+            api_url('/file-downloads/'), responses.POST,
+            dict(
+                label=MT940_STMT_LABEL,
+                date='2014-11-12'
             )
         )
 
@@ -599,6 +652,11 @@ class DownloadDisbursementsFileViewTestCase(BankAdminViewTestCase):
             api_url('/disbursements/actions/send/'),
             status=200
         )
+        responses.add(
+            responses.POST,
+            api_url('/file-downloads/'),
+            status=200
+        )
 
         return disbursements
 
@@ -640,6 +698,13 @@ class DownloadDisbursementsFileViewTestCase(BankAdminViewTestCase):
                 log__action='confirmed',
                 logged_at__gte=start_date,
                 logged_at__lt=end_date
+            )
+        )
+        self.assert_called_with(
+            api_url('/file-downloads/'), responses.POST,
+            dict(
+                label=DISBURSEMENTS_LABEL,
+                date='2014-12-11'
             )
         )
 
@@ -692,7 +757,13 @@ class DownloadDisbursementsFileErrorViewTestCase(BankAdminViewTestCase):
             api_url('/disbursements/'),
             json=NO_TRANSACTIONS
         )
+        responses.add(
+            responses.POST,
+            api_url('/file-downloads/'),
+            status=200
+        )
         mock_list_prisons()
+        mock_missing_download_check()
 
         response = self.client.get(reverse('bank_admin:download_disbursements') +
                                    '?receipt_date=2014-12-11',
