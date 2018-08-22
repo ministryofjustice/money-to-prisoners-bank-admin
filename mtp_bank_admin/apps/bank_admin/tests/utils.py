@@ -206,7 +206,16 @@ def base_urls_equal(url1, url2):
 
 def get_query_dict(url):
     parsed_url = urlparse(url)
-    return dict(parse_qsl(parsed_url.query))
+    query_params = parse_qsl(parsed_url.query)
+    query_dict = {}
+    for key, value in query_params:
+        if key not in query_dict:
+            query_dict[key] = value
+        elif type(query_dict[key]) == list:
+            query_dict[key].append(value)
+        else:
+            query_dict[key] = [query_dict[key], value]
+    return query_dict
 
 
 @contextmanager

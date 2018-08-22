@@ -48,6 +48,7 @@ def mark_as_sent(api_session, date):
     start_date, end_date = get_start_and_end_date(date)
     disbursements = retrieve_all_disbursements(
         api_session,
+        resolution=['confirmed', 'sent'],
         log__action='confirmed',
         logged_at__gte=start_date,
         logged_at__lt=end_date
@@ -63,6 +64,7 @@ def generate_disbursements_journal(api_session, date):
     start_date, end_date = get_start_and_end_date(date)
     disbursements = retrieve_all_disbursements(
         api_session,
+        resolution=['confirmed', 'sent'],
         log__action='confirmed',
         logged_at__gte=start_date,
         logged_at__lt=end_date

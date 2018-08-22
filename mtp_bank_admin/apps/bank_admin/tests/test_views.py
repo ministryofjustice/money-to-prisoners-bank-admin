@@ -695,6 +695,7 @@ class DownloadDisbursementsFileViewTestCase(BankAdminViewTestCase):
             dict(
                 limit=str(settings.REQUEST_PAGE_SIZE),
                 offset='0',
+                resolution=['confirmed', 'sent'],
                 log__action='confirmed',
                 logged_at__gte=start_date,
                 logged_at__lt=end_date
