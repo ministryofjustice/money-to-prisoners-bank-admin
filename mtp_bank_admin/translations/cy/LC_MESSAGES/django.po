@@ -85,11 +85,6 @@ msgstr "Cyfriflen banc"
 msgid "Previous bank statements"
 msgstr "Cyfriflenni banc blaenorol"
 
-#: templates/base.html:12 templates/base.html:13
-#: templates/mtp_auth/login.html:5
-msgid "Bank Admin"
-msgstr "Banc - gweinyddol"
-
 #: templates/base.html:23 templates/base.html:32
 msgid "Get help"
 msgstr ""
