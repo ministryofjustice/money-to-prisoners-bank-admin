@@ -41,7 +41,8 @@ PROJECT_APPS = (
     'mtp_common',
     'widget_tweaks',
     'bank_admin',
-    'zendesk_tickets'
+    'zendesk_tickets',
+    'disbursements',
 )
 INSTALLED_APPS += PROJECT_APPS
 
@@ -274,6 +275,13 @@ SHOW_LANGUAGE_SWITCH = os.environ.get('SHOW_LANGUAGE_SWITCH', 'False') == 'True'
 
 BANK_ADMIN_USERNAME = os.environ.get('BANK_ADMIN_USERNAME', 'refund-bank-admin')
 BANK_ADMIN_PASSWORD = os.environ.get('BANK_ADMIN_PASSWORD', 'refund-bank-admin')
+
+NOMIS_API_BASE_URL = os.environ.get('NOMIS_API_BASE_URL', '')
+NOMIS_API_CLIENT_TOKEN = os.environ.get('NOMIS_API_CLIENT_TOKEN', '')
+NOMIS_API_PRIVATE_KEY = os.environ.get('NOMIS_API_PRIVATE_KEY', '').encode('utf8').decode('unicode_escape')
+
+TOKEN_RETRIEVAL_USER = os.environ.get('TOKEN_RETRIEVAL_USER', '_token_retrieval')
+TOKEN_RETRIEVAL_PASSWORD = os.environ.get('TOKEN_RETRIEVAL_PASSWORD', '_token_retrieval')
 
 try:
     from .local import *  # noqa

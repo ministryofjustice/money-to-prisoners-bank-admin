@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load dates %}
+{% load mtp_common %}
+{% load disbursements %}
+
+{% block page_title %}{% trans 'Cancel disbursement' %} – {{ block.super }}{% endblock %}
+
+{% block inner_content %}
+  <header>
+    <h1 class="heading-xlarge">{% trans 'Cancel disbursements' %}</h1>
+  </header>
+
+  {% for message in messages %}
+    <div class="mtp-message mtp-message--{{ message.level_tag }}">
+      {{ message }}
+    </div>
+    <br/>
+  {% endfor %}
+
+  <p>
+    {% trans 'Enter the invoice number of the disbursement you wish to cancel.' %}
+  </p>
+
+  <form method="post" class="print-hidden">
+    {% csrf_token %}
+    {% include 'mtp_common/forms/error-summary.html' with form=form only %}
+
+    {% include 'mtp_common/forms/field.html' with field=form.invoice_number %}
+
+    <p>
+      <input id="id_submit_btn" class="button" type="submit" value="{% trans 'Next' %}">
+    </p>
+  </form>
+
+  <h3 class="heading-medium">{% trans 'Previously cancelled disbursements' %}</h3>
+
+  <table class="mtp-table">
+    <thead>
+      <tr>
+        <th>{% trans 'Invoice number' %}</th>
+        <th>{% trans 'Amount' %}</th>
+        <th>{% trans 'Created' %}</th>
+        <th>{% trans 'Cancelled' %}</th>
+        <th>{% trans 'Notes' %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for disbursement in cancelled_disbursements %}
+        <tr>
+          <td>{{ disbursement.invoice_number }}</td>
+          <td>{{ disbursement.amount|currency }}</td>
+          <td>
+            {% for log in disbursement.log_set %}
+              {% if log.action == 'confirmed' %}
+                {{ log.created|parse_date_field }}
+              {% endif %}
+            {% endfor %}
+          </td>
+          <td>
+            {% for log in disbursement.log_set %}
+              {% if log.action == 'cancelled' %}
+                {{ log.created|parse_date_field }}, {{ log.user.first_name }} {{ log.user.last_name }}
+              {% endif %}
+            {% endfor %}
+          </td>
+          <td>
+            {% for comment in disbursement.comments %}
+              {% if comment.category == 'cancel' %}
+                {{ comment.comment }}<br/>
+              {% endif %}
+            {% endfor %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7">{% trans 'No matching disbursements found' %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p>
+    {% page_list page=page page_count=page_count %}
+  </p>
+{% endblock %}

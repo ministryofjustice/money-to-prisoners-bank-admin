@@ -55,6 +55,7 @@ urlpatterns = i18n_patterns(
     ),
 
     url(r'^', include('bank_admin.urls', namespace='bank_admin',)),
+    url(r'^', include('disbursements.urls', namespace='disbursements',)),
     url(r'^', include('feedback.urls')),
     url(r'^', include('mtp_common.user_admin.urls')),
 

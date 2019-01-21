@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load dates %}
+{% load mtp_common %}
+{% load disbursements %}
+
+{% block page_title %}{% trans 'Cancel disbursement' %} – {{ block.super }}{% endblock %}
+
+{% block inner_content %}
+  <header>
+    <h1 class="heading-xlarge">{% trans 'Cancel disbursement' %}</h1>
+  </header>
+
+  <form method="post" class="print-hidden">
+    {% csrf_token %}
+    {% include 'mtp_common/forms/error-summary.html' with form=form only %}
+
+    <div class="grid-row">
+      <div class="column-quarter"><strong>{% trans 'Invoice number' %}</strong></div>
+      <div class="column-quarter">{{ disbursement.invoice_number }}</div>
+    </div>
+
+    <div class="grid-row">
+      <div class="column-quarter"><strong>{% trans 'Amount' %}</strong></div>
+      <div class="column-quarter">{{ disbursement.amount|currency }}</div>
+    </div>
+
+    <div class="grid-row">
+      <div class="column-quarter"><strong>{% trans 'Created' %}</strong></div>
+      <div class="column-quarter">
+        {% for log in disbursement.log_set %}
+          {% if log.action == 'confirmed' %}
+            {{ log.created|parse_date_field }}
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="grid-row">
+      <div class="column-quarter"><strong>{% trans 'Recipient' %}</strong></div>
+      <div class="column-quarter">{{ disbursement.recipient_first_name }} {{ disbursement.recipient_last_name }}</div>
+    </div>
+
+    <br/>
+
+    <p>
+      {% trans 'Select the reason for cancelling this disbursement.' %}
+      {% trans 'This will refund the money back to the prisoner’s bank account, and inform the prison staff of the cancellation.' %}
+    </p>
+
+    <span class="hidden">
+      {% include 'mtp_common/forms/field.html' with field=form.invoice_number value=view.kwargs.invoice_number %}
+    </span>
+
+    {% include 'mtp_common/forms/radio-field.html' with field=form.reason %}
+
+    <p>
+      <input id="id_submit_btn" class="button" type="submit" value="{% trans 'Cancel disbursement' %}">
+    </p>
+  </form>
+{% endblock %}
