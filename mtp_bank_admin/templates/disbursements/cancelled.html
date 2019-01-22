@@ -10,6 +10,12 @@
     <h1 class="heading-xlarge">{% trans 'Cancelled disbursements' %}</h1>
   </header>
 
+  <div class="print-hidden mtp-export-link">
+    <a href="{% url 'disbursements:cancelled-disbursements-export' %}">{% trans 'Download as spreadsheet' %}</a>
+  </div>
+
+  <div style="clear: both;"></div>
+
   <table class="mtp-table">
     <thead>
       <tr>

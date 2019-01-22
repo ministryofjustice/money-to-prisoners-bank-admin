@@ -19,4 +19,9 @@ urlpatterns = [
         login_required(views.CancelledDisbursementsView.as_view()),
         name='cancelled-disbursements'
     ),
+    url(
+        r'^cancelled-disbursements/export/$',
+        login_required(views.export_cancelled_disbursements),
+        name='cancelled-disbursements-export'
+    ),
 ]

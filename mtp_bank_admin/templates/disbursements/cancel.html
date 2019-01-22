@@ -17,7 +17,11 @@
     <br/>
   {% endfor %}
 
-  <form method="post" class="print-hidden">
+  <p>
+    {% trans 'Cancelling a disbursement will refund the money to the prisoner’s NOMIS account, and notify the prison that the disbursement failed.' %}
+  </p>
+
+  <form method="post">
     {% csrf_token %}
     {% include 'mtp_common/forms/error-summary.html' with form=form only %}
     {% include 'mtp_common/forms/field.html' with field=form.invoice_number %}
