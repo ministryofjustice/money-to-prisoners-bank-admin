@@ -11,7 +11,7 @@ logger = logging.getLogger('mtp')
 
 
 class ChooseDisbursementForm(GARequestErrorReportingMixin, forms.Form):
-    invoice_number = forms.CharField()
+    invoice_number = forms.CharField(label=_('Invoice number of the disbursement you wish to cancel'))
 
     error_messages = {
         'connection': _('This service is currently unavailable'),
