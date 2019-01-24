@@ -4,8 +4,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from form_error_reporting import GARequestErrorReportingMixin
 from mtp_common.auth.api_client import get_api_session
-from mtp_common import nomis
-from requests.exceptions import HTTPError, RequestException
+from requests.exceptions import RequestException
 
 logger = logging.getLogger('mtp')
 
@@ -75,8 +74,6 @@ class CancelDisbursementForm(ChooseDisbursementForm):
 
     def cancel_disbursement(self):
         session = get_api_session(self.request)
-        nomis_id = self.refund_disbursement(self.disbursement)
-
         session.post(
             '/disbursements/actions/cancel/',
             json={'disbursement_ids': [self.disbursement['id']]}
@@ -87,48 +84,4 @@ class CancelDisbursementForm(ChooseDisbursementForm):
             'comment': self.cleaned_data['reason'],
             'category': 'cancel',
         }]
-        if nomis_id:
-            comments.append({
-                'disbursement': self.disbursement['id'],
-                'comment': 'NOMIS refund ref: {nomis_id}'.format(
-                    nomis_id=nomis_id
-                ),
-                'category': 'cancel',
-            })
         session.post('/disbursements/comments/', json=comments)
-
-    def refund_disbursement(self, disbursement):
-        try:
-            nomis_response = nomis.create_transaction(
-                prison_id=disbursement['prison'],
-                prisoner_number=disbursement['prisoner_number'],
-                amount=disbursement['amount']*-1,
-                record_id='refund-d%s' % disbursement['id'],
-                description='Refund of cancelled disbursement {invoice_number}'.format(
-                    invoice_number=disbursement['invoice_number'],
-                ),
-                transaction_type='RELA',
-                retries=1
-            )
-            return nomis_response['id']
-        except HTTPError as e:
-            if e.response.status_code == 409:
-                logger.warning(
-                    'Disbursement %s has already been refunded in NOMIS' % disbursement['id']
-                )
-                return None
-            elif e.response.status_code >= 500:
-                logger.error(
-                    'Disbursement %s could not be refunded as NOMIS is unavailable'
-                    % disbursement['id']
-                )
-                self.add_error(None, self.error_messages['connection'])
-            else:
-                logger.warning('Could not refund disbursement %s' % disbursement['id'])
-                self.add_error(None, self.error_messages['connection'])
-        except RequestException:
-            logger.exception(
-                'Disbursement %s could not be refunded as NOMIS is unavailable'
-                % disbursement['id']
-            )
-            self.add_error(None, self.error_messages['connection'])
