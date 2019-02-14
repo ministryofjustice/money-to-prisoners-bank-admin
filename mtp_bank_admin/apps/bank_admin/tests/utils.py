@@ -13,12 +13,13 @@ from bank_admin.types import PaymentType
 from bank_admin.utils import BANK_HOLIDAY_URL
 
 TEST_PRISONS = [
-    {'nomis_id': 'BPR', 'general_ledger_code': '048', 'name': 'Big Prison'},
-    {'nomis_id': 'MPR', 'general_ledger_code': '067', 'name': 'Medium Prison'},
-    {'nomis_id': 'SPR', 'general_ledger_code': '054', 'name': 'Small Prison'},
-    {'nomis_id': 'NPR', 'general_ledger_code': '067', 'name': 'New Prison'},
+    {'nomis_id': 'BPR', 'general_ledger_code': '048', 'name': 'Big Prison', 'private_estate': False},
+    {'nomis_id': 'MPR', 'general_ledger_code': '067', 'name': 'Medium Prison', 'private_estate': False},
+    {'nomis_id': 'SPR', 'general_ledger_code': '054', 'name': 'Small Prison', 'private_estate': False},
+    {'nomis_id': 'NPR', 'general_ledger_code': '067', 'name': 'New Prison', 'private_estate': False},
+    {'nomis_id': 'PR1', 'general_ledger_code': '10101000', 'name': 'Private 1', 'private_estate': True},
+    {'nomis_id': 'PR2', 'general_ledger_code': '10101000', 'name': 'Private 2', 'private_estate': True},
 ]
-TEST_PRISONS_RESPONSE = {'count': 4, 'results': TEST_PRISONS}
 TEST_HOLIDAYS = {'england-and-wales': {
     'division': 'england-and-wales',
     'events': [
@@ -39,28 +40,25 @@ def mock_list_prisons():
     responses.add(
         responses.GET,
         api_url('/prisons/'),
-        json=TEST_PRISONS_RESPONSE
+        json={'count': len(TEST_PRISONS), 'results': TEST_PRISONS}
     )
 
 
 def get_test_credits(count=20):
     credits = []
     for i in range(count):
-        credit = {'id': i, 'status': 'credited', 'amount': random.randint(500, 5000)}
+        credit = {
+            'id': i,
+            'status': 'credited',
+            'amount': random.randint(500, 5000),
+            'prison': TEST_PRISONS[i % len(TEST_PRISONS)]['nomis_id'],
+        }
         if i % 2:
             credit['source'] = 'bank_transfer'
             credit['reconciliation_code'] = '9' + str(random.randint(0, 99999)).zfill(5)
         else:
             credit['source'] = 'online'
             credit['reconciliation_code'] = '800001'
-        if i % 5 == 0:
-            credit['prison'] = TEST_PRISONS[0]['nomis_id']
-        elif i % 5 == 1:
-            credit['prison'] = TEST_PRISONS[1]['nomis_id']
-        elif i % 5 == 2:
-            credit['prison'] = TEST_PRISONS[2]['nomis_id']
-        else:
-            credit['prison'] = TEST_PRISONS[3]['nomis_id']
         credits.append(credit)
     return {'count': count, 'results': sorted(credits, key=lambda t: t['id'])}
 

@@ -152,6 +152,11 @@ def generate_adi_journal(api_session, receipt_date, user=None):
 
     prisons = retrieve_prisons(api_session)
     bu_lookup = {prison['general_ledger_code']: nomis_id for nomis_id, prison in prisons.items()}
+    private_estate_cost_centre = {
+        prison['general_ledger_code']
+        for nomis_id, prison in prisons.items()
+        if prison['private_estate']
+    }
 
     debit_card_batches = defaultdict(int)
     prison_totals = defaultdict(int)
@@ -187,7 +192,11 @@ def generate_adi_journal(api_session, receipt_date, user=None):
         journal.add_payment_row(
             prison_totals[business_unit], PaymentType.payment, RecordType.credit,
             prison_ledger_code=business_unit,
-            prison_name=prisons[bu_lookup[business_unit]]['name'],
+            prison_name=(
+                'Private estate'
+                if business_unit in private_estate_cost_centre else
+                prisons[bu_lookup[business_unit]]['name']
+            ),
             date=journal_date
         )
 
