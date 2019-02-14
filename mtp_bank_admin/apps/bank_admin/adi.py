@@ -6,8 +6,8 @@ import logging
 from django.conf import settings
 
 from . import adi_config as config, ADI_JOURNAL_LABEL
-from .types import PaymentType, RecordType
 from .exceptions import EmptyFileError
+from .types import PaymentType, RecordType
 from .utils import (
     Journal, retrieve_all_transactions, retrieve_all_valid_credits,
     reconcile_for_date, retrieve_prisons, get_full_narrative,
@@ -158,7 +158,7 @@ def generate_adi_journal(api_session, receipt_date, user=None):
     prison_transactions = defaultdict(list)
     for credit in credits:
         business_unit = prisons[credit['prison']]['general_ledger_code']
-        amount = Decimal(credit['amount'])/100
+        amount = Decimal(credit['amount']) / 100
         prison_totals[business_unit] += amount
         if credit['source'] == 'online':
             if credit['reconciliation_code']:
@@ -180,7 +180,7 @@ def generate_adi_journal(api_session, receipt_date, user=None):
     for business_unit in prison_totals:
         for transaction in prison_transactions.get(business_unit, []):
             journal.add_payment_row(
-                Decimal(transaction['amount'])/100,
+                Decimal(transaction['amount']) / 100,
                 PaymentType.payment, RecordType.debit,
                 reconciliation_code=transaction['reconciliation_code']
             )
@@ -194,7 +194,7 @@ def generate_adi_journal(api_session, receipt_date, user=None):
     # add refund rows
     refund_total = 0
     for refund in refundable_transactions:
-        refund_amount = Decimal(refund['amount'])/100
+        refund_amount = Decimal(refund['amount']) / 100
         refund_total += refund_amount
         journal.add_payment_row(
             refund_amount, PaymentType.refund, RecordType.debit,
@@ -206,7 +206,7 @@ def generate_adi_journal(api_session, receipt_date, user=None):
 
     # add reject rows
     for reject in rejected_transactions:
-        reject_amount = Decimal(reject['amount'])/100
+        reject_amount = Decimal(reject['amount']) / 100
         reference = get_full_narrative(reject)
         journal.add_payment_row(
             reject_amount, PaymentType.reject, RecordType.debit,

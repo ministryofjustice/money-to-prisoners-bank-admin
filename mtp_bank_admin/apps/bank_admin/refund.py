@@ -68,7 +68,7 @@ def generate_refund_file(transactions):
                 transaction['sender_sort_code'],
                 transaction['sender_account_number'],
                 transaction['sender_name'],
-                '%.2f' % (Decimal(transaction['amount'])/100),
+                '%.2f' % (Decimal(transaction['amount']) / 100),
                 refund_reference(transaction)
             ])
             writer.writerow(list(cells))
