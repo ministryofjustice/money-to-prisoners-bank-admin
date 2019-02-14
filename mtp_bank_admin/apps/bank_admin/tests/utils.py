@@ -46,8 +46,7 @@ def mock_list_prisons():
 def get_test_credits(count=20):
     credits = []
     for i in range(count):
-        credit = {'id': i, 'status': 'credited'}
-        credit['amount'] = random.randint(500, 5000)
+        credit = {'id': i, 'status': 'credited', 'amount': random.randint(500, 5000)}
         if i % 2:
             credit['source'] = 'bank_transfer'
             credit['reconciliation_code'] = '9' + str(random.randint(0, 99999)).zfill(5)
@@ -227,15 +226,14 @@ def temp_file(data):
 
 class BankAdminTestCase(SimpleTestCase):
 
-    def tearDown(self, *args, **kwargs):
-        super().tearDown(*args, **kwargs)
+    def tearDown(self):
+        super().tearDown()
         shutil.rmtree('local_files/cache/', ignore_errors=True)
 
     def assert_called_with(self, url, method, expected_data):
         called = False
         for call in responses.calls:
-            if (base_urls_equal(call.request.url, url) and call.request.method == method):
-                request_data = call.request.body
+            if base_urls_equal(call.request.url, url) and call.request.method == method:
                 if method == responses.GET:
                     request_data = get_query_dict(call.request.url)
                 else:

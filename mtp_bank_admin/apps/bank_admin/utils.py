@@ -147,7 +147,7 @@ def get_preceding_workday_list(number_of_days, offset=0):
     return list(days)
 
 
-class Journal():
+class Journal:
 
     STYLE_TYPES = {
         'fill': styles.PatternFill,

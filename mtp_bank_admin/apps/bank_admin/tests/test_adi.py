@@ -154,7 +154,6 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
     @responses.activate
     def test_adi_journal_debits_match_credits(self):
         exceldata, test_data = self._generate_test_adi_journal()
-        credits, refundable_transactions, rejected_transactions = test_data
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
@@ -205,8 +204,8 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
                     file_credit_rows += 1
                 row += 1
 
-            credit = self.assertEqual(expected_credit_rows, file_credit_rows)
-            credit = self.assertEqual(expected_debit_rows, file_debit_rows)
+            self.assertEqual(expected_credit_rows, file_credit_rows)
+            self.assertEqual(expected_debit_rows, file_debit_rows)
 
     @responses.activate
     def test_adi_journal_credit_sums_correct(self):
@@ -218,9 +217,9 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
             prison_totals[prison['general_ledger_code']] += float(sum(
                 [c['amount'] for c in credits['results']
                     if 'prison' in c and c['prison'] == prison['nomis_id']]
-            ))/100
+            )) / 100
 
-        refund_total = float(sum([t['amount'] for t in refundable_transactions['results']]))/100
+        refund_total = float(sum([t['amount'] for t in refundable_transactions['results']])) / 100
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
@@ -275,7 +274,7 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
 
     @responses.activate
     def test_adi_journal_reconciles_date(self):
-        _, _ = self._generate_test_adi_journal(receipt_date=date(2016, 9, 13))
+        self._generate_test_adi_journal(receipt_date=date(2016, 9, 13))
 
         self.assert_called_with(
             api_url('/transactions/reconcile/'), responses.POST,

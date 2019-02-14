@@ -131,7 +131,7 @@ class BankStatementGenerationTestCase(BankStatementTestCase):
 
     @responses.activate
     def test_reconciles_date(self):
-        _, _ = self._generate_and_parse_bank_statement(receipt_date=date(2016, 9, 13))
+        self._generate_and_parse_bank_statement(receipt_date=date(2016, 9, 13))
 
         self.assert_called_with(
             api_url('/transactions/reconcile/'), responses.POST,

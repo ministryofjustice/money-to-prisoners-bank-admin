@@ -11,7 +11,7 @@ from .utils import (
 
 PAYMENT_METHODS = {
     'cheque': 'Cheque',
-    'bank_transfer': 'New Bank Details'
+    'bank_transfer': 'New Bank Details',
 }
 
 
@@ -100,7 +100,7 @@ def generate_disbursements_journal(api_session, date):
         journal.add_disbursement_row(
             creator=creator,
             confirmer=confirmer,
-            amount_pounds=Decimal(disbursement['amount'])/100,
+            amount_pounds=Decimal(disbursement['amount']) / 100,
             prison_ledger_code=prisons[disbursement['prison']]['general_ledger_code'],
             payment_method=PAYMENT_METHODS[disbursement['method']],
             date=date.strftime('%d/%m/%Y'),
