@@ -13,7 +13,7 @@ import responses
 
 from .utils import (
     NO_TRANSACTIONS, mock_list_prisons,
-    get_test_disbursements, temp_file, api_url,
+    get_test_disbursements, get_private_estate_batches, temp_file, api_url,
     mock_bank_holidays, BankAdminTestCase
 )
 from bank_admin import disbursements, disbursements_config
@@ -49,10 +49,21 @@ class DisbursementsFileGenerationTestCase(BankAdminTestCase):
         if receipt_date is None:
             receipt_date = date(2016, 9, 13)
 
+        test_private_estate_batches = get_private_estate_batches()
         test_disbursements = get_test_disbursements(20)
 
         mock_list_prisons()
         mock_bank_holidays()
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        responses.add(
+            responses.GET,
+            api_url('/private-estate-batches/'),
+            json=test_private_estate_batches
+        )
         responses.add(
             responses.GET,
             api_url('/disbursements/'),
@@ -70,18 +81,18 @@ class DisbursementsFileGenerationTestCase(BankAdminTestCase):
                 self.get_api_session(), receipt_date
             )
 
-        return exceldata, test_disbursements
+        return exceldata, test_private_estate_batches, test_disbursements
 
     @responses.activate
     @skipUnless(os.environ.get('GENERATE_SAMPLES'), 'Enable to generate an example file for inspection')
     def test_disbursements_file_generation(self):
-        exceldata, _ = self._generate_test_disbursements_file()
+        exceldata, _, _ = self._generate_test_disbursements_file()
         with open('test_disbursements.xlsm', 'wb+') as f:
             f.write(exceldata)
 
     @responses.activate
     def test_disbursements_file_number_of_payment_rows_correct(self):
-        exceldata, test_data = self._generate_test_disbursements_file()
+        exceldata, test_batches, test_data = self._generate_test_disbursements_file()
 
         with temp_file(exceldata) as f:
             wb = load_workbook(f)
@@ -91,7 +102,50 @@ class DisbursementsFileGenerationTestCase(BankAdminTestCase):
             lines = 0
             invoice_numbers = []
             while True:
-                disbursement_ref = get_cell_value(journal_ws, 'unique_payee_reference', row)
+                disbursement_ref = get_cell_value(journal_ws, 'payment_method', row)
+                if not disbursement_ref:
+                    break
+                invoice_numbers.append(get_cell_value(journal_ws, 'invoice_number', row))
+                lines += 1
+                row += 1
+
+        self.assertEqual(lines, len(test_batches['results']) + len(test_data['results']))
+        expected_invoice_numbers = ['PM%(prison)s20160913' % batch for batch in test_batches['results']] + \
+                                   [str(i) for i in range(1000095, 1000100)] + \
+                                   ['PMD%d' % i for i in range(1000100, 1000115)]
+        self.assertListEqual(invoice_numbers, expected_invoice_numbers)
+
+    @responses.activate
+    def test_disbursement_file_with_incomplete_batches(self):
+        responses.add(
+            responses.GET,
+            api_url('/private-estate-batches/'),
+            json={
+                'count': 2,
+                'results': [
+                    {'date': '2016-09-13',
+                     'prison': 'PR1',
+                     'total_amount': 1000,
+                     'bank_account': None},
+                    {'date': '2016-09-13',
+                     'prison': 'PR2',
+                     'total_amount': None,
+                     'bank_account': {'account_number': '12345678'}},
+                ]
+            },
+            status=200
+        )
+        exceldata, _, test_data = self._generate_test_disbursements_file()
+
+        with temp_file(exceldata) as f:
+            wb = load_workbook(f)
+            journal_ws = wb[disbursements_config.DISBURSEMENTS_JOURNAL_SHEET]
+
+            row = disbursements_config.DISBURSEMENTS_JOURNAL_START_ROW
+            lines = 0
+            invoice_numbers = []
+            while True:
+                disbursement_ref = get_cell_value(journal_ws, 'payment_method', row)
                 if not disbursement_ref:
                     break
                 invoice_numbers.append(get_cell_value(journal_ws, 'invoice_number', row))
@@ -107,6 +161,16 @@ class DisbursementsFileGenerationTestCase(BankAdminTestCase):
     def test_no_transactions_raises_error(self):
         mock_list_prisons()
         mock_bank_holidays()
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        responses.add(
+            responses.GET,
+            api_url('/private-estate-batches/'),
+            json=NO_TRANSACTIONS
+        )
         responses.add(
             responses.GET,
             api_url('/disbursements/'),
