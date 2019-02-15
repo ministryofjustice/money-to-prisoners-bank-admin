@@ -21,6 +21,8 @@ static/
 media/
 spooler/
 local_files/cache/
+/test_disbursements.xlsm
+/test_journal.xlsm
 
 # selenium
 geckodriver.log
