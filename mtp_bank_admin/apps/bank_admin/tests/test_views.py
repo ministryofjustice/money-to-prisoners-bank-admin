@@ -640,8 +640,18 @@ class DownloadDisbursementsFileViewTestCase(BankAdminViewTestCase):
     def _set_returned_disbursements(self):
         disbursements = get_test_disbursements(20)
 
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
         mock_bank_holidays()
         mock_list_prisons()
+        responses.add(
+            responses.GET,
+            api_url('/private-estate-batches/'),
+            json=NO_TRANSACTIONS
+        )
         responses.add(
             responses.GET,
             api_url('/disbursements/'),
@@ -732,6 +742,16 @@ class DownloadDisbursementsFileErrorViewTestCase(BankAdminViewTestCase):
 
         mock_bank_holidays()
         responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=401
+        )
+        responses.add(
+            responses.GET,
+            api_url('/private-estate-batches/'),
+            status=401
+        )
+        responses.add(
             responses.GET,
             api_url('/disbursements/'),
             status=401
@@ -753,6 +773,16 @@ class DownloadDisbursementsFileErrorViewTestCase(BankAdminViewTestCase):
         self.login()
 
         mock_bank_holidays()
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        responses.add(
+            responses.GET,
+            api_url('/private-estate-batches/'),
+            json=NO_TRANSACTIONS
+        )
         responses.add(
             responses.GET,
             api_url('/disbursements/'),

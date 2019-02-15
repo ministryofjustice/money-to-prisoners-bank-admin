@@ -159,6 +159,27 @@ def get_test_disbursements(count=20):
     return {'count': count, 'results': disbursements}
 
 
+def get_private_estate_batches(date='2016-09-13'):
+    batches = [
+        {
+            'date': date,
+            'prison': prison['nomis_id'],
+            'total_amount': random.randint(5000, 200000),
+            'bank_account': {
+                'address_line1': 'line 1',
+                'city': 'city',
+                'postcode': 'post code',
+                'account_number': '12345678',
+                'sort_code': '101010',
+                'remittance_email': 'private@mtp.local',
+            },
+        }
+        for prison in TEST_PRISONS
+        if prison['private_estate']
+    ]
+    return {'count': len(batches), 'results': batches}
+
+
 class AssertCalledWithBatchRequest(object):
 
     def __init__(self, test_case, expected):
