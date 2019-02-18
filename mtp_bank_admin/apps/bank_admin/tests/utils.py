@@ -17,8 +17,10 @@ TEST_PRISONS = [
     {'nomis_id': 'MPR', 'general_ledger_code': '067', 'name': 'Medium Prison', 'private_estate': False},
     {'nomis_id': 'SPR', 'general_ledger_code': '054', 'name': 'Small Prison', 'private_estate': False},
     {'nomis_id': 'NPR', 'general_ledger_code': '067', 'name': 'New Prison', 'private_estate': False},
-    {'nomis_id': 'PR1', 'general_ledger_code': '10101000', 'name': 'Private 1', 'private_estate': True},
-    {'nomis_id': 'PR2', 'general_ledger_code': '10101000', 'name': 'Private 2', 'private_estate': True},
+    {'nomis_id': 'PR1', 'general_ledger_code': '10101000', 'name': 'Private 1', 'private_estate': True,
+     'cms_establishment_code': '10'},
+    {'nomis_id': 'PR2', 'general_ledger_code': '10101000', 'name': 'Private 2', 'private_estate': True,
+     'cms_establishment_code': '20'},
 ]
 TEST_HOLIDAYS = {'england-and-wales': {
     'division': 'england-and-wales',

@@ -1,0 +1,19 @@
+{% extends 'mtp_common/email_base.html' %}
+{% load i18n %}
+
+{% block inner_content %}
+  <p>
+    {% blocktrans trimmed with date=date|date:'d/m/Y' %}
+      The attached CSV file lists the credits received for {{ prison_name }} on {{ date }} from ‘Send money to someone in prison’.
+    {% endblocktrans %}
+  </p>
+  <p>
+    {% trans 'Please upload this file into the CMS and make sure NO credits are rejected.' %}
+  </p>
+  <p>
+    {% trans 'If there’s any doubt, put credits on hold or speak with your security department.' %}
+  </p>
+  <p>
+    {% trans 'Once all credits are accepted, make sure you DON’T send the response email to Secure Payment Service.' %}
+  </p>
+{% endblock %}
