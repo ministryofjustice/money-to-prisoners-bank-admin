@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime, time, timedelta
+from decimal import Decimal
 from itertools import count, islice
 import time as systime
 import os
@@ -13,6 +14,10 @@ import requests
 from .exceptions import EarlyReconciliationError, UpstreamServiceUnavailable
 
 BANK_HOLIDAY_URL = 'https://www.gov.uk/bank-holidays.json'
+
+
+def format_amount(pence):
+    return '£{:0,.2f}'.format(Decimal(pence) / 100)
 
 
 def retrieve_all_transactions(api_session, **kwargs):
