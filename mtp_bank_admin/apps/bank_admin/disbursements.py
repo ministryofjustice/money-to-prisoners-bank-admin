@@ -2,6 +2,7 @@ from decimal import Decimal
 import logging
 
 from django.conf import settings
+from django.utils.dateparse import parse_date
 from mtp_common.api import retrieve_all_pages_for_path
 
 from . import disbursements_config as config, DISBURSEMENTS_LABEL
@@ -48,8 +49,13 @@ def retrieve_all_disbursements(api_session, **kwargs):
         api_session, 'disbursements/', **kwargs)
 
 
-def retrieve_private_estate_batches(api_session, date):
-    return retrieve_all_pages_for_path(api_session, 'private-estate-batches/', date=date)
+def retrieve_private_estate_batches(api_session, start_date, end_date):
+    return retrieve_all_pages_for_path(
+        api_session,
+        'private-estate-batches/',
+        date__gte=start_date.date(),
+        date__lt=end_date.date(),
+    )
 
 
 def mark_as_sent(api_session, date):
@@ -71,7 +77,7 @@ def mark_as_sent(api_session, date):
 def generate_disbursements_journal(api_session, date):
     start_date, end_date = reconcile_for_date(api_session, date)
 
-    private_estate_batches = retrieve_private_estate_batches(api_session, date)
+    private_estate_batches = retrieve_private_estate_batches(api_session, start_date, end_date)
 
     disbursements = retrieve_all_disbursements(
         api_session,
@@ -93,14 +99,13 @@ def generate_disbursements_journal(api_session, date):
     journal_date = date.strftime('%d/%m/%Y')
     prisons = retrieve_prisons(api_session)
 
-    add_private_estate_batches(journal, date, journal_date, prisons, private_estate_batches)
+    add_private_estate_batches(journal, journal_date, prisons, private_estate_batches)
     add_disbursements(journal, journal_date, prisons, disbursements)
 
     return journal.create_file()
 
 
-def add_private_estate_batches(journal, date, journal_date, prisons, private_estate_batches):
-    canonical_date = date.strftime('%Y%m%d')
+def add_private_estate_batches(journal, journal_date, prisons, private_estate_batches):
     for private_estate_batch in private_estate_batches:
         if not private_estate_batch.get('bank_account'):
             logger.error('Private estate batch missing bank account %(prison)s %(date)s' % private_estate_batch)
@@ -119,7 +124,7 @@ def add_private_estate_batches(journal, date, journal_date, prisons, private_est
             payment_method=PAYMENT_METHODS['bank_transfer'],
             date=journal_date,
 
-            invoice_number='PM%s%s' % (prison['nomis_id'], canonical_date),
+            invoice_number='PM%s%s' % (prison['nomis_id'], parse_date(private_estate_batch['date']).strftime('%Y%m%d')),
             description='Transfer to %s' % prison_name,
 
             recipient_first_name='',

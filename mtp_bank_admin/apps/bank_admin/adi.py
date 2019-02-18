@@ -155,7 +155,7 @@ def generate_adi_journal(api_session, receipt_date, user=None):
     private_estate_cost_centre = {
         prison['general_ledger_code']
         for nomis_id, prison in prisons.items()
-        if prison['private_estate']
+        if prison.get('private_estate')
     }
 
     debit_card_batches = defaultdict(int)
