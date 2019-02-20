@@ -111,7 +111,7 @@ def add_private_estate_batches(journal, journal_date, prisons, private_estate_ba
             logger.error('Private estate batch missing bank account %(prison)s %(date)s' % private_estate_batch)
             continue
         if not private_estate_batch['total_amount']:
-            logger.info('Nothing to transfer to %(prison)s for %(date)s')
+            logger.info('Nothing to transfer to %(prison)s for %(date)s' % private_estate_batch)
             continue
         prison = prisons[private_estate_batch['prison']]
         prison_name = prison.get('short_name') or prison['name']
@@ -128,7 +128,7 @@ def add_private_estate_batches(journal, journal_date, prisons, private_estate_ba
             description='Transfer to %s' % prison_name,
 
             recipient_first_name='',
-            recipient_last_name=prison_name,
+            recipient_last_name=prison['name'],
             address_line1=bank_account['address_line1'],
             address_line2=bank_account.get('address_line2') or '',
             city=bank_account['city'],
