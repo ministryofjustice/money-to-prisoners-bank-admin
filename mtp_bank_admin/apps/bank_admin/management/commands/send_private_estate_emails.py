@@ -3,6 +3,7 @@ import collections
 import csv
 import io
 import logging
+import zipfile
 
 from anymail.message import AnymailMessage
 from django.conf import settings
@@ -155,10 +156,13 @@ def send_csv(prison, date, batches, csv_contents, total, count):
     prison_name = prison.get('short_name') or prison['name']
     some_batch = batches[0]
     now = timezone.now()
-    attachment_name = 'payment_%s_%s.csv' % (
+    csv_name = 'payment_%s_%s.csv' % (
         prison['cms_establishment_code'],
         now.strftime('%Y%m%d_%H%M%S'),
     )
+    zipped_csv = io.BytesIO()
+    with zipfile.ZipFile(zipped_csv, 'w') as z:
+        z.writestr(csv_name, csv_contents)
     template_context = {
         'prison_name': prison_name,
         'date': date,
@@ -178,7 +182,7 @@ def send_csv(prison, date, batches, csv_contents, total, count):
         tags=['private-csv'],
     )
     email.attach_alternative(html_body, mimetype='text/html')
-    email.attach(attachment_name, csv_contents, mimetype='application/octet-stream')
+    email.attach(csv_name + '.zip', zipped_csv.getvalue(), mimetype='application/zip')
     email.send()
     logger.info('Sent private estate batch for %s' % prison_name)
 
