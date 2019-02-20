@@ -54,7 +54,7 @@ class Command(BaseCommand):
         batches = retrieve_private_estate_batches(self.api_session, start_date, end_date)
         grouped_batches = combine_private_estate_batches(batches)
         if not grouped_batches:
-            logger.info('No private estate batches to handle for %s', date)
+            logger.info('No private estate batches to handle for %s' % date)
             return
 
         prisons = retrieve_prisons(self.api_session)
@@ -126,7 +126,7 @@ def combine_private_estate_batches(private_estate_batches):
     batches = collections.defaultdict(list)
     for batch in private_estate_batches:
         if not batch['total_amount']:
-            logger.info('Skipping %(prison)s because there are no credits for %(date)s batch', batch)
+            logger.info('Skipping %(prison)s because there are no credits for %(date)s batch' % batch)
             continue
         if not batch.get('bank_account'):
             logger.error('Private estate batch missing bank account %(prison)s %(date)s' % batch)
