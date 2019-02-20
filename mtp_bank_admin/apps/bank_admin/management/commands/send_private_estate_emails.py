@@ -163,7 +163,7 @@ def send_csv(prison, date, batches, csv_contents, total, count):
         tags=['private-csv'],
     )
     email.attach_alternative(html_body, mimetype='text/html')
-    email.attach(attachment_name, csv_contents, mimetype='text/csv')
+    email.attach(attachment_name, csv_contents, mimetype='application/octet-stream')
     email.send()
     logger.info('Sent private estate batch for %s' % prison_name)
 
