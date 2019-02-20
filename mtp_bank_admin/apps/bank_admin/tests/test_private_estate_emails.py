@@ -1,9 +1,11 @@
 import datetime
-from django.utils.timezone import utc
+import io
 from unittest import mock
+import zipfile
 
 from django.core.management import call_command
 from django.test import SimpleTestCase
+from django.utils.timezone import utc
 from mtp_common.auth.api_client import MoJOAuth2Session
 from mtp_common.auth.test_utils import generate_tokens
 import responses
@@ -248,5 +250,8 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
         self.assertIn('private@mtp.local', email_kwargs['to'])
 
         attachment_args = mocked_anymail_message().attach.call_args_list[0][0]
-        self.assertEqual(attachment_args[0], 'payment_10_20190218_120000.csv')
-        self.assertIn('£25.01'.encode('cp1252'), attachment_args[1])
+        self.assertEqual(attachment_args[0], 'payment_10_20190218_120000.csv.zip')
+        attachment = io.BytesIO(attachment_args[1])
+        with zipfile.ZipFile(attachment, 'r') as z:
+            csv_contents = z.read('payment_10_20190218_120000.csv')
+        self.assertIn('£25.01'.encode('cp1252'), csv_contents)
