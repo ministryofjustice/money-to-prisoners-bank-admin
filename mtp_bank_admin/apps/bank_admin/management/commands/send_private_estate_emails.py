@@ -13,6 +13,7 @@ from django.utils.dateparse import parse_date
 from django.utils.functional import cached_property
 from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.auth import api_client
+from mtp_common.stack import StackException, is_first_instance
 
 from bank_admin.disbursements import retrieve_private_estate_batches
 from bank_admin.utils import WorkdayChecker, format_amount, retrieve_prisons, reconcile_for_date
@@ -35,20 +36,34 @@ class Command(BaseCommand):
     def handle(self, **options):
         date = options['date']
         scheduled = options['scheduled']
+
         if date and scheduled:
             raise CommandError('Date cannot be provided if running as a scheduled command')
+
         elif scheduled:
+            try:
+                should_continue = is_first_instance()
+            except StackException:
+                should_continue = True
+            if not should_continue:
+                logger.warning('Not processing private estate emails as running on non-key instance '
+                               '(command is not idempotent)')
+                return
             today = timezone.now().date()
             workdays = WorkdayChecker()
             if not workdays.is_workday(today):
                 logger.info('Non-workday: no private estate batches to process')
                 return
             date = workdays.get_previous_workday(today)
+
         else:
             date = parse_date(date)
             if date is None:
                 raise CommandError('Date cannot be parsed, use YYYY-MM-DD format')
 
+        self.process_batches(date)
+
+    def process_batches(self, date):
         start_date, end_date = reconcile_for_date(self.api_session, date)
 
         batches = retrieve_private_estate_batches(self.api_session, start_date, end_date)
