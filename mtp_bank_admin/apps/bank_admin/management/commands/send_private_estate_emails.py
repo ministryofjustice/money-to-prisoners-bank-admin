@@ -197,10 +197,10 @@ def csv_transaction_id(credit):
 
 def format_address(credit):
     if credit['source'] == 'bank_transfer':
-        return '(bank transfer)'
+        return 'Bank Transfer 102 Petty France London SW1H 9AJ'
     billing_address = credit.get('billing_address')
     if not billing_address:
-        return '(missing address)'
+        return 'Missing Address 102 Petty France London SW1H 9AJ'
     return ' '.join(filter(None, (
         billing_address.get(key)
         for key in ('line1', 'line2', 'city', 'postcode', 'country')
