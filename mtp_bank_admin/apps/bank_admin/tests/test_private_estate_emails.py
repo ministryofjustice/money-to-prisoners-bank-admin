@@ -203,7 +203,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
                 '"£7.00","Mary [] Fredson","Clive House 3 SW1H 9EX",""',
 
                 '"Private 2","15/02/19","FRED JOHNSON","A1000BB","100000004",'
-                '"£13.00","A JOHNSON","(bank transfer)",""',
+                '"£13.00","A JOHNSON","Bank Transfer 102 Petty France London SW1H 9AJ",""',
 
                 '"","","","","Total","£20.00","","",""',
             ]
