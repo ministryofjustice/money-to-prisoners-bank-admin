@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django.views.decorators.cache import cache_control
-from django.views.generic import RedirectView
+from django.views.generic import RedirectView, TemplateView
 from django.views.i18n import JavaScriptCatalog
 from moj_irat.views import HealthcheckView, PingJsonView
 from mtp_common.auth import views as auth_views
@@ -21,6 +21,13 @@ urlpatterns = i18n_patterns(
             'template_name': 'mtp_auth/login.html',
             'next_page': reverse_lazy('login'),
         }, name='logout'
+    ),
+
+
+    url(
+        r'^settings/$',
+        TemplateView.as_view(template_name='mtp_common/settings.html'),
+        name='settings'
     ),
     url(
         r'^password_change/$', auth_views.password_change, {
