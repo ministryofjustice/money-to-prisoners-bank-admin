@@ -2,7 +2,6 @@
   'use strict';
   require('polyfills').Polyfills.init();
 
-  require('proposition-user-menu').PropositionUserMenu.init();
   require('analytics').Analytics.init();
   require('disclosure').Disclosure.init();
   require('mailcheck-warning').MailcheckWarning.init(
