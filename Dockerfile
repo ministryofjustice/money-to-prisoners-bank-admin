@@ -61,6 +61,13 @@ RUN set -ex; chown www-data:www-data local_files
 RUN set -ex; \
   venv/bin/python run.py --requirements-file requirements/docker.txt build
 
+ARG APP_GIT_COMMIT
+ARG APP_BUILD_TAG
+ARG APP_BUILD_DATE
+ENV APP_GIT_COMMIT ${APP_GIT_COMMIT}
+ENV APP_BUILD_TAG ${APP_BUILD_TAG}
+ENV APP_BUILD_DATE ${APP_BUILD_DATE}
+
 # run uwsgi on 8080
 EXPOSE 8080
 ENV DJANGO_SETTINGS_MODULE=mtp_bank_admin.settings.docker
