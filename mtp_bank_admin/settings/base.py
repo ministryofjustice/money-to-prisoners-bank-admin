@@ -57,6 +57,7 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'mtp_common.analytics.ReferrerPolicyMiddleware',
 )
 
 HEALTHCHECKS = []
@@ -121,6 +122,7 @@ TEMPLATES = [
                 'mtp_common.context_processors.analytics',
                 'mtp_common.context_processors.app_environment',
                 'bank_admin.context_processors.govuk_localisation',
+                'mtp_common.analytics.default_genericised_pageview',
             ],
         },
     },
