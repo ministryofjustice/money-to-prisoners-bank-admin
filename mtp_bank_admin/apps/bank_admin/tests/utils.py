@@ -33,6 +33,14 @@ ORIGINAL_REF = 'reference'
 SENDER_NAME = 'sender'
 OPENING_BALANCE = 20000
 
+TEST_BANK_ACCOUNT = {
+    'address_line1': 'line 1',
+    'city': 'city',
+    'postcode': 'post code',
+    'account_number': '12345678',
+    'sort_code': '101010',
+}
+
 
 def api_url(path):
     return urljoin(settings.API_URL, path)
@@ -173,8 +181,8 @@ def get_private_estate_batches(date='2016-09-13'):
                 'postcode': 'post code',
                 'account_number': '12345678',
                 'sort_code': '101010',
-                'remittance_email': 'private@mtp.local',
             },
+            'remittance_emails': ['private@mtp.local'],
         }
         for prison in TEST_PRISONS
         if prison['private_estate']

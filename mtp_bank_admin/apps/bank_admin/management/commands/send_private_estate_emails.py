@@ -178,7 +178,7 @@ def send_csv(prison, date, batches, csv_contents, total, count):
         ),
         body=text_body.strip('\n'),
         from_email=from_address,
-        to=[some_batch['bank_account']['remittance_email']],
+        to=some_batch['remittance_emails'],
         tags=['private-csv'],
     )
     email.attach_alternative(html_body, mimetype='text/html')

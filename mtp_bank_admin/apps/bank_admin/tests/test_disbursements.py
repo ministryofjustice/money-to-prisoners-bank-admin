@@ -12,7 +12,7 @@ from openpyxl import load_workbook
 import responses
 
 from .utils import (
-    NO_TRANSACTIONS, mock_list_prisons,
+    NO_TRANSACTIONS, TEST_BANK_ACCOUNT, mock_list_prisons,
     get_test_disbursements, get_private_estate_batches, temp_file, api_url,
     mock_bank_holidays, BankAdminTestCase
 )
@@ -121,7 +121,7 @@ class DisbursementsFileGenerationTestCase(BankAdminTestCase):
             responses.GET,
             api_url('/private-estate-batches/'),
             json={
-                'count': 2,
+                'count': 3,
                 'results': [
                     {'date': '2016-09-13',
                      'prison': 'PR1',
@@ -130,7 +130,13 @@ class DisbursementsFileGenerationTestCase(BankAdminTestCase):
                     {'date': '2016-09-13',
                      'prison': 'PR2',
                      'total_amount': None,
-                     'bank_account': {'account_number': '12345678'}},
+                     'bank_account': TEST_BANK_ACCOUNT,
+                     'remittance_emails': ['private@mtp.local']},
+                    {'date': '2016-09-13',
+                     'prison': 'PR3',
+                     'total_amount': 2000,
+                     'bank_account': TEST_BANK_ACCOUNT,
+                     'remittance_emails': []},
                 ]
             },
             status=200

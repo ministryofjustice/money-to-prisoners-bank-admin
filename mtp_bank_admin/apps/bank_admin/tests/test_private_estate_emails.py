@@ -10,17 +10,8 @@ from mtp_common.auth.api_client import MoJOAuth2Session
 from mtp_common.auth.test_utils import generate_tokens
 import responses
 
-from bank_admin.tests.utils import TEST_HOLIDAYS, TEST_PRISONS, api_url
+from bank_admin.tests.utils import TEST_HOLIDAYS, TEST_PRISONS, TEST_BANK_ACCOUNT, api_url
 from bank_admin.utils import BANK_HOLIDAY_URL
-
-TEST_BANK_ACCOUNT = {
-    'address_line1': 'line 1',
-    'city': 'city',
-    'postcode': 'post code',
-    'account_number': '12345678',
-    'sort_code': '101010',
-    'remittance_email': 'private@mtp.local',
-}
 
 
 def mock_api_session(mocked_api_session):
@@ -93,22 +84,26 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
                     {'date': '2019-02-15',
                      'prison': 'PR1',
                      'total_amount': 2500,
-                     'bank_account': TEST_BANK_ACCOUNT},
+                     'bank_account': TEST_BANK_ACCOUNT,
+                     'remittance_emails': ['private@mtp.local']},
                     # empty batch, ignored
                     {'date': '2019-02-16',
                      'prison': 'PR1',
                      'total_amount': 0,
-                     'bank_account': TEST_BANK_ACCOUNT},
+                     'bank_account': TEST_BANK_ACCOUNT,
+                     'remittance_emails': ['private@mtp.local']},
                     # ok
                     {'date': '2019-02-17',
                      'prison': 'PR1',
                      'total_amount': 1200,
-                     'bank_account': TEST_BANK_ACCOUNT},
+                     'bank_account': TEST_BANK_ACCOUNT,
+                     'remittance_emails': ['private@mtp.local']},
                     # ok
                     {'date': '2019-02-15',
                      'prison': 'PR2',
                      'total_amount': 2000,
-                     'bank_account': TEST_BANK_ACCOUNT},
+                     'bank_account': TEST_BANK_ACCOUNT,
+                     'remittance_emails': ['private@mtp.local']},
                 ]
             })
             rsps.add(rsps.GET, api_url('prisons/'), json={'count': len(TEST_PRISONS), 'results': TEST_PRISONS})
@@ -224,7 +219,8 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
                     {'date': '2019-02-15',
                      'prison': 'PR1',
                      'total_amount': 2501,
-                     'bank_account': TEST_BANK_ACCOUNT},
+                     'bank_account': TEST_BANK_ACCOUNT,
+                     'remittance_emails': ['private@mtp.local']},
                 ]
             })
             rsps.add(rsps.GET, api_url('prisons/'), json={'count': len(TEST_PRISONS), 'results': TEST_PRISONS})
