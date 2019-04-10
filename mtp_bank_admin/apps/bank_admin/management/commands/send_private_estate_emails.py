@@ -12,9 +12,11 @@ from django.template import loader as template_loader
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.utils.functional import cached_property
+from django.utils.translation import activate, get_language
 from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.auth import api_client
 from mtp_common.stack import StackException, is_first_instance
+from mtp_common.tasks import default_from_address, prepare_context
 
 from bank_admin.disbursements import retrieve_private_estate_batches
 from bank_admin.utils import WorkdayChecker, format_amount, retrieve_prisons, reconcile_for_date
@@ -79,6 +81,10 @@ class Command(BaseCommand):
             for nomis_id, prison in prisons.items()
             if prison.get('private_estate')
         }
+
+        if not get_language():
+            language = getattr(settings, 'LANGUAGE_CODE', 'en')
+            activate(language)
 
         for prison, batches in grouped_batches.items():
             prison = prisons[prison]
@@ -163,13 +169,12 @@ def send_csv(prison, date, batches, csv_contents, total, count):
     zipped_csv = io.BytesIO()
     with zipfile.ZipFile(zipped_csv, 'w') as z:
         z.writestr(csv_name, csv_contents)
-    template_context = {
+    template_context = prepare_context({
         'prison_name': prison_name,
         'date': date,
         'total': total,
         'count': count,
-    }
-    from_address = getattr(settings, 'MAILGUN_FROM_ADDRESS', '') or settings.DEFAULT_FROM_EMAIL
+    })
     text_body = template_loader.get_template('bank_admin/emails/private-estate.txt').render(template_context)
     html_body = template_loader.get_template('bank_admin/emails/private-estate.html').render(template_context)
     email = AnymailMessage(
@@ -177,7 +182,7 @@ def send_csv(prison, date, batches, csv_contents, total, count):
             prison_name, date.strftime('%d/%m/%Y'),
         ),
         body=text_body.strip('\n'),
-        from_email=from_address,
+        from_email=default_from_address(),
         to=some_batch['remittance_emails'],
         tags=['private-csv'],
     )
