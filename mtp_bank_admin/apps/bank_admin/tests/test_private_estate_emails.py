@@ -206,9 +206,9 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
 
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.AnymailMessage')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
-    @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone')
-    def test_email_sent(self, mocked_timezone, mocked_api_session, mocked_anymail_message):
-        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
+    @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone.now')
+    def test_email_sent(self, mocked_now, mocked_api_session, mocked_anymail_message):
+        mocked_now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
         with responses.RequestsMock() as rsps:
             rsps.add(rsps.GET, BANK_HOLIDAY_URL, json=TEST_HOLIDAYS)
             mock_api_session(mocked_api_session)
