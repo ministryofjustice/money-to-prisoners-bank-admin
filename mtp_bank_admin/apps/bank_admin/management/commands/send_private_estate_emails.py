@@ -161,7 +161,7 @@ def combine_private_estate_batches(private_estate_batches):
 def send_csv(prison, date, batches, csv_contents, total, count):
     prison_name = prison.get('short_name') or prison['name']
     some_batch = batches[0]
-    now = timezone.now()
+    now = timezone.localtime(timezone.now())
     csv_name = 'payment_%s_%s.csv' % (
         prison['cms_establishment_code'],
         now.strftime('%Y%m%d_%H%M%S'),
