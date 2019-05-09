@@ -60,6 +60,11 @@ urlpatterns = i18n_patterns(
             'cancel_url': reverse_lazy('bank_admin:dashboard'),
         }, name='reset_password_done'
     ),
+    url(
+        r'^email_change/$', auth_views.email_change, {
+            'cancel_url': reverse_lazy('settings'),
+        }, name='email_change'
+    ),
 
     url(r'^', include('bank_admin.urls', namespace='bank_admin',)),
     url(r'^', include('feedback.urls')),
