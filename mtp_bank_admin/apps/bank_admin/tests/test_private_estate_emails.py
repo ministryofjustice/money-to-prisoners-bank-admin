@@ -172,10 +172,10 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
                 '"Establishment","Date","Prisoner Name","Prisoner Number","TransactionID",'
                 '"Value","Sender","Address",""',
 
-                '"Private 1","15/02/2019","JOHN HALLS","A1409AE","100000001",'
+                '"Private 1","15/02/19","JOHN HALLS","A1409AE","100000001",'
                 '"£25.00","Jilly Halls","Clive House 1 SW1H 9EX",""',
 
-                '"Private 1","17/02/2019","JILLY HALLS","A1401AE","100000002",'
+                '"Private 1","17/02/19","JILLY HALLS","A1401AE","100000002",'
                 '"£12.00","John Halls","Clive House 2 SW1H 9EX",""',
 
                 '"","","","","Total","£37.00","","",""',
@@ -194,10 +194,10 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
                 '"Establishment","Date","Prisoner Name","Prisoner Number","TransactionID",'
                 '"Value","Sender","Address",""',
 
-                '"Private 2","15/02/2019","JOHN FREDSON","A1000AA","100000003",'
+                '"Private 2","15/02/19","JOHN FREDSON","A1000AA","100000003",'
                 '"£7.00","Mary [] Fredson","Clive House 3 SW1H 9EX",""',
 
-                '"Private 2","15/02/2019","FRED JOHNSON","A1000BB","100000004",'
+                '"Private 2","15/02/19","FRED JOHNSON","A1000BB","100000004",'
                 '"£13.00","A JOHNSON","Bank Transfer 102 Petty France London SW1H 9AJ",""',
 
                 '"","","","","Total","£20.00","","",""',

@@ -113,7 +113,7 @@ class Command(BaseCommand):
         total = 0
         count = 0
         for batch in batches:
-            csv_batch_date = batch['date'].strftime('%d/%m/%Y')
+            csv_batch_date = batch['date'].strftime('%d/%m/%y')
             credit_list = retrieve_all_pages_for_path(
                 self.api_session,
                 'private-estate-batches/%s/%s/credits/' % (
