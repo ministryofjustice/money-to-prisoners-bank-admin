@@ -1,6 +1,5 @@
 import codecs
 import collections
-import csv
 import io
 import logging
 import zipfile
@@ -105,11 +104,7 @@ class Command(BaseCommand):
 
     def prepare_csv(self, batches):
         f = io.StringIO()
-        writer = csv.writer(f, dialect='excel', lineterminator='\r\n', quoting=csv.QUOTE_ALL)
-        writer.writerow([
-            'Establishment', 'Date', 'Prisoner Name', 'Prisoner Number', 'TransactionID', 'Value', 'Sender', 'Address',
-            '',
-        ])
+        f.write('Establishment, Date, Prisoner Name, Prisoner Number, TransactionID, Value, Sender, Address\n')
         total = 0
         count = 0
         for batch in batches:
@@ -125,22 +120,13 @@ class Command(BaseCommand):
             prison_name = batch['prison'].get('short_name') or batch['prison']['name']
             for credit in credit_list:
                 total += credit['amount']
-                writer.writerow([
-                    prison_name,
-                    csv_batch_date,
-                    credit['prisoner_name'],
-                    credit['prisoner_number'],
-                    csv_transaction_id(credit),
-                    format_amount(credit['amount']),
-                    credit.get('sender_name') or 'Unknown sender',
-                    format_address(credit),
-                    ''
-                ])
-        writer.writerow([
-            '', '', '', '',
-            'Total', format_amount(total),
-            '', '', '',
-        ])
+                f.write((
+                    f"{prison_name}, {csv_batch_date},"
+                    f"{credit['prisoner_name']}, {credit['prisoner_number']},"
+                    f" {csv_transaction_id(credit)}, {format_amount(credit['amount'])},"
+                    f"{credit.get('sender_name') or 'Unknown sender'}, {format_address(credit)}, \n"
+                ).replace('"', ''))
+        f.write(f', , , ,Total , {format_amount(total)}, , \n')
         return codecs.encode(f.getvalue(), 'cp1252', errors='ignore'), total, count
 
 

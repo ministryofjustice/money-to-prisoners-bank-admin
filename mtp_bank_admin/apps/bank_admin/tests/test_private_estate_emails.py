@@ -149,7 +149,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
                      'amount': 1300,
                      'prisoner_name': 'FRED JOHNSON',
                      'prisoner_number': 'A1000BB',
-                     'sender_name': 'A JOHNSON',
+                     'sender_name': 'A "O\'Connell"',  # note quotes
                      'billing_address': None},
                 ],
             })
@@ -167,18 +167,17 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
         self.assertEqual(total, 3700)
         self.assertEqual(count, 2)
         self.assertEqual(
-            csv_contents.decode('cp1252').strip().splitlines(),
+            csv_contents.decode('cp1252').splitlines(),
             [
-                '"Establishment","Date","Prisoner Name","Prisoner Number","TransactionID",'
-                '"Value","Sender","Address",""',
+                'Establishment, Date, Prisoner Name, Prisoner Number, TransactionID, Value, Sender, Address',
 
-                '"Private 1","15/02/19","JOHN HALLS","A1409AE","100000001",'
-                '"£25.00","Jilly Halls","Clive House 1 SW1H 9EX",""',
+                'Private 1, 15/02/19,JOHN HALLS, A1409AE, 100000001,'
+                ' £25.00,Jilly Halls, Clive House 1 SW1H 9EX, ',
 
-                '"Private 1","17/02/19","JILLY HALLS","A1401AE","100000002",'
-                '"£12.00","John Halls","Clive House 2 SW1H 9EX",""',
+                'Private 1, 17/02/19,JILLY HALLS, A1401AE, 100000002,'
+                ' £12.00,John Halls, Clive House 2 SW1H 9EX, ',
 
-                '"","","","","Total","£37.00","","",""',
+                ', , , ,Total , £37.00, , ',
             ]
         )
 
@@ -189,18 +188,17 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
         self.assertEqual(total, 2000)
         self.assertEqual(count, 2)
         self.assertEqual(
-            csv_contents.decode('cp1252').strip().splitlines(),
+            csv_contents.decode('cp1252').splitlines(),
             [
-                '"Establishment","Date","Prisoner Name","Prisoner Number","TransactionID",'
-                '"Value","Sender","Address",""',
+                'Establishment, Date, Prisoner Name, Prisoner Number, TransactionID, Value, Sender, Address',
 
-                '"Private 2","15/02/19","JOHN FREDSON","A1000AA","100000003",'
-                '"£7.00","Mary [] Fredson","Clive House 3 SW1H 9EX",""',
+                'Private 2, 15/02/19,JOHN FREDSON, A1000AA, 100000003,'
+                ' £7.00,Mary [] Fredson, Clive House 3 SW1H 9EX, ',
 
-                '"Private 2","15/02/19","FRED JOHNSON","A1000BB","100000004",'
-                '"£13.00","A JOHNSON","Bank Transfer 102 Petty France London SW1H 9AJ",""',
+                'Private 2, 15/02/19,FRED JOHNSON, A1000BB, 100000004,'
+                ' £13.00,A O\'Connell, Bank Transfer 102 Petty France London SW1H 9AJ, ',
 
-                '"","","","","Total","£20.00","","",""',
+                ', , , ,Total , £20.00, , ',
             ]
         )
 
