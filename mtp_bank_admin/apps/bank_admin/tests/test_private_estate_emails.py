@@ -143,10 +143,10 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
                      'prisoner_name': 'JOHN FREDSON',
                      'prisoner_number': 'A1000AA',
                      'sender_name': 'Mary [Φ] Fredson',  # note non-CP1252 character
-                     'billing_address': {'line1': 'Clive House 3', 'postcode': 'SW1H 9EX'}},
+                     'billing_address': {'line1': 'Clive House, 3', 'postcode': 'SW1H 9EX'}},  # note comma
                     {'id': 4,
                      'source': 'bank_transfer',
-                     'amount': 1300,
+                     'amount': 100300,  # note > £1000
                      'prisoner_name': 'FRED JOHNSON',
                      'prisoner_number': 'A1000BB',
                      'sender_name': 'A "O\'Connell"',  # note quotes
@@ -185,7 +185,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
         self.assertEqual(prison['cms_establishment_code'], '20')
         self.assertEqual(date, datetime.date(2019, 2, 15))
         self.assertEqual(len(batches), 1)
-        self.assertEqual(total, 2000)
+        self.assertEqual(total, 101000)
         self.assertEqual(count, 2)
         self.assertEqual(
             csv_contents.decode('cp1252').splitlines(),
@@ -193,12 +193,12 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
                 'Establishment, Date, Prisoner Name, Prisoner Number, TransactionID, Value, Sender, Address',
 
                 'Private 2, 15/02/19,JOHN FREDSON, A1000AA, 100000003,'
-                ' £7.00,Mary [] Fredson, Clive House 3 SW1H 9EX, ',
+                ' £7.00,Mary [] Fredson, Clive House  3 SW1H 9EX, ',
 
                 'Private 2, 15/02/19,FRED JOHNSON, A1000BB, 100000004,'
-                ' £13.00,A O\'Connell, Bank Transfer 102 Petty France London SW1H 9AJ, ',
+                ' £1003.00,A O\'Connell, Bank Transfer 102 Petty France London SW1H 9AJ, ',
 
-                ', , , ,Total , £20.00, , ',
+                ', , , ,Total , £1010.00, , ',
             ]
         )
 

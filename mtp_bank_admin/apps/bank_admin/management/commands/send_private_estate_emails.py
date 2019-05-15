@@ -121,12 +121,17 @@ class Command(BaseCommand):
             for credit in credit_list:
                 total += credit['amount']
                 f.write((
-                    f"{prison_name}, {csv_batch_date},"
-                    f"{credit['prisoner_name']}, {credit['prisoner_number']},"
-                    f" {csv_transaction_id(credit)}, {format_amount(credit['amount'])},"
-                    f"{credit.get('sender_name') or 'Unknown sender'}, {format_address(credit)}, \n"
+                    f"{csv_text_value(prison_name)},"
+                    f" {csv_batch_date.replace(',', '')},"
+                    f"{csv_text_value(credit['prisoner_name'])},"
+                    f" {credit['prisoner_number'].replace(',', '')},"
+                    f" {csv_transaction_id(credit)},"
+                    f" {format_amount(credit['amount']).replace(',', '')},"
+                    f"{csv_text_value(credit.get('sender_name') or 'Unknown sender')},"
+                    f" {csv_text_value(format_address(credit))},"
+                    f" \n"
                 ).replace('"', ''))
-        f.write(f', , , ,Total , {format_amount(total)}, , \n')
+        f.write(f", , , ,Total , {format_amount(total).replace(',', '')}, , \n")
         return codecs.encode(f.getvalue(), 'cp1252', errors='ignore'), total, count
 
 
@@ -196,3 +201,7 @@ def format_address(credit):
         billing_address.get(key)
         for key in ('line1', 'line2', 'city', 'postcode', 'country')
     )))
+
+
+def csv_text_value(value):
+    return value.replace(',', ' ')
