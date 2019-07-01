@@ -26,6 +26,7 @@ SECRET_KEY = 'CHANGE_ME'
 ALLOWED_HOSTS = []
 
 START_PAGE_URL = os.environ.get('START_PAGE_URL', 'https://www.gov.uk/send-prisoner-money')
+SEND_MONEY_URL = os.environ.get('SEND_MONEY_URL', 'http://localhost:8004')
 SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8002')
 
 # Application definition
