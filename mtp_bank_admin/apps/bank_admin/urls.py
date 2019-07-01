@@ -1,6 +1,7 @@
-from django.contrib.auth.decorators import login_required
+from django.conf import settings
 from django.conf.urls import url
-from django.views.generic.base import TemplateView
+from django.contrib.auth.decorators import login_required
+from django.views.generic import RedirectView
 
 from . import views
 
@@ -13,5 +14,5 @@ urlpatterns = [
     url(r'^bank_statement/download/$', views.download_bank_statement, name='download_bank_statement'),
     url(r'^disbursements/download/$', views.download_disbursements, name='download_disbursements'),
 
-    url(r'^q_and_a/$', TemplateView.as_view(template_name='faq.html'), name='faq')
+    url(r'^q_and_a/$', RedirectView.as_view(url=settings.SEND_MONEY_URL + '/en-gb/help/faq/', permanent=True)),
 ]
