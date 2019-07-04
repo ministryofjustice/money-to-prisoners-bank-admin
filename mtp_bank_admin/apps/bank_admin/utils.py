@@ -176,7 +176,8 @@ class Journal:
         return '%s%s' % (self.fields[field]['column'],
                          self.current_row)
 
-    def set_field(self, field, value, style=None, extra_style={}):
+    def set_field(self, field, value, style=None, extra_style=None):
+        extra_style = extra_style or {}
         cell = self.get_cell(field)
         self.journal_ws[cell] = value
 
@@ -196,7 +197,9 @@ class Journal:
             )
         return self.journal_ws[cell]
 
-    def lookup(self, field, context={}):
+    def lookup(self, field, context=None):
+        context = context or {}
+
         try:
             value = self.fields[field]['value']
             return value.format(**context)
@@ -215,7 +218,10 @@ def get_cached_file_path(label, date, extension=None):
     return filepath
 
 
-def get_or_create_file(label, date, creation_func, f_args=[], f_kwargs={}, file_extension=None):
+def get_or_create_file(label, date, creation_func, f_args=None, f_kwargs=None, file_extension=None):
+    f_args = f_args or []
+    f_kwargs = f_kwargs or {}
+
     filepath = get_cached_file_path(label, date, extension=file_extension)
     if not os.path.isfile(filepath):
         filedata = creation_func(*f_args, **f_kwargs)

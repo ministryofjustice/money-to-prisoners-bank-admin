@@ -48,7 +48,9 @@ class AdiJournal(Journal):
         cell = self.get_cell(field)
         self.journal_ws[cell].number_format = '£#,##0.00_-'
 
-    def lookup(self, field, payment_type, record_type, context={}):
+    def lookup(self, field, payment_type, record_type, context=None):
+        context = context or {}
+
         try:
             value_dict = self.fields[field]['value']
             value = value_dict[payment_type.name][record_type.name]
