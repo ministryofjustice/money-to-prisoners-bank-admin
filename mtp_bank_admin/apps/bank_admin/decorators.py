@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse_lazy
 from django.contrib import messages
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from .exceptions import EmptyFileError, EarlyReconciliationError, UpstreamServiceUnavailable
 

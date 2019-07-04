@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.utils.encoding import escape_uri_path
 from django.utils.timezone import utc
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from mtp_common.auth.exceptions import Forbidden
 from mtp_common.auth.test_utils import generate_tokens
 from mtp_common.test_utils import silence_logger
