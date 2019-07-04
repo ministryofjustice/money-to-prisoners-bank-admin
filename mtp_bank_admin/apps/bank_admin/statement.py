@@ -1,5 +1,4 @@
 from decimal import Decimal
-import logging
 
 from django.conf import settings
 from django.utils.dateparse import parse_date
@@ -10,8 +9,6 @@ from .utils import (
     retrieve_all_transactions, get_daily_file_uid, get_or_create_file,
     reconcile_for_date, retrieve_last_balance, get_full_narrative
 )
-
-logger = logging.getLogger('mtp')
 
 
 def get_bank_statement_file(api_session, receipt_date):
