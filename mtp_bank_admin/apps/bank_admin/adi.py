@@ -1,7 +1,6 @@
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
-import logging
 
 from django.conf import settings
 
@@ -13,8 +12,6 @@ from .utils import (
     reconcile_for_date, retrieve_prisons, get_full_narrative,
     get_or_create_file
 )
-
-logger = logging.getLogger('mtp')
 
 
 def get_adi_journal_file(api_session, receipt_date, user=None):
@@ -51,7 +48,9 @@ class AdiJournal(Journal):
         cell = self.get_cell(field)
         self.journal_ws[cell].number_format = '£#,##0.00_-'
 
-    def lookup(self, field, payment_type, record_type, context={}):
+    def lookup(self, field, payment_type, record_type, context=None):
+        context = context or {}
+
         try:
             value_dict = self.fields[field]['value']
             value = value_dict[payment_type.name][record_type.name]

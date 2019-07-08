@@ -121,15 +121,15 @@ class Command(BaseCommand):
             for credit in credit_list:
                 total += credit['amount']
                 f.write((
-                    f"{csv_text_value(prison_name)},"
+                    f'{csv_text_value(prison_name)},'
                     f" {csv_batch_date.replace(',', '')},"
                     f"{csv_text_value(credit['prisoner_name'])},"
                     f" {credit['prisoner_number'].replace(',', '')},"
-                    f" {csv_transaction_id(credit)},"
+                    f' {csv_transaction_id(credit)},'
                     f" {format_amount(credit['amount']).replace(',', '')},"
                     f"{csv_text_value(credit.get('sender_name') or 'Unknown sender')},"
-                    f" {csv_text_value(format_address(credit))},"
-                    f" \n"
+                    f' {csv_text_value(format_address(credit))},'
+                    f' \n'
                 ).replace('"', ''))
         f.write(f", , , ,Total , {format_amount(total).replace(',', '')}, , \n")
         return codecs.encode(f.getvalue(), 'cp1252', errors='ignore'), total, count

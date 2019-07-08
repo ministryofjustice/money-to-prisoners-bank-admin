@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse_lazy
 from django.contrib import messages
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from .exceptions import EmptyFileError, EarlyReconciliationError, UpstreamServiceUnavailable
 
@@ -19,7 +19,7 @@ def filter_by_receipt_date(view_func):
             try:
                 receipt_date = datetime.strptime(receipt_date_str, '%Y-%m-%d').date()
             except ValueError:
-                return HttpResponseBadRequest(_("Invalid format for receipt_date"))
+                return HttpResponseBadRequest(_('Invalid format for receipt_date'))
         else:
             return HttpResponseBadRequest(_("'receipt_date' parameter required"))
         return view_func(request, receipt_date, *args, **kwargs)

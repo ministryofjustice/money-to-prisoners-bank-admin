@@ -2,7 +2,6 @@ import csv
 from datetime import datetime
 from decimal import Decimal
 import io
-import logging
 
 from django.conf import settings
 
@@ -12,8 +11,6 @@ from .utils import (
     retrieve_all_transactions, escape_csv_formula, reconcile_for_date,
     get_or_create_file, get_start_and_end_date
 )
-
-logger = logging.getLogger('mtp')
 
 
 def get_refund_file(api_session, receipt_date, mark_refunded=False):
