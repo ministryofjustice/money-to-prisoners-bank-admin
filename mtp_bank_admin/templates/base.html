@@ -19,6 +19,9 @@
       <ul id="mtp-proposition-tabs">
         {% if request.user.is_authenticated %}
           {% include 'bank_admin/proposition-tab.html' with view_name='bank_admin:dashboard' subview_names='bank_admin:dashboard' link_text=_('Download files') %}
+          {% if perms.disbursement.change_disbursement %}
+            {% include 'bank_admin/proposition-tab.html' with view_name='disbursements:cancel-disbursement' subview_names='disbursements:cancel-disbursement-confirm disbursements:cancel-disbursement disbursements:cancelled-disbursements' link_text=_('Cancel disbursement') %}
+          {% endif %}
         {% else %}
           {% include 'bank_admin/proposition-tab.html' with view_name='login' subview_names='login' link_text=_('Sign in') %}
         {% endif %}

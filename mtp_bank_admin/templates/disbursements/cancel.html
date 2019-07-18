@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load mtp_common %}
+{% load disbursements %}
+
+{% block page_title %}{% trans 'Cancel disbursement' %} – {{ block.super }}{% endblock %}
+
+{% block inner_content %}
+  <header>
+    <h1 class="heading-xlarge">{% trans 'Cancel disbursement' %}</h1>
+  </header>
+
+  {% for message in messages %}
+    <div class="mtp-message mtp-message--{{ message.level_tag }}">
+      {{ message }}
+    </div>
+    <br/>
+  {% endfor %}
+
+  <p>
+    {% trans 'Cancelling a disbursement will update our records and notify the prison that the disbursement failed.' %}
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    {% include 'mtp_common/forms/error-summary.html' with form=form only %}
+    {% include 'mtp_common/forms/field.html' with field=form.invoice_number %}
+
+    <p>
+      <input id="id_submit_btn" class="button" type="submit" value="{% trans 'Next' %}">
+    </p>
+  </form>
+
+  <br/>
+  <p>
+    <a href="{% url 'disbursements:cancelled-disbursements' %}">
+      {% trans 'View previously cancelled disbursements' %}
+    </a>
+  </p>
+{% endblock %}

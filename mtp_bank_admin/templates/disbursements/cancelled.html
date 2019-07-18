@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load mtp_common %}
+{% load disbursements %}
+
+{% block page_title %}{% trans 'Cancel disbursement' %} – {{ block.super }}{% endblock %}
+
+{% block inner_content %}
+  <header>
+    <h1 class="heading-xlarge">{% trans 'Cancelled disbursements' %}</h1>
+  </header>
+
+  <div class="print-hidden mtp-export-link">
+    <a href="{% url 'disbursements:cancelled-disbursements-export' %}">{% trans 'Download as spreadsheet' %}</a>
+  </div>
+
+  <div style="clear: both;"></div>
+
+  <table class="mtp-table">
+    <thead>
+      <tr>
+        <th>{% trans 'Invoice number' %}</th>
+        <th>{% trans 'Amount' %}</th>
+        <th>{% trans 'Created' %}</th>
+        <th>{% trans 'Cancelled' %}</th>
+        <th>{% trans 'Notes' %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for disbursement in cancelled_disbursements %}
+        <tr>
+          <td>{{ disbursement.invoice_number }}</td>
+          <td>{{ disbursement.amount|currency }}</td>
+          <td>
+            {% for log in disbursement.log_set %}
+              {% if log.action == 'confirmed' %}
+                {{ log.created|parse_date_field }}
+              {% endif %}
+            {% endfor %}
+          </td>
+          <td>
+            {% for log in disbursement.log_set %}
+              {% if log.action == 'cancelled' %}
+                {{ log.created|parse_date_field }}, {{ log.user.first_name }} {{ log.user.last_name }}
+              {% endif %}
+            {% endfor %}
+          </td>
+          <td>
+            {% for comment in disbursement.comments %}
+              {% if comment.category == 'cancel' %}
+                {{ comment.comment }}<br/>
+              {% endif %}
+            {% endfor %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7">{% trans 'No matching disbursements found' %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p>
+    {% page_list page=page page_count=page_count %}
+  </p>
+{% endblock %}
