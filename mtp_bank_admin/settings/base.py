@@ -52,6 +52,7 @@ ROOT_URLCONF = 'mtp_bank_admin.urls'
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
+    'mtp_common.cp_migration.middleware.CloudPlatformMigrationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'mtp_common.auth.csrf.CsrfViewMiddleware',
     'mtp_common.auth.middleware.AuthenticationMiddleware',
@@ -278,6 +279,9 @@ SHOW_LANGUAGE_SWITCH = os.environ.get('SHOW_LANGUAGE_SWITCH', 'False') == 'True'
 
 BANK_ADMIN_USERNAME = os.environ.get('BANK_ADMIN_USERNAME', 'refund-bank-admin')
 BANK_ADMIN_PASSWORD = os.environ.get('BANK_ADMIN_PASSWORD', 'refund-bank-admin')
+
+CLOUD_PLATFORM_MIGRATION_MODE = os.environ.get('CLOUD_PLATFORM_MIGRATION_MODE', '')
+CLOUD_PLATFORM_MIGRATION_URL = os.environ.get('CLOUD_PLATFORM_MIGRATION_URL', '')
 
 try:
     from .local import *  # noqa
