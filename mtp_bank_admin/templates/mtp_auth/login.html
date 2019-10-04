@@ -1,6 +1,12 @@
 {% extends 'mtp_common/auth/login.html' %}
 {% load i18n %}
+{% load mtp_common %}
 
 {% block auth_title %}
   {% trans 'Bank admin' %}
+{% endblock %}
+
+{% block inner_content %}
+  {% notifications_box request 'bankadmin_login' %}
+  {{ block.super }}
 {% endblock %}
