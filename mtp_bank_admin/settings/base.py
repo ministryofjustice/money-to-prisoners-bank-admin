@@ -20,6 +20,8 @@ APP_BUILD_DATE = os.environ.get('APP_BUILD_DATE')
 APP_GIT_COMMIT = os.environ.get('APP_GIT_COMMIT')
 MOJ_INTERNAL_SITE = True
 
+TEAM_EMAIL = os.environ.get('TEAM_EMAIL', 'mtp@localhost')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 SECRET_KEY = 'CHANGE_ME'
