@@ -49,7 +49,8 @@ class DashboardView(TemplateView):
     template_name = 'bank_admin/dashboard.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+        context = super().get_context_data(**kwargs)
+        context['team_email'] = settings.TEAM_EMAIL
         api_session = get_api_session(self.request)
         workday_list = get_preceding_workday_list(20, offset=2)
         user = self.request.user
