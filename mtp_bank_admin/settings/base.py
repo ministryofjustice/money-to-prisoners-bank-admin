@@ -126,7 +126,6 @@ TEMPLATES = [
                 'mtp_common.context_processors.analytics',
                 'mtp_common.context_processors.app_environment',
                 'bank_admin.context_processors.govuk_localisation',
-                'mtp_common.analytics.default_genericised_pageview',
             ],
         },
     },
@@ -233,7 +232,7 @@ LOGOUT_URL = 'logout'
 
 OAUTHLIB_INSECURE_TRANSPORT = True
 
-
+ANALYTICS_REQUIRED = os.environ.get('ANALYTICS_REQUIRED', 'True') == 'True'
 GOOGLE_ANALYTICS_ID = os.environ.get('GOOGLE_ANALYTICS_ID', None)
 
 REFUND_REFERENCE = 'Refund %s %s'
