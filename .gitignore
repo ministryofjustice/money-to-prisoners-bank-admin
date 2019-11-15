@@ -24,6 +24,7 @@ local_files/cache/
 /test_disbursements.xlsm
 /test_journal.xlsm
 
-# selenium
+# testing
+/reports/
 geckodriver.log
 ghostdriver.log
