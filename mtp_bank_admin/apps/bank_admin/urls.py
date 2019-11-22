@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 from django.conf import settings
 from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
@@ -14,5 +16,5 @@ urlpatterns = [
     url(r'^bank_statement/download/$', views.download_bank_statement, name='download_bank_statement'),
     url(r'^disbursements/download/$', views.download_disbursements, name='download_disbursements'),
 
-    url(r'^q_and_a/$', RedirectView.as_view(url=settings.SEND_MONEY_URL + '/en-gb/help/faq/', permanent=True)),
+    url(r'^q_and_a/$', RedirectView.as_view(url=urljoin(settings.SEND_MONEY_URL, '/help/faq/'), permanent=True)),
 ]
