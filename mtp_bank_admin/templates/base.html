@@ -28,12 +28,6 @@
   </nav>
 {% endblock %}
 
-{% block sub_nav %}
-  {{ block.super }}
-
-  {% include 'mtp_common/ie-support-banner.html' %}
-{% endblock %}
-
 {% block footer_support_links %}
   <ul>
     <li><a href="{% url 'submit_ticket' %}">{% trans 'Get help' %}</a></li>
