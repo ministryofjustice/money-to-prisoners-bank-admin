@@ -1,7 +1,7 @@
 (function () {
   'use strict';
-  require('polyfills').Polyfills.init();
 
+  // common
   require('analytics').Analytics.init();
   require('disclosure').Disclosure.init();
   require('mailcheck-warning').MailcheckWarning.init(
