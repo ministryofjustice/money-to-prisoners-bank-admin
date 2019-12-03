@@ -68,7 +68,6 @@ ROOT_URLCONF = 'mtp_bank_admin.urls'
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
-    'mtp_common.cp_migration.middleware.CloudPlatformMigrationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'mtp_common.auth.csrf.CsrfViewMiddleware',
     'mtp_common.auth.middleware.AuthenticationMiddleware',
