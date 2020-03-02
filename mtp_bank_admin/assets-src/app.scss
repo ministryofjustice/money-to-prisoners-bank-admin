@@ -1,0 +1,8 @@
+// mtp-common base components
+@import 'mtp/base';
+
+// mtp-common extra components
+@import 'mtp/components/mailcheck-warning';
+
+// app components
+@import './components/dashboard';
