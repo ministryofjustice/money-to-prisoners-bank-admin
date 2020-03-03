@@ -11,7 +11,7 @@
     <h1 class="govuk-heading-xl">{% trans 'Download files' %}</h1>
   </header>
 
-  {% include 'mtp_common/includes/message_box.html' %}
+  {% include 'mtp_common/includes/message-banners.html' %}
 
   {% if missed_refunds or missed_adi_journals or missed_statements or missed_disbursements %}
     <div class="mtp-missed-downloads-box" role="alert" aria-labelledby="mtp-missed-downloads-box__heading">

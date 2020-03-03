@@ -4,26 +4,7 @@
 
 {% block cookie_message %}{% endblock %}
 
-
 {% block page_title %}{% trans 'Bank admin' %}{% endblock %}
-{% block proposition %}{% trans 'Bank admin' %}{% endblock %}
-
-
-{% block proposition_extra %}
-  <nav id="mtp-proposition-extra" class="column-full print-hidden">
-    {% spaceless %}
-      <ul id="mtp-proposition-tabs">
-        {% if request.user.is_authenticated %}
-          {% include 'bank_admin/proposition-tab.html' with view_name='bank_admin:dashboard' subview_names='bank_admin:dashboard' link_text=_('Download files') %}
-        {% else %}
-          {% include 'bank_admin/proposition-tab.html' with view_name='login' subview_names='login' link_text=_('Sign in') %}
-        {% endif %}
-        {% include 'bank_admin/proposition-tab.html' with view_name='submit_ticket' subview_names='submit_ticket feedback_success' link_text=_('Get help') %}
-      </ul>
-    {% endspaceless %}
-  </nav>
-{% endblock %}
-
 
 {% block body_end %}
   <script src="{% url 'js-i18n' %}?{{ APP_GIT_COMMIT_SHORT }}"></script>

@@ -14,5 +14,12 @@ Banner.init();
 MailcheckWarning.init(
   '.mtp-account-management input[type=email]',
   ['gov.sscl.com', 'justice.gov.uk'],
-  ['gov.sscl.com', 'gov.uk']
+  ['gov.sscl.com', 'gov.uk'],
+  []
+);
+MailcheckWarning.init(
+  '#change-your-email #id_email',
+  ['gov.sscl.com', 'justice.gov.uk'],
+  ['gov.sscl.com', 'gov.uk'],
+  []
 );
