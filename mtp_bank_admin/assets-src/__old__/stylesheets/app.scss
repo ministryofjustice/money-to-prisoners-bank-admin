@@ -1,38 +1,6 @@
 // Application specific
 // Dashboard design makes page shorter so the whole page fits on a typical user screen
 
-.mtp-compact {
-  h1 {
-    font-size: 28px;
-  }
-
-  h2 {
-    font-size: 19px;
-    margin: 0;
-  }
-
-  h3 {
-    margin: 1em 0;
-  }
-
-  section {
-    display: inline-block;
-    margin-bottom: 2em;
-    vertical-align: top;
-    width: 470px;
-  }
-}
-
-.mtp-compact__row-1 {
-  border-bottom: 1px solid $panel-colour;
-  margin-bottom: 2em;
-  padding-bottom: 1em;
-}
-
-.mtp-filelink {
-  margin: 1.2em 0;
-}
-
 .mtp-missed-downloads-box {
   background: file-url('icon-important.png') no-repeat 16px 16px;
   border: 3px solid $red;
