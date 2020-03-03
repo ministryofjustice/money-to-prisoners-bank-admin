@@ -2,12 +2,8 @@
 {% load i18n %}
 {% load mtp_common %}
 
-{% block body_end %}
-  <script src="{% url 'js-i18n' %}?{{ APP_GIT_COMMIT_SHORT }}"></script>
-  {{ block.super }}
-  {% sentry_js %}
-  <!-- {{ request.resolver_match.url_name }} -->
-{% endblock %}
+{% block cookie_message %}{% endblock %}
+
 
 {% block page_title %}{% trans 'Bank admin' %}{% endblock %}
 {% block proposition %}{% trans 'Bank admin' %}{% endblock %}
@@ -28,14 +24,10 @@
   </nav>
 {% endblock %}
 
-{% block footer_support_links %}
-  <ul>
-    <li><a href="{% url 'submit_ticket' %}">{% trans 'Get help' %}</a></li>
-    <li>
-      {% trans 'Built by' %}
-      <a href="https://mojdigital.blog.gov.uk/">
-        <abbr title="{% trans 'Ministry of Justice' %}">MOJ</abbr> Digital
-      </a>
-    </li>
-  </ul>
+
+{% block body_end %}
+  <script src="{% url 'js-i18n' %}?{{ APP_GIT_COMMIT_SHORT }}"></script>
+  {{ block.super }}
+  {% sentry_js %}
+  <!-- {{ request.resolver_match.url_name }} -->
 {% endblock %}
