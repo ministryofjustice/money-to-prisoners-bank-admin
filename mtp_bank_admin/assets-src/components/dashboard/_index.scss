@@ -1,50 +1,26 @@
-// Dashboard design makes page shorter so the whole page fits on a typical user screen
+.mtp-missed-downloads-box {
+  box-sizing: border-box;
+  @include govuk-responsive-margin(8, 'bottom');
+  @include govuk-responsive-padding(4);
+  border: $govuk-border-width solid $govuk-error-colour;
+  background-color: $govuk-body-background-colour;
+}
 
-.mtp-compact {
-  h1 {
-    font-size: 28px;
-  }
+.mtp-download-dashboard {
+  .govuk-grid-row {
+    @include govuk-responsive-margin(8, 'bottom');
 
-  h2 {
-    font-size: 19px;
-    margin: 0;
-  }
-
-  h3 {
-    margin: 1em 0;
+    @include govuk-media-query($from: tablet) {
+      border-bottom: 1px solid $govuk-border-colour;
+    }
   }
 
   section {
-    display: inline-block;
-    margin-bottom: 2em;
-    vertical-align: top;
-    width: 470px;
-  }
-}
+    @include govuk-responsive-margin(6, 'bottom');
+    border-bottom: 1px solid $govuk-border-colour;
 
-.mtp-compact__row-1 {
-  border-bottom: 1px solid $panel-colour;
-  margin-bottom: 2em;
-  padding-bottom: 1em;
-}
-
-.mtp-filelink {
-  margin: 1.2em 0;
-}
-
-.mtp-missed-downloads-box {
-  background: file-url('icon-important.png') no-repeat 16px 16px;
-  border: 3px solid $red;
-  padding: 1em;
-  margin-bottom: 2em;
-
-  @include device-pixel-ratio {
-    background-image: file-url('icon-important-2x.png');
-    background-size: 35px 35px;
-  }
-
-  .heading-medium {
-    margin-top: 4px;
-    padding-left: 48px;
+    @include govuk-media-query($from: tablet) {
+      border-bottom: none;
+    }
   }
 }

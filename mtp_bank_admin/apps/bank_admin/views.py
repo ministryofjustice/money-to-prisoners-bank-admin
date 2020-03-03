@@ -50,25 +50,25 @@ class DashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        preceding_workdays = get_preceding_workday_list(5, offset=1)
+        context['latest_day'], context['preceding_days'] = preceding_workdays[0], preceding_workdays[1:]
+
         api_session = get_api_session(self.request)
         workday_list = get_preceding_workday_list(20, offset=2)
         user = self.request.user
-
         if user.has_perm('transaction.view_bank_details_transaction'):
             context['missed_refunds'] = get_missing_downloads(
                 api_session, ACCESSPAY_LABEL, workday_list
             )
-
         if user.has_perm('credit.view_any_credit'):
             context['missed_adi_journals'] = get_missing_downloads(
                 api_session, ADI_JOURNAL_LABEL, workday_list
             )
-
         if user.has_perm('transaction.view_transaction'):
             context['missed_statements'] = get_missing_downloads(
                 api_session, MT940_STMT_LABEL, workday_list
             )
-
         if user.has_perm('disbursement.view_disbursement'):
             context['missed_disbursements'] = get_missing_downloads(
                 api_session, DISBURSEMENTS_LABEL, workday_list

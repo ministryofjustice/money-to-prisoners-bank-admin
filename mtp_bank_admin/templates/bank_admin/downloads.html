@@ -1,0 +1,28 @@
+{% load i18n %}
+
+<section class="govuk-grid-column-one-half">
+  <h2 class="govuk-heading-s">{{ heading }}</h2>
+  <p>
+    <a href="{{ base_download_url }}?receipt_date={{ latest_day|date:'Y-m-d' }}">
+      {% blocktrans with date=latest_day|date:'d/m/Y' %}Download file for {{ date }}{% endblocktrans %}
+    </a>
+  </p>
+  <details class="govuk-details" data-module="govuk-details">
+    <summary class="govuk-details__summary">
+      <span class="govuk-details__summary-text" data-analytics="pageview,/-help_open/previous-{{ identifier }}/">
+        {{ previous_heading }}
+      </span>
+    </summary>
+    <div id="previous-{{ identifier }}" class="govuk-details__text">
+      <ul class="govuk-list govuk-list--bullet">
+        {% for day in preceding_days %}
+          <li>
+            <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+              {% blocktrans with date=day|date:'d/m/Y' %}Download file for {{ date }}{% endblocktrans %}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </details>
+</section>
