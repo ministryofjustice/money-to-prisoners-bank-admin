@@ -6,7 +6,7 @@ from mtp_common.views import GetHelpView as BaseGetHelpView, GetHelpSuccessView
 
 class GetHelpView(BaseGetHelpView):
     success_url = reverse_lazy('feedback_success')
-    ticket_subject = 'MTP Bank Admin Feedback'
+    ticket_subject = 'MTP for digital team - Bank Admin'
     ticket_tags = ['feedback', 'mtp', 'bank-admin', settings.ENVIRONMENT]
 
 
