@@ -2,8 +2,8 @@ from datetime import date, datetime
 import random
 from unittest import mock
 
-from django.core.urlresolvers import reverse
 from django.test.client import RequestFactory
+from django.urls import reverse
 from django.utils.timezone import utc
 import mt940
 from mtp_common.auth.api_client import get_api_session

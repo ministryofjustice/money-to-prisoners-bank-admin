@@ -5,7 +5,7 @@ from bank_admin.utils import get_preceding_workday_list
 register = template.Library()
 
 
-@register.assignment_tag
+@register.simple_tag
 def get_preceding_workdays(number_of_days, offset=0):
     """
     Returns a list of weekdays counting backwards from today

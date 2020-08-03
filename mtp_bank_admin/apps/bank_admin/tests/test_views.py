@@ -4,7 +4,7 @@ from unittest import mock
 from urllib.parse import quote_plus
 
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils.encoding import escape_uri_path
 from django.utils.timezone import utc
 from django.utils.translation import gettext_lazy as _
