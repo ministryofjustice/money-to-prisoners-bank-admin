@@ -1,9 +1,9 @@
 from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
-from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
+from django.urls import reverse_lazy
 from django.views.decorators.cache import cache_control
 from django.views.generic import RedirectView, TemplateView
 from django.views.i18n import JavaScriptCatalog

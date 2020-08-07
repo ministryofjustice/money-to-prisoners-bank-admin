@@ -4,7 +4,7 @@ import os
 from unittest import mock, skipUnless
 
 from django.test.client import RequestFactory
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from mtp_common.auth.api_client import get_api_session
 from mtp_common.auth.models import MojUser
 from mtp_common.test_utils import silence_logger

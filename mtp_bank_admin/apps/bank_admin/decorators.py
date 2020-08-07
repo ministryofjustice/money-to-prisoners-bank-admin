@@ -1,10 +1,10 @@
 from datetime import datetime
 from functools import wraps
 
-from django.core.urlresolvers import reverse_lazy
 from django.contrib import messages
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
+from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 
 from .exceptions import EmptyFileError, EarlyReconciliationError, UpstreamServiceUnavailable

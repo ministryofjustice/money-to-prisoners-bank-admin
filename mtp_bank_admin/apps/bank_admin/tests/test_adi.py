@@ -6,7 +6,7 @@ from unittest import mock, skipUnless
 from urllib.parse import quote_plus
 
 from django.test.client import RequestFactory
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils.timezone import utc
 from mtp_common.auth.api_client import get_api_session
 from mtp_common.auth.models import MojUser
