@@ -22,7 +22,6 @@ package.json
 package-lock.json
 webpack.config.js
 mtp_bank_admin/assets/
-mtp_bank_admin/settings/local.py
 mtp_bank_admin/templates/govuk_template
 static/
 media/
