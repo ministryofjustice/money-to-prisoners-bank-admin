@@ -1,3 +1,4 @@
+from django.conf import settings
 from openpyxl import styles
 
 ADI_JOURNAL_SHEET = 'WebADI'
@@ -94,9 +95,18 @@ ADI_JOURNAL_FIELDS = {
     'account': {
         'column': 'E',
         'value': {
-            'payment': {'debit': '1841102059', 'credit': '2617902085'},
-            'refund': {'debit': '1841102059', 'credit': '1841102059'},
-            'reject': {'debit': '1841102059', 'credit': '1816902028'},
+            'payment': {
+                'debit': settings.PRISONER_MONEY_HOLDING_ACCOUNT,
+                'credit': '2617902085',
+            },
+            'refund': {
+                'debit': settings.PRISONER_MONEY_HOLDING_ACCOUNT,
+                'credit': settings.PRISONER_MONEY_HOLDING_ACCOUNT,
+            },
+            'reject': {
+                'debit': settings.PRISONER_MONEY_HOLDING_ACCOUNT,
+                'credit': '1816902028',
+            },
         },
         'style': _white_style
     },

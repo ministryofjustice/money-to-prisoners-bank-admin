@@ -284,6 +284,15 @@ BANK_ADMIN_PASSWORD = os.environ.get('BANK_ADMIN_PASSWORD', 'refund-bank-admin')
 CLOUD_PLATFORM_MIGRATION_MODE = os.environ.get('CLOUD_PLATFORM_MIGRATION_MODE', '')
 CLOUD_PLATFORM_MIGRATION_URL = os.environ.get('CLOUD_PLATFORM_MIGRATION_URL', '')
 
+# general ledger account code for prisoner monies holding bank account
+PRISONER_MONEY_HOLDING_ACCOUNT = '1841102059'
+
+# global setting to turn on all November 2 HMPPS policy changes
+NOVEMBER_SECOND_CHANGES_LIVE = os.environ.get('NOVEMBER_SECOND_CHANGES_LIVE', '').lower() in ('1', 'true')
+if NOVEMBER_SECOND_CHANGES_LIVE:
+    # new bank account will be in use from this date
+    PRISONER_MONEY_HOLDING_ACCOUNT = '1841102092'
+
 try:
     from .local import *  # noqa
 except ImportError:
