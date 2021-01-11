@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load mtp_common %}
 
+
 {% block body_end %}
   <script src="{% url 'js-i18n' %}?{{ APP_GIT_COMMIT_SHORT }}"></script>
   {{ block.super }}
@@ -9,11 +10,13 @@
   <!-- {{ request.resolver_match.url_name }} -->
 {% endblock %}
 
+
 {% block page_title %}{% trans 'Bank admin' %}{% endblock %}
 {% block proposition %}{% trans 'Bank admin' %}{% endblock %}
 
 
 {% block proposition_extra %}
+  {# TODO: block is non-functional #}
   <nav id="mtp-proposition-extra" class="column-full print-hidden">
     {% spaceless %}
       <ul id="mtp-proposition-tabs">
@@ -26,16 +29,4 @@
       </ul>
     {% endspaceless %}
   </nav>
-{% endblock %}
-
-{% block footer_support_links %}
-  <ul>
-    <li><a href="{% url 'submit_ticket' %}">{% trans 'Get help' %}</a></li>
-    <li>
-      {% trans 'Built by' %}
-      <a href="https://mojdigital.blog.gov.uk/">
-        <abbr title="{% trans 'Ministry of Justice' %}">MOJ</abbr> Digital
-      </a>
-    </li>
-  </ul>
 {% endblock %}
