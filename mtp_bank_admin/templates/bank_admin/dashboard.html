@@ -12,12 +12,12 @@
     {% get_preceding_workdays 5 offset=1 as preceding_days %}
 
     <header>
-      <h1 class="heading-xlarge">{% trans 'Download files' %}</h1>
+      <h1 class="govuk-heading-xl">{% trans 'Download files' %}</h1>
     </header>
 
     {% if missed_refunds or missed_adi_journals or missed_statements or missed_disbursements %}
       <div class="mtp-missed-downloads-box">
-        <h3 class="heading-medium">{% trans 'You may have forgotten to download these files' %}</h3>
+        <h3 class="govuk-heading-m">{% trans 'You may have forgotten to download these files' %}</h3>
         <p><strong>
           {% trans 'Please download and process them before you move on to the next.' %}
         </strong></p>
@@ -65,7 +65,7 @@
       <div class="mtp-compact__row-1">
         {% if perms.transaction.view_bank_details_transaction %}
         <section>
-          <h2 class="heading-small">{% trans 'Access Pay file – refunds' %}</h2>
+          <h2 class="govuk-heading-s">{% trans 'Access Pay file – refunds' %}</h2>
           {% url 'bank_admin:download_refund_file' as base_download_url %}
           {% for day in preceding_days %}
             {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download file for {{ date }}{% endblocktrans %}
@@ -99,7 +99,7 @@
 
         {% if perms.credit.view_any_credit %}
         <section>
-          <h2 class="heading-small">{% trans 'ADI Journal' %}</h2>
+          <h2 class="govuk-heading-s">{% trans 'ADI Journal' %}</h2>
           {% url 'bank_admin:download_adi_journal' as base_download_url %}
           {% for day in preceding_days %}
             {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
@@ -135,7 +135,7 @@
       <div class="mtp-compact__row-2">
         {% if perms.transaction.view_transaction %}
         <section>
-          <h2 class="heading-small">{% trans 'Bank statement' %}</h2>
+          <h2 class="govuk-heading-s">{% trans 'Bank statement' %}</h2>
           {% url 'bank_admin:download_bank_statement' as base_download_url %}
           {% for day in preceding_days %}
             {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download transactions for {{ date }}{% endblocktrans %}
@@ -169,7 +169,7 @@
 
         {% if perms.disbursement.view_disbursement %}
         <section>
-          <h2 class="heading-small">{% trans 'Disbursements' %}</h2>
+          <h2 class="govuk-heading-s">{% trans 'Disbursements' %}</h2>
           {% url 'bank_admin:download_disbursements' as base_download_url %}
           {% for day in preceding_days %}
             {% blocktrans with date=day|date:'d/m/Y' asvar download_label %}Download disbursements for {{ date }}{% endblocktrans %}
