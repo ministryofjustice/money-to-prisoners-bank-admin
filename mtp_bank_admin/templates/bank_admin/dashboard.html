@@ -12,47 +12,49 @@
   </header>
 
   {% if missed_refunds or missed_adi_journals or missed_statements or missed_disbursements %}
-    <div class="mtp-missed-downloads-box">
-      <h3 class="govuk-heading-m">{% trans 'You may have forgotten to download these files' %}</h3>
-      <p><strong>
-        {% trans 'Please download and process them before you move on to the next.' %}
-      </strong></p>
-
-      {% if missed_refunds %}
-      <p>
-        {% trans 'Refunds for:' %}
-        {% for refund_date in missed_refunds %}
-          <a href="{% url 'bank_admin:download_refund_file' %}?receipt_date={{ refund_date|date:'Y-m-d' }}">{{ refund_date|date:'d/m/Y' }}</a>{% if not forloop.last %}, {% endif %}
-        {% endfor %}
-      </p>
-      {% endif %}
-
-      {% if missed_adi_journals %}
-      <p>
-        {% trans 'ADI journals for:' %}
-        {% for journal_date in missed_adi_journals %}
-          <a href="{% url 'bank_admin:download_adi_journal' %}?receipt_date={{ journal_date|date:'Y-m-d' }}">{{ journal_date|date:'d/m/Y' }}</a>{% if not forloop.last %}, {% endif %}
-        {% endfor %}
-      </p>
-      {% endif %}
-
-      {% if missed_statements %}
-      <p>
-        {% trans 'Bank statements for:' %}
-        {% for statement_date in missed_statements %}
-          <a href="{% url 'bank_admin:download_bank_statement' %}?receipt_date={{ statement_date|date:'Y-m-d' }}">{{ statement_date|date:'d/m/Y' }}</a>{% if not forloop.last %}, {% endif %}
-        {% endfor %}
-      </p>
-      {% endif %}
-
-      {% if missed_disbursements %}
-      <p>
-        {% trans 'Disbursements for:' %}
-        {% for disbursement_date in missed_disbursements %}
-          <a href="{% url 'bank_admin:download_disbursements' %}?receipt_date={{ disbursement_date|date:'Y-m-d' }}">{{ disbursement_date|date:'d/m/Y' }}</a>{% if not forloop.last %}, {% endif %}
-        {% endfor %}
-      </p>
-      {% endif %}
+    <div class="govuk-error-summary" aria-labelledby="error-summary-title__missed-downloads" role="alert" tabindex="-1" data-module="govuk-error-summary">
+      <h2 class="govuk-error-summary__title" id="error-summary-title__missed-downloads">
+        {% trans 'You may have forgotten to download these files' %}
+      </h2>
+      <div class="govuk-error-summary__body">
+        <ul class="govuk-list govuk-error-summary__list">
+          <li class="mtp-error-summary__non-field-error">
+            {% trans 'Please download and process them before you move on to the next.' %}
+          </li>
+          {% if missed_refunds %}
+            <li class="mtp-error-summary__non-field-error">
+              {% trans 'Refunds for:' %}
+              {% for refund_date in missed_refunds %}
+                <a href="{% url 'bank_admin:download_refund_file' %}?receipt_date={{ refund_date|date:'Y-m-d' }}">{{ refund_date|date:'d/m/Y' }}</a>{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </li>
+          {% endif %}
+          {% if missed_adi_journals %}
+            <li class="mtp-error-summary__non-field-error">
+              {% trans 'ADI journals for:' %}
+              {% for journal_date in missed_adi_journals %}
+                <a href="{% url 'bank_admin:download_adi_journal' %}?receipt_date={{ journal_date|date:'Y-m-d' }}">{{ journal_date|date:'d/m/Y' }}</a>{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </li>
+          {% endif %}
+          {% if missed_statements %}
+            <li class="mtp-error-summary__non-field-error">
+              {% trans 'Bank statements for:' %}
+              {% for statement_date in missed_statements %}
+                <a href="{% url 'bank_admin:download_bank_statement' %}?receipt_date={{ statement_date|date:'Y-m-d' }}">{{ statement_date|date:'d/m/Y' }}</a>{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </li>
+          {% endif %}
+          {% if missed_disbursements %}
+            <li class="mtp-error-summary__non-field-error">
+              {% trans 'Disbursements for:' %}
+              {% for disbursement_date in missed_disbursements %}
+                <a href="{% url 'bank_admin:download_disbursements' %}?receipt_date={{ disbursement_date|date:'Y-m-d' }}">{{ disbursement_date|date:'d/m/Y' }}</a>{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </li>
+          {% endif %}
+        </ul>
+      </div>
     </div>
   {% endif %}
 
