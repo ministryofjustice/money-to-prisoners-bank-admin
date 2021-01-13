@@ -3,16 +3,7 @@
 {% load mtp_common %}
 
 
-{% block body_end %}
-  <script src="{% url 'js-i18n' %}?{{ APP_GIT_COMMIT_SHORT }}"></script>
-  {{ block.super }}
-  {% sentry_js %}
-  <!-- {{ request.resolver_match.url_name }} -->
-{% endblock %}
-
-
 {% block page_title %}{% trans 'Bank admin' %}{% endblock %}
-{% block proposition %}{% trans 'Bank admin' %}{% endblock %}
 
 
 {% block proposition_extra %}
@@ -29,4 +20,12 @@
       </ul>
     {% endspaceless %}
   </nav>
+{% endblock %}
+
+
+{% block body_end %}
+  <script src="{% url 'js-i18n' %}?{{ APP_GIT_COMMIT_SHORT }}"></script>
+  {{ block.super }}
+  {% sentry_js %}
+  <!-- {{ request.resolver_match.url_name }} -->
 {% endblock %}
