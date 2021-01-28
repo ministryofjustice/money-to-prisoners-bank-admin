@@ -58,7 +58,7 @@ PROJECT_APPS = (
     'mtp_common.metrics',
     'widget_tweaks',
     'bank_admin',
-    'zendesk_tickets'
+    'zendesk_tickets',
 )
 INSTALLED_APPS += PROJECT_APPS
 
@@ -142,7 +142,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'mtp_common.context_processors.analytics',
                 'mtp_common.context_processors.app_environment',
-                'bank_admin.context_processors.govuk_localisation',
+                'mtp_common.context_processors.govuk_localisation',
             ],
         },
     },

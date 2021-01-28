@@ -2,40 +2,13 @@
 {% load i18n %}
 {% load mtp_common %}
 
+
+{% block page_title %}{% trans 'Bank admin' %}{% endblock %}
+
+
 {% block body_end %}
   <script src="{% url 'js-i18n' %}?{{ APP_GIT_COMMIT_SHORT }}"></script>
   {{ block.super }}
   {% sentry_js %}
   <!-- {{ request.resolver_match.url_name }} -->
-{% endblock %}
-
-{% block page_title %}{% trans 'Bank admin' %}{% endblock %}
-{% block proposition %}{% trans 'Bank admin' %}{% endblock %}
-
-
-{% block proposition_extra %}
-  <nav id="mtp-proposition-extra" class="column-full print-hidden">
-    {% spaceless %}
-      <ul id="mtp-proposition-tabs">
-        {% if request.user.is_authenticated %}
-          {% include 'bank_admin/proposition-tab.html' with view_name='bank_admin:dashboard' subview_names='bank_admin:dashboard' link_text=_('Download files') %}
-        {% else %}
-          {% include 'bank_admin/proposition-tab.html' with view_name='login' subview_names='login' link_text=_('Sign in') %}
-        {% endif %}
-        {% include 'bank_admin/proposition-tab.html' with view_name='submit_ticket' subview_names='submit_ticket feedback_success' link_text=_('Get help') %}
-      </ul>
-    {% endspaceless %}
-  </nav>
-{% endblock %}
-
-{% block footer_support_links %}
-  <ul>
-    <li><a href="{% url 'submit_ticket' %}">{% trans 'Get help' %}</a></li>
-    <li>
-      {% trans 'Built by' %}
-      <a href="https://mojdigital.blog.gov.uk/">
-        <abbr title="{% trans 'Ministry of Justice' %}">MOJ</abbr> Digital
-      </a>
-    </li>
-  </ul>
 {% endblock %}

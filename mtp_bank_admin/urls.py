@@ -5,11 +5,12 @@ from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django.urls import reverse_lazy
 from django.views.decorators.cache import cache_control
-from django.views.generic import RedirectView, TemplateView
+from django.views.generic import RedirectView
 from django.views.i18n import JavaScriptCatalog
 from moj_irat.views import HealthcheckView, PingJsonView
 from mtp_common.auth import views as auth_views
 from mtp_common.metrics.views import metrics_view
+from mtp_common.views import SettingsView
 
 urlpatterns = i18n_patterns(
     url(
@@ -27,13 +28,13 @@ urlpatterns = i18n_patterns(
 
     url(
         r'^settings/$',
-        TemplateView.as_view(template_name='mtp_common/settings.html'),
+        SettingsView.as_view(),
         name='settings'
     ),
     url(
         r'^password_change/$', auth_views.password_change, {
             'template_name': 'mtp_common/auth/password_change.html',
-            'cancel_url': reverse_lazy('bank_admin:dashboard'),
+            'cancel_url': reverse_lazy('settings'),
         }, name='password_change'
     ),
     url(

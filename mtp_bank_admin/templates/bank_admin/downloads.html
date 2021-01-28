@@ -1,0 +1,26 @@
+{% load i18n %}
+{% load mtp_common %}
+
+<section class="govuk-grid-column-one-half">
+  <h2 class="govuk-heading-s">{{ heading }}</h2>
+  <p>
+    <a href="{{ base_download_url }}?receipt_date={{ latest_day|date:'Y-m-d' }}">
+      {% blocktrans with date=latest_day|date:'d/m/Y' %}Download file for {{ date }}{% endblocktrans %}
+    </a>
+  </p>
+  {% captureoutput as body %}
+      <ul class="govuk-list">
+        {% for day in preceding_days %}
+          <li>
+            <a href="{{ base_download_url }}?receipt_date={{ day|date:'Y-m-d' }}">
+              {% blocktrans with date=day|date:'d/m/Y' %}Download file for {{ date }}{% endblocktrans %}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+  {% endcaptureoutput %}
+  {% captureoutput as analytics %}{% stripwhitespace %}
+      pageview,/-help_open/previous-{{ id }}/
+  {% endstripwhitespace %}{% endcaptureoutput %}
+  {% include 'govuk-frontend/components/details.html' with id=id summary=previous_heading body=body analytics=analytics %}
+</section>
