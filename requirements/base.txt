@@ -1,11 +1,7 @@
 # Dependencies needed for all environments
 
-money-to-prisoners-common~=11.0.0
-
-openpyxl>=2.5,<2.5.14
-Pillow>=5.3,<6
-django-anymail[mailgun]~=7.2
-uWSGI==2.0.19.1
-django-moj-irat>=0.6
+money-to-prisoners-common~=11.0.1
 
 mt940-writer==0.3
+openpyxl>=2.5,<2.5.14
+Pillow>=5.3,<6
