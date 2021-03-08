@@ -56,15 +56,22 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
             {'first_name': 'John', 'last_name': 'Smith', 'username': 'jsmith'}
         )
 
-    def _generate_test_adi_journal(self, receipt_date=None, user=None):
+    def _generate_test_adi_journal(
+        self,
+        receipt_date=None,
+        user=None,
+        credits=20,
+        refundable_transactions=5,
+        rejected_transactions=2,
+    ):
         if receipt_date is None:
             receipt_date = date(2016, 9, 13)
         start_date = quote_plus(str(set_worldpay_cutoff(receipt_date)))
         end_date = quote_plus(str(set_worldpay_cutoff(receipt_date + timedelta(days=1))))
 
-        credits = get_test_credits(20)
-        refundable_transactions = get_test_transactions(PaymentType.refund, 5)
-        rejected_transactions = get_test_transactions(PaymentType.reject, 2)
+        credits = get_test_credits(credits)
+        refundable_transactions = get_test_transactions(PaymentType.refund, refundable_transactions)
+        rejected_transactions = get_test_transactions(PaymentType.reject, rejected_transactions)
 
         responses.add(
             responses.POST,
@@ -137,7 +144,7 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
             # valid credits
             len({prison['general_ledger_code'] for prison in TEST_PRISONS}) +
             # refunds
-            1 +
+            (1 if refundable_transactions['results'] else 0) +
             # rejects
             len(rejected_transactions['results'])
         )
@@ -206,6 +213,26 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
 
             self.assertEqual(expected_credit_rows, file_credit_rows)
             self.assertEqual(expected_debit_rows, file_debit_rows)
+
+    @responses.activate
+    def test_adi_journal_without_refundable_transactions(self):
+        exceldata, test_data = self._generate_test_adi_journal(
+            refundable_transactions=0,
+            rejected_transactions=0,
+        )
+        with temp_file(exceldata) as f:
+            wb = load_workbook(f)
+            journal_ws = wb['130916']
+            row = adi_config.ADI_JOURNAL_START_ROW
+            while True:
+                debit = get_cell_value(journal_ws, 'debit', row)
+                credit = get_cell_value(journal_ws, 'credit', row)
+                if debit and credit:
+                    # final line
+                    break
+                row += 1
+                description = get_cell_value(journal_ws, 'description', row)
+                self.assertNotIn('MTP Refund File', description or '')
 
     @responses.activate
     def test_adi_journal_credit_sums_correct(self):

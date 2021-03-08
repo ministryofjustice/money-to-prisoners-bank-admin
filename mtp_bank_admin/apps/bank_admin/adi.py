@@ -208,9 +208,10 @@ def generate_adi_journal(api_session, receipt_date, user=None):
             refund_amount, PaymentType.refund, RecordType.debit,
             reconciliation_code=str(refund['ref_code'])
         )
-    journal.add_payment_row(
-        refund_total, PaymentType.refund, RecordType.credit, date=journal_date
-    )
+    if refundable_transactions:
+        journal.add_payment_row(
+            refund_total, PaymentType.refund, RecordType.credit, date=journal_date
+        )
 
     # add reject rows
     for reject in rejected_transactions:
