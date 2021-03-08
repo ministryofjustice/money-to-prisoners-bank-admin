@@ -199,7 +199,14 @@ def generate_adi_journal(api_session, receipt_date, user=None):
             date=journal_date
         )
 
-    # add refund rows
+    add_refund_rows(journal, journal_date, refundable_transactions)
+    add_reject_rows(journal, journal_date, rejected_transactions)
+
+    journal.finish_journal(receipt_date, user)
+    return journal.create_file()
+
+
+def add_refund_rows(journal, journal_date, refundable_transactions):
     refund_total = 0
     for refund in refundable_transactions:
         refund_amount = Decimal(refund['amount']) / 100
@@ -213,7 +220,8 @@ def generate_adi_journal(api_session, receipt_date, user=None):
             refund_total, PaymentType.refund, RecordType.credit, date=journal_date
         )
 
-    # add reject rows
+
+def add_reject_rows(journal, journal_date, rejected_transactions):
     for reject in rejected_transactions:
         reject_amount = Decimal(reject['amount']) / 100
         reference = get_full_narrative(reject)
@@ -225,6 +233,3 @@ def generate_adi_journal(api_session, receipt_date, user=None):
             reject_amount, PaymentType.reject, RecordType.credit,
             reference=reference, date=journal_date
         )
-
-    journal.finish_journal(receipt_date, user)
-    return journal.create_file()
