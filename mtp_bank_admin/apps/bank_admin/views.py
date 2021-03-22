@@ -74,6 +74,7 @@ class DashboardView(TemplateView):
                 api_session, DISBURSEMENTS_LABEL, workday_list
             )
 
+        context['show_access_pay_refunds'] = settings.SHOW_ACCESS_PAY_REFUNDS
         return context
 
 
