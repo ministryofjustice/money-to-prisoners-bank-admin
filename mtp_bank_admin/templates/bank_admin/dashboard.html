@@ -61,8 +61,18 @@
   {% if perms.transaction.view_bank_details_transaction or perms.credit.view_any_credit %}
     <div class="govuk-grid-row">
       {% if perms.transaction.view_bank_details_transaction %}
-        {% url 'bank_admin:download_refund_file' as base_download_url %}
-        {% include 'bank_admin/downloads.html' with heading=_('Access Pay file – refunds') previous_heading=_('Previous Access Pay refund files') id='ap-refunds' %}
+        {% if show_access_pay_refunds %}
+          {% url 'bank_admin:download_refund_file' as base_download_url %}
+          {% include 'bank_admin/downloads.html' with heading=_('Access Pay file – refunds') previous_heading=_('Previous Access Pay refund files') id='ap-refunds' %}
+        {% else %}
+          <section class="govuk-grid-column-one-half">
+            <h2 class="govuk-heading-s">{% trans 'Access Pay file – refunds' %}</h2>
+            <p>
+              {% trans 'This file does not need to be downloaded anymore.' %}
+              {% trans 'There are no refunds to process through Access Pay.' %}
+            </p>
+          </section>
+        {% endif %}
       {% endif %}
 
       {% if perms.credit.view_any_credit %}

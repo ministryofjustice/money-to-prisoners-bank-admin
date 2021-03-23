@@ -4,6 +4,7 @@ from unittest import mock
 from urllib.parse import quote_plus
 
 from django.conf import settings
+from django.test import override_settings
 from django.urls import reverse
 from django.utils.encoding import escape_uri_path
 from django.utils.timezone import utc
@@ -36,6 +37,7 @@ def mock_missing_download_check():
     )
 
 
+@override_settings(SHOW_ACCESS_PAY_REFUNDS=True)
 class BankAdminViewTestCase(BankAdminTestCase):
     def setUp(self):
         super().setUp()
@@ -133,6 +135,32 @@ class DashboardButtonVisibilityTestCase(BankAdminViewTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse('bank_admin:download_refund_file'))
+
+    @responses.activate
+    @mock.patch('mtp_common.auth.backends.api_client')
+    @override_settings(SHOW_ACCESS_PAY_REFUNDS=False)
+    def test_refund_download_hidden_even_with_perm(self, mock_api_client):
+        mock_api_client.authenticate.return_value = {
+            'pk': 5,
+            'token': generate_tokens(),
+            'user_data': {
+                'first_name': 'Sam',
+                'last_name': 'Hall',
+                'username': 'shall',
+                'permissions': ['transaction.view_bank_details_transaction']
+            }
+        }
+        mock_missing_download_check()
+
+        response = self.client.post(
+            reverse('login'),
+            data={'username': 'shall', 'password': 'pass'},
+            follow=True
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse('bank_admin:download_refund_file'))
+        self.assertContains(response, 'There are no refunds to process through Access Pay')
 
     @mock.patch('mtp_common.auth.backends.api_client')
     def test_cannot_see_refund_download_without_perm(self, mock_api_client):
