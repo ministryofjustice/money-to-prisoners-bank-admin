@@ -97,7 +97,7 @@ def download_refund_file(request, receipt_date):
     response = HttpResponse(csvfile, content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename="%s"' % filename
 
-    logger.info('User "%(username)s" is downloading AccessPay file for %(date)s' % {
+    logger.info('User "%(username)s" is downloading AccessPay file for %(date)s', {
         'username': request.user.username,
         'date': date_format(receipt_date, 'Y-m-d'),
     })
@@ -130,7 +130,7 @@ def download_adi_journal(request, receipt_date):
     )
     response['Content-Disposition'] = 'attachment; filename="%s"' % filename
 
-    logger.info('User "%(username)s" is downloading ADI journal for %(date)s' % {
+    logger.info('User "%(username)s" is downloading ADI journal for %(date)s', {
         'username': request.user.username,
         'date': date_format(receipt_date, 'Y-m-d'),
     })
@@ -157,7 +157,7 @@ def download_bank_statement(request, receipt_date):
     response = HttpResponse(bai2file, content_type='application/octet-stream')
     response['Content-Disposition'] = 'attachment; filename="%s"' % filename
 
-    logger.info('User "%(username)s" is downloading bank statement file for %(date)s' % {
+    logger.info('User "%(username)s" is downloading bank statement file for %(date)s', {
         'username': request.user.username,
         'date': date_format(receipt_date, 'Y-m-d'),
     })
@@ -187,7 +187,7 @@ def download_disbursements(request, receipt_date):
     )
     response['Content-Disposition'] = 'attachment; filename="%s"' % filename
 
-    logger.info('User "%(username)s" is downloading Disbursements for %(date)s' % {
+    logger.info('User "%(username)s" is downloading Disbursements for %(date)s', {
         'username': request.user.username,
         'date': date_format(receipt_date, 'Y-m-d'),
     })
