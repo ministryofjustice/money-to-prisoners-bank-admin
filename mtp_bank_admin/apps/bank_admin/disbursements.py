@@ -108,13 +108,13 @@ def generate_disbursements_journal(api_session, date):
 def add_private_estate_batches(journal, journal_date, prisons, private_estate_batches):
     for private_estate_batch in private_estate_batches:
         if not private_estate_batch.get('bank_account'):
-            logger.error('Private estate batch missing bank account %(prison)s %(date)s' % private_estate_batch)
+            logger.error('Private estate batch missing bank account %(prison)s %(date)s', private_estate_batch)
             continue
         if not private_estate_batch.get('remittance_emails'):
-            logger.error('Private estate batch missing remittance email addresses %(prison)s' % private_estate_batch)
+            logger.error('Private estate batch missing remittance email addresses %(prison)s', private_estate_batch)
             continue
         if not private_estate_batch['total_amount']:
-            logger.info('Nothing to transfer to %(prison)s for %(date)s' % private_estate_batch)
+            logger.info('Nothing to transfer to %(prison)s for %(date)s', private_estate_batch)
             continue
         prison = prisons[private_estate_batch['prison']]
         prison_name = prison.get('short_name') or prison['name']
