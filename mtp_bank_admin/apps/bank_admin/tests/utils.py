@@ -220,8 +220,9 @@ def mock_balance():
     )
 
 
-def mock_bank_holidays():
-    responses.add(
+def mock_bank_holidays(rsps=None):
+    rsps = rsps or responses
+    rsps.add(
         responses.GET,
         BANK_HOLIDAY_URL,
         json=TEST_HOLIDAYS
