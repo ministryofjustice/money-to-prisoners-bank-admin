@@ -10,8 +10,7 @@ from mtp_common.auth.api_client import MoJOAuth2Session
 from mtp_common.auth.test_utils import generate_tokens
 import responses
 
-from bank_admin.tests.utils import TEST_HOLIDAYS, TEST_PRISONS, TEST_BANK_ACCOUNT, api_url
-from bank_admin.utils import BANK_HOLIDAY_URL
+from bank_admin.tests.utils import TEST_PRISONS, TEST_BANK_ACCOUNT, api_url, mock_bank_holidays
 
 
 def mock_api_session(mocked_api_session):
@@ -28,12 +27,12 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
 
         mocked_timezone.now.return_value = datetime.datetime(2019, 2, 17, 12, tzinfo=utc)
         with responses.RequestsMock() as rsps:
-            rsps.add(rsps.GET, BANK_HOLIDAY_URL, json=TEST_HOLIDAYS)
+            mock_bank_holidays(rsps)
             call_command('send_private_estate_emails', scheduled=True)
 
         mocked_timezone.now.return_value = datetime.datetime(2016, 12, 26, 12, tzinfo=utc)
         with responses.RequestsMock() as rsps:
-            rsps.add(rsps.GET, BANK_HOLIDAY_URL, json=TEST_HOLIDAYS)
+            mock_bank_holidays(rsps)
             call_command('send_private_estate_emails', scheduled=True)
 
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
@@ -43,7 +42,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
 
         mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
         with responses.RequestsMock() as rsps:
-            rsps.add(rsps.GET, BANK_HOLIDAY_URL, json=TEST_HOLIDAYS)
+            mock_bank_holidays(rsps)
             with self.assertRaisesMessage(AssertionError, 'Must be called'):
                 call_command('send_private_estate_emails', scheduled=True)
 
@@ -54,7 +53,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
         mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
         mocked_send_csv.side_effect = AssertionError('Should not be called')
         with responses.RequestsMock() as rsps:
-            rsps.add(rsps.GET, BANK_HOLIDAY_URL, json=TEST_HOLIDAYS)
+            mock_bank_holidays(rsps)
             mock_api_session(mocked_api_session)
             rsps.add(rsps.POST, api_url('transactions/reconcile/'))
             rsps.add(rsps.GET, api_url('private-estate-batches/'), json={
@@ -69,7 +68,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
     def test_csv_created(self, mocked_timezone, mocked_api_session, mocked_send_csv):
         mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
         with responses.RequestsMock() as rsps:
-            rsps.add(rsps.GET, BANK_HOLIDAY_URL, json=TEST_HOLIDAYS)
+            mock_bank_holidays(rsps)
             mock_api_session(mocked_api_session)
             rsps.add(rsps.POST, api_url('transactions/reconcile/'))
             rsps.add(rsps.GET, api_url('private-estate-batches/'), json={
@@ -208,7 +207,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
     def test_email_sent(self, mocked_now, mocked_api_session, mocked_anymail_message):
         mocked_now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
         with responses.RequestsMock() as rsps:
-            rsps.add(rsps.GET, BANK_HOLIDAY_URL, json=TEST_HOLIDAYS)
+            mock_bank_holidays(rsps)
             mock_api_session(mocked_api_session)
             rsps.add(rsps.POST, api_url('transactions/reconcile/'))
             rsps.add(rsps.GET, api_url('private-estate-batches/'), json={

@@ -7,10 +7,10 @@ from urllib.parse import urljoin, urlparse, parse_qsl
 
 from django.conf import settings
 from django.test import SimpleTestCase
+from govuk_bank_holidays.bank_holidays import BankHolidays
 import responses
 
 from bank_admin.types import PaymentType
-from bank_admin.utils import BANK_HOLIDAY_URL
 
 TEST_PRISONS = [
     {'nomis_id': 'BPR', 'general_ledger_code': '048', 'name': 'Big Prison', 'private_estate': False},
@@ -220,10 +220,11 @@ def mock_balance():
     )
 
 
-def mock_bank_holidays():
-    responses.add(
+def mock_bank_holidays(rsps=None):
+    rsps = rsps or responses
+    rsps.add(
         responses.GET,
-        BANK_HOLIDAY_URL,
+        BankHolidays.source_url,
         json=TEST_HOLIDAYS
     )
 
