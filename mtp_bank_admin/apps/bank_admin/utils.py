@@ -7,13 +7,11 @@ import os
 
 from django.utils.timezone import now, utc
 from mtp_common.api import retrieve_all_pages_for_path
+from mtp_common.dates import WorkdayChecker
 from openpyxl import load_workbook, styles
 from openpyxl.writer.excel import save_virtual_workbook
-import requests
 
-from .exceptions import EarlyReconciliationError, UpstreamServiceUnavailable
-
-BANK_HOLIDAY_URL = 'https://www.gov.uk/bank-holidays.json'
+from .exceptions import EarlyReconciliationError
 
 
 def format_amount(pence):
@@ -103,36 +101,6 @@ def get_full_narrative(transaction):
     ])
 
 
-class WorkdayChecker:
-
-    def __init__(self):
-        response = requests.get(BANK_HOLIDAY_URL, timeout=15)
-        if response.status_code == 200:
-            self.holidays = [
-                datetime.strptime(holiday['date'], '%Y-%m-%d').date() for holiday in
-                response.json()['england-and-wales']['events']
-            ]
-        else:
-            raise UpstreamServiceUnavailable(
-                'Could not retrieve list of holidays for work day calculation'
-            )
-
-    def is_workday(self, date):
-        return date.weekday() < 5 and date not in self.holidays
-
-    def get_next_workday(self, date):
-        next_day = date + timedelta(days=1)
-        while not self.is_workday(next_day):
-            next_day += timedelta(days=1)
-        return next_day
-
-    def get_previous_workday(self, date):
-        previous_day = date - timedelta(days=1)
-        while not self.is_workday(previous_day):
-            previous_day -= timedelta(days=1)
-        return previous_day
-
-
 def get_preceding_workday_list(number_of_days, offset=0):
     """
     Returns a list of weekdays counting backwards from today
@@ -144,6 +112,7 @@ def get_preceding_workday_list(number_of_days, offset=0):
         current = now().date()
         for day in count():
             yield current - timedelta(days=day)
+
     days = day_generator()
     checker = WorkdayChecker()
     days = filter(checker.is_workday, days)
