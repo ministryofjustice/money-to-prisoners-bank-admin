@@ -36,10 +36,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, **options):
-        if settings.CLOUD_PLATFORM_MIGRATION_MODE:
-            logger.warning(f'{self.__class__.__module__} management command will not run in migration mode')
-            return
-
         date = options['date']
         scheduled = options['scheduled']
 

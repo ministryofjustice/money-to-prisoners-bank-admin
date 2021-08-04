@@ -19,10 +19,6 @@ class FileGenerationCommand(BaseCommand):
         parser.add_argument('--date', dest='date', type=str, help='Receipt date')
 
     def handle(self, *args, **options):
-        if settings.CLOUD_PLATFORM_MIGRATION_MODE:
-            logger.warning(f'{self.__class__.__module__} management command will not run in migration mode')
-            return
-
         if options['date']:
             receipt_date = parse_date(options['date'])
             if not receipt_date:
