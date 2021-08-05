@@ -32,13 +32,10 @@ def handle_file_download_errors(view_func):
         try:
             return view_func(request, receipt_date, *args, **kwargs)
         except EmptyFileError:
-            messages.add_message(request, messages.ERROR, _(
-                'No transactions available'))
+            messages.error(request, _('No transactions available'))
         except EarlyReconciliationError:
-            messages.add_message(request, messages.ERROR, _(
-                'This file cannot be downloaded until the next working day'))
+            messages.error(request, _('This file cannot be downloaded until the next working day'))
         except UpstreamServiceUnavailable:
-            messages.add_message(request, messages.ERROR, _(
-                'There was a problem generating the file. Please try again later.'))
+            messages.error(request, _('There was a problem generating the file. Please try again later.'))
         return redirect(reverse_lazy('bank_admin:dashboard'))
     return wrapper
