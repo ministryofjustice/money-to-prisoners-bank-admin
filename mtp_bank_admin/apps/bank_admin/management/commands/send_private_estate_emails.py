@@ -16,9 +16,10 @@ from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.auth import api_client
 from mtp_common.stack import StackException, is_first_instance
 from mtp_common.tasks import default_from_address, prepare_context
+from mtp_common.utils import format_currency
 
 from bank_admin.disbursements import retrieve_private_estate_batches
-from bank_admin.utils import WorkdayChecker, format_amount, retrieve_prisons, reconcile_for_date
+from bank_admin.utils import WorkdayChecker, retrieve_prisons, reconcile_for_date
 
 logger = logging.getLogger('mtp')
 
@@ -126,12 +127,12 @@ class Command(BaseCommand):
                     f"{csv_text_value(credit['prisoner_name'])},"
                     f" {credit['prisoner_number'].replace(',', '')},"
                     f' {csv_transaction_id(credit)},'
-                    f" {format_amount(credit['amount']).replace(',', '')},"
+                    f" {format_currency(credit['amount']).replace(',', '')},"
                     f"{csv_text_value(credit.get('sender_name') or 'Unknown sender')},"
                     f' {csv_text_value(format_address(credit))},'
                     f' \n'
                 ).replace('"', ''))
-        f.write(f", , , ,Total , {format_amount(total).replace(',', '')}, , \n")
+        f.write(f", , , ,Total , {format_currency(total).replace(',', '')}, , \n")
         return codecs.encode(f.getvalue(), 'cp1252', errors='ignore'), total, count
 
 
