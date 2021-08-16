@@ -283,9 +283,6 @@ SHOW_LANGUAGE_SWITCH = os.environ.get('SHOW_LANGUAGE_SWITCH', 'False') == 'True'
 BANK_ADMIN_USERNAME = os.environ.get('BANK_ADMIN_USERNAME', 'refund-bank-admin')
 BANK_ADMIN_PASSWORD = os.environ.get('BANK_ADMIN_PASSWORD', 'refund-bank-admin')
 
-CLOUD_PLATFORM_MIGRATION_MODE = os.environ.get('CLOUD_PLATFORM_MIGRATION_MODE', '')
-CLOUD_PLATFORM_MIGRATION_URL = os.environ.get('CLOUD_PLATFORM_MIGRATION_URL', '')
-
 # general ledger account code for prisoner monies holding bank account
 PRISONER_MONEY_HOLDING_ACCOUNT = '1841102059'
 
