@@ -4,18 +4,17 @@ import io
 import logging
 import zipfile
 
-from anymail.message import AnymailMessage
 from django.conf import settings
 from django.core.management import BaseCommand, CommandError
-from django.template import loader as template_loader
 from django.utils import timezone
+from django.utils.dateformat import format as format_date
 from django.utils.dateparse import parse_date
 from django.utils.functional import cached_property
 from django.utils.translation import activate, get_language
 from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.auth import api_client
 from mtp_common.stack import StackException, is_first_instance
-from mtp_common.tasks import default_from_address, prepare_context
+from mtp_common.tasks import send_email
 from mtp_common.utils import format_currency
 
 from bank_admin.disbursements import retrieve_private_estate_batches
@@ -161,27 +160,17 @@ def send_csv(prison, date, batches, csv_contents, total, count):
     zipped_csv = io.BytesIO()
     with zipfile.ZipFile(zipped_csv, 'w') as z:
         z.writestr(csv_name, csv_contents)
-    template_context = prepare_context({
-        'prison_name': prison_name,
-        'date': date,
-        'total': total,
-        'count': count,
-    })
-    text_body = template_loader.get_template('bank_admin/emails/private-estate.txt').render(template_context)
-    html_body = template_loader.get_template('bank_admin/emails/private-estate.html').render(template_context)
-    email = AnymailMessage(
-        subject='Credits received from "Send money to someone in prison" for %s on %s' % (
-            prison_name, date.strftime('%d/%m/%Y'),
-        ),
-        body=text_body.strip('\n'),
-        from_email=default_from_address(),
+    send_email(
+        template_name='bank-admin-private-csv',
         to=some_batch['remittance_emails'],
-        tags=['private-csv'],
+        personalisation={
+            'prison_name': prison_name,
+            'date': format_date(date, 'd/m/Y'),
+            'attachment': zipped_csv.getvalue(),
+        },
+        staff_email=True,
     )
-    email.attach_alternative(html_body, mimetype='text/html')
-    email.attach(csv_name + '.zip', zipped_csv.getvalue(), mimetype='application/zip')
-    email.send()
-    logger.info('Sent private estate batch for %s', prison_name)
+    logger.info('Sent private estate batch for %s with %d credits totalling £%0.2f', prison_name, count, total / 100)
 
 
 def csv_transaction_id(credit):

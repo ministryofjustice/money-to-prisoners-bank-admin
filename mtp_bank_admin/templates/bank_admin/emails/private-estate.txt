@@ -1,9 +1,0 @@
-{% load i18n %}
-{% blocktrans trimmed with date=date|date:'d/m/Y' %}The attached CSV file lists the credits received for {{ prison_name }} on {{ date }} from ‘Send money to someone in prison’.{% endblocktrans %}
-
-{% trans 'Please unzip this file and upload into the CMS.' %}
-{% trans 'Make sure NO credits are rejected.' %}
-
-{% trans 'If there’s any doubt, put credits on hold or speak with your security department.' %}
-
-{% trans 'Once all credits are accepted, make sure you DON’T send the response email to Secure Payment Service.' %}
