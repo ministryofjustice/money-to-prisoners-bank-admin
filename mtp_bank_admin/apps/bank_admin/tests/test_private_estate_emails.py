@@ -21,6 +21,7 @@ def mock_api_session(mocked_api_session):
     mocked_api_session.return_value = mock_session
 
 
+@override_settings(GOVUK_NOTIFY_REPLY_TO_STAFF='test-1234567-1234567')
 class PrivateEstateEmailTestCase(SimpleTestCase):
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone')
@@ -245,10 +246,12 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
         attachment = send_email_request_data['personalisation'].pop('attachment', {'file': 'AAAAAAA='})
         self.assertDictEqual(send_email_request_data, {
             'email_address': 'private@mtp.local',
+            'email_reply_to_id': 'test-1234567-1234567',
             'personalisation': {
                 'date': '15/02/2019',
                 'prison_name': 'Private 1',
             },
+            'reference': 'bank-admin-private-csv-2019-02-15-PR1',
         })
         # NB: file name should be 'payment_10_20190218_120000.csv.zip' but Notify doesn't support setting file names
         attachment_data = base64.b64decode(attachment['file'])
