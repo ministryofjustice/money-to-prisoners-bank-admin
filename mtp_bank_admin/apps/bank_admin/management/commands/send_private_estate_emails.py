@@ -2,7 +2,6 @@ import codecs
 import collections
 import io
 import logging
-import zipfile
 
 from django.conf import settings
 from django.core.management import BaseCommand, CommandError
@@ -16,6 +15,7 @@ from mtp_common.auth import api_client
 from mtp_common.stack import StackException, is_first_instance
 from mtp_common.tasks import send_email
 from mtp_common.utils import format_currency
+from notifications_python_client import prepare_upload
 
 from bank_admin.disbursements import retrieve_private_estate_batches
 from bank_admin.utils import WorkdayChecker, retrieve_prisons, reconcile_for_date
@@ -152,21 +152,14 @@ def combine_private_estate_batches(private_estate_batches):
 def send_csv(prison, date, batches, csv_contents, total, count):
     prison_name = prison.get('short_name') or prison['name']
     some_batch = batches[0]
-    now = timezone.localtime()
-    csv_name = 'payment_%s_%s.csv' % (
-        prison['cms_establishment_code'],
-        now.strftime('%Y%m%d_%H%M%S'),
-    )
-    zipped_csv = io.BytesIO()
-    with zipfile.ZipFile(zipped_csv, 'w') as z:
-        z.writestr(csv_name, csv_contents)
+    attachment = prepare_upload(io.BytesIO(csv_contents), is_csv=True)
     send_email(
         template_name='bank-admin-private-csv',
         to=some_batch['remittance_emails'],
         personalisation={
             'prison_name': prison_name,
             'date': format_date(date, 'd/m/Y'),
-            'attachment': zipped_csv.getvalue(),
+            'attachment': attachment,
         },
         reference='bank-admin-private-csv-%s-%s' % (
             format_date(date, 'Y-m-d'),

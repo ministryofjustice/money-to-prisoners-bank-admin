@@ -1,8 +1,6 @@
 import base64
 import datetime
-import io
 from unittest import mock
-import zipfile
 
 from django.core.management import call_command
 from django.test import SimpleTestCase, override_settings
@@ -253,9 +251,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
             },
             'reference': 'bank-admin-private-csv-2019-02-15-PR1',
         })
-        # NB: file name should be 'payment_10_20190218_120000.csv.zip' but Notify doesn't support setting file names
-        attachment_data = base64.b64decode(attachment['file'])
-        attachment_data = io.BytesIO(attachment_data)
-        with zipfile.ZipFile(attachment_data, 'r') as z:
-            csv_contents = z.read('payment_10_20190218_120000.csv')
+        # NB: file name should be 'payment_10_20190218_120000.csv' but Notify doesn't support setting file names
+        self.assertTrue(attachment['is_csv'])
+        csv_contents = base64.b64decode(attachment['file'])
         self.assertIn('£25.01'.encode('cp1252'), csv_contents)
