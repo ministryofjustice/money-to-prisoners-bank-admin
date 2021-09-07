@@ -1,4 +1,3 @@
-import base64
 import datetime
 from unittest import mock
 
@@ -19,7 +18,7 @@ def mock_api_session(mocked_api_session):
     mocked_api_session.return_value = mock_session
 
 
-@override_settings(GOVUK_NOTIFY_REPLY_TO_STAFF='test-1234567-1234567')
+@override_settings(GOVUK_NOTIFY_REPLY_TO_STAFF='test-1234567-1234567', EMAILS_URL='http://localhost:8006')
 class PrivateEstateEmailTestCase(SimpleTestCase):
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone')
@@ -202,10 +201,11 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
             ]
         )
 
+    @mock.patch('bank_admin.management.commands.send_private_estate_emails.upload_to_s3')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone.now')
     @override_settings(GOVUK_NOTIFY_API_KEY=GOVUK_NOTIFY_TEST_API_KEY)
-    def test_email_sent(self, mocked_now, mocked_api_session):
+    def test_email_sent(self, mocked_now, mocked_api_session, mocked_upload_to_s3):
         mocked_now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
         with NotifyMock() as rsps:
             mock_bank_holidays(rsps)
@@ -238,10 +238,12 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
             call_command('send_private_estate_emails', scheduled=True)
             send_email_request_data = rsps.send_email_request_data
 
+        self.assertEqual(mocked_upload_to_s3.call_count, 1)
+        upload_to_s3_kwargs = mocked_upload_to_s3.call_args_list[0].kwargs
         self.assertEqual(len(send_email_request_data), 1)
         send_email_request_data = send_email_request_data[0]
         send_email_request_data.pop('template_id')  # because template_id is random
-        attachment = send_email_request_data['personalisation'].pop('attachment', {'file': 'AAAAAAA='})
+        send_email_request_data['personalisation'].pop('attachment')  # because bucket path is part-random
         self.assertDictEqual(send_email_request_data, {
             'email_address': 'private@mtp.local',
             'email_reply_to_id': 'test-1234567-1234567',
@@ -251,7 +253,10 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
             },
             'reference': 'bank-admin-private-csv-2019-02-15-PR1',
         })
-        # NB: file name should be 'payment_10_20190218_120000.csv' but Notify doesn't support setting file names
-        self.assertTrue(attachment['is_csv'])
-        csv_contents = base64.b64decode(attachment['file'])
+        bucket_path = upload_to_s3_kwargs['path']
+        self.assertTrue(bucket_path.startswith('emails/private-estate-credits/2019-02-15/PR1/'))
+        self.assertTrue(bucket_path.endswith('/payment_10_20190218_120000.csv'))
+        csv_contents = upload_to_s3_kwargs['file_contents']
         self.assertIn('£25.01'.encode('cp1252'), csv_contents)
+        self.assertEqual(upload_to_s3_kwargs['content_type'], 'text/csv')
+        self.assertDictEqual(upload_to_s3_kwargs['tags'], {'prison': 'PR1'})

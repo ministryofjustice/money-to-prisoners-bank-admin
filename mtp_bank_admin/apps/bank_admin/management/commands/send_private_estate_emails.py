@@ -12,10 +12,10 @@ from django.utils.functional import cached_property
 from django.utils.translation import activate, get_language
 from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.auth import api_client
+from mtp_common.s3_bucket import generate_upload_path, get_download_url
 from mtp_common.stack import StackException, is_first_instance
-from mtp_common.tasks import send_email
+from mtp_common.tasks import send_email, upload_to_s3
 from mtp_common.utils import format_currency
-from notifications_python_client import prepare_upload
 
 from bank_admin.disbursements import retrieve_private_estate_batches
 from bank_admin.utils import WorkdayChecker, retrieve_prisons, reconcile_for_date
@@ -152,19 +152,34 @@ def combine_private_estate_batches(private_estate_batches):
 def send_csv(prison, date, batches, csv_contents, total, count):
     prison_name = prison.get('short_name') or prison['name']
     some_batch = batches[0]
-    attachment = prepare_upload(io.BytesIO(csv_contents), is_csv=True)
+    now = timezone.localtime()
+    csv_name = 'payment_%s_%s.csv' % (
+        prison['cms_establishment_code'],
+        now.strftime('%Y%m%d_%H%M%S'),
+    )
+    naming_context = {
+        'date': format_date(date, 'Y-m-d'),
+        'prison': prison['nomis_id'],
+    }
+    bucket_path_prefix = 'emails/private-estate-credits/%(date)s/%(prison)s' % naming_context
+    bucket_path = generate_upload_path(bucket_path_prefix, csv_name)
+    upload_to_s3(
+        file_contents=csv_contents,
+        path=bucket_path,
+        content_type='text/csv',
+        tags={
+            'prison': prison['nomis_id'],
+        },
+    )
     send_email(
         template_name='bank-admin-private-csv',
         to=some_batch['remittance_emails'],
         personalisation={
             'prison_name': prison_name,
             'date': format_date(date, 'd/m/Y'),
-            'attachment': attachment,
+            'attachment': get_download_url(bucket_path),
         },
-        reference='bank-admin-private-csv-%s-%s' % (
-            format_date(date, 'Y-m-d'),
-            prison['nomis_id'],
-        ),
+        reference='bank-admin-private-csv-%(date)s-%(prison)s' % naming_context,
         staff_email=True,
     )
     logger.info('Sent private estate batch for %s with %d credits totalling £%0.2f', prison_name, count, total / 100)
