@@ -2,23 +2,23 @@ import codecs
 import collections
 import io
 import logging
-import zipfile
 
-from anymail.message import AnymailMessage
 from django.conf import settings
 from django.core.management import BaseCommand, CommandError
-from django.template import loader as template_loader
 from django.utils import timezone
+from django.utils.dateformat import format as format_date
 from django.utils.dateparse import parse_date
 from django.utils.functional import cached_property
 from django.utils.translation import activate, get_language
 from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.auth import api_client
+from mtp_common.s3_bucket import generate_upload_path, get_download_url
 from mtp_common.stack import StackException, is_first_instance
-from mtp_common.tasks import default_from_address, prepare_context
+from mtp_common.tasks import send_email, upload_to_s3
+from mtp_common.utils import format_currency
 
 from bank_admin.disbursements import retrieve_private_estate_batches
-from bank_admin.utils import WorkdayChecker, format_amount, retrieve_prisons, reconcile_for_date
+from bank_admin.utils import WorkdayChecker, retrieve_prisons, reconcile_for_date
 
 logger = logging.getLogger('mtp')
 
@@ -126,12 +126,12 @@ class Command(BaseCommand):
                     f"{csv_text_value(credit['prisoner_name'])},"
                     f" {credit['prisoner_number'].replace(',', '')},"
                     f' {csv_transaction_id(credit)},'
-                    f" {format_amount(credit['amount']).replace(',', '')},"
+                    f" {format_currency(credit['amount']).replace(',', '')},"
                     f"{csv_text_value(credit.get('sender_name') or 'Unknown sender')},"
                     f' {csv_text_value(format_address(credit))},'
                     f' \n'
                 ).replace('"', ''))
-        f.write(f", , , ,Total , {format_amount(total).replace(',', '')}, , \n")
+        f.write(f", , , ,Total , {format_currency(total).replace(',', '')}, , \n")
         return codecs.encode(f.getvalue(), 'cp1252', errors='ignore'), total, count
 
 
@@ -152,35 +152,37 @@ def combine_private_estate_batches(private_estate_batches):
 def send_csv(prison, date, batches, csv_contents, total, count):
     prison_name = prison.get('short_name') or prison['name']
     some_batch = batches[0]
-    now = timezone.localtime(timezone.now())
+    now = timezone.localtime()
     csv_name = 'payment_%s_%s.csv' % (
         prison['cms_establishment_code'],
         now.strftime('%Y%m%d_%H%M%S'),
     )
-    zipped_csv = io.BytesIO()
-    with zipfile.ZipFile(zipped_csv, 'w') as z:
-        z.writestr(csv_name, csv_contents)
-    template_context = prepare_context({
-        'prison_name': prison_name,
-        'date': date,
-        'total': total,
-        'count': count,
-    })
-    text_body = template_loader.get_template('bank_admin/emails/private-estate.txt').render(template_context)
-    html_body = template_loader.get_template('bank_admin/emails/private-estate.html').render(template_context)
-    email = AnymailMessage(
-        subject='Credits received from "Send money to someone in prison" for %s on %s' % (
-            prison_name, date.strftime('%d/%m/%Y'),
-        ),
-        body=text_body.strip('\n'),
-        from_email=default_from_address(),
-        to=some_batch['remittance_emails'],
-        tags=['private-csv'],
+    naming_context = {
+        'date': format_date(date, 'Y-m-d'),
+        'prison': prison['nomis_id'],
+    }
+    bucket_path_prefix = 'emails/private-estate-credits/%(date)s/%(prison)s' % naming_context
+    bucket_path = generate_upload_path(bucket_path_prefix, csv_name)
+    upload_to_s3(
+        file_contents=csv_contents,
+        path=bucket_path,
+        content_type='text/csv',
+        tags={
+            'prison': prison['nomis_id'],
+        },
     )
-    email.attach_alternative(html_body, mimetype='text/html')
-    email.attach(csv_name + '.zip', zipped_csv.getvalue(), mimetype='application/zip')
-    email.send()
-    logger.info('Sent private estate batch for %s', prison_name)
+    send_email(
+        template_name='bank-admin-private-csv',
+        to=some_batch['remittance_emails'],
+        personalisation={
+            'prison_name': prison_name,
+            'date': format_date(date, 'd/m/Y'),
+            'attachment': get_download_url(bucket_path),
+        },
+        reference='bank-admin-private-csv-%(date)s-%(prison)s' % naming_context,
+        staff_email=True,
+    )
+    logger.info('Sent private estate batch for %s with %d credits totalling £%0.2f', prison_name, count, total / 100)
 
 
 def csv_transaction_id(credit):

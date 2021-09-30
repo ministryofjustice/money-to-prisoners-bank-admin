@@ -1,13 +1,12 @@
 import datetime
-import io
 from unittest import mock
-import zipfile
 
 from django.core.management import call_command
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 from django.utils.timezone import utc
 from mtp_common.auth.api_client import MoJOAuth2Session
 from mtp_common.auth.test_utils import generate_tokens
+from mtp_common.test_utils.notify import NotifyMock, GOVUK_NOTIFY_TEST_API_KEY
 import responses
 
 from bank_admin.tests.utils import TEST_PRISONS, TEST_BANK_ACCOUNT, api_url, mock_bank_holidays
@@ -19,6 +18,7 @@ def mock_api_session(mocked_api_session):
     mocked_api_session.return_value = mock_session
 
 
+@override_settings(GOVUK_NOTIFY_REPLY_TO_STAFF='test-1234567-1234567', EMAILS_URL='http://localhost:8006')
 class PrivateEstateEmailTestCase(SimpleTestCase):
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone')
@@ -201,12 +201,13 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
             ]
         )
 
-    @mock.patch('bank_admin.management.commands.send_private_estate_emails.AnymailMessage')
+    @mock.patch('bank_admin.management.commands.send_private_estate_emails.upload_to_s3')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone.now')
-    def test_email_sent(self, mocked_now, mocked_api_session, mocked_anymail_message):
+    @override_settings(GOVUK_NOTIFY_API_KEY=GOVUK_NOTIFY_TEST_API_KEY)
+    def test_email_sent(self, mocked_now, mocked_api_session, mocked_upload_to_s3):
         mocked_now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
-        with responses.RequestsMock() as rsps:
+        with NotifyMock() as rsps:
             mock_bank_holidays(rsps)
             mock_api_session(mocked_api_session)
             rsps.add(rsps.POST, api_url('transactions/reconcile/'))
@@ -235,16 +236,27 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
                 ],
             })
             call_command('send_private_estate_emails', scheduled=True)
+            send_email_request_data = rsps.send_email_request_data
 
-        self.assertEqual(mocked_anymail_message.call_count, 1)
-        email_kwargs = mocked_anymail_message.call_args_list[0][1]
-        self.assertIn('Private 1', email_kwargs['subject'])
-        self.assertIn('15/02/2019', email_kwargs['subject'])
-        self.assertIn('private@mtp.local', email_kwargs['to'])
-
-        attachment_args = mocked_anymail_message().attach.call_args_list[0][0]
-        self.assertEqual(attachment_args[0], 'payment_10_20190218_120000.csv.zip')
-        attachment = io.BytesIO(attachment_args[1])
-        with zipfile.ZipFile(attachment, 'r') as z:
-            csv_contents = z.read('payment_10_20190218_120000.csv')
+        self.assertEqual(mocked_upload_to_s3.call_count, 1)
+        upload_to_s3_kwargs = mocked_upload_to_s3.call_args_list[0].kwargs
+        self.assertEqual(len(send_email_request_data), 1)
+        send_email_request_data = send_email_request_data[0]
+        send_email_request_data.pop('template_id')  # because template_id is random
+        send_email_request_data['personalisation'].pop('attachment')  # because bucket path is part-random
+        self.assertDictEqual(send_email_request_data, {
+            'email_address': 'private@mtp.local',
+            'email_reply_to_id': 'test-1234567-1234567',
+            'personalisation': {
+                'date': '15/02/2019',
+                'prison_name': 'Private 1',
+            },
+            'reference': 'bank-admin-private-csv-2019-02-15-PR1',
+        })
+        bucket_path = upload_to_s3_kwargs['path']
+        self.assertTrue(bucket_path.startswith('emails/private-estate-credits/2019-02-15/PR1/'))
+        self.assertTrue(bucket_path.endswith('/payment_10_20190218_120000.csv'))
+        csv_contents = upload_to_s3_kwargs['file_contents']
         self.assertIn('£25.01'.encode('cp1252'), csv_contents)
+        self.assertEqual(upload_to_s3_kwargs['content_type'], 'text/csv')
+        self.assertDictEqual(upload_to_s3_kwargs['tags'], {'prison': 'PR1'})
