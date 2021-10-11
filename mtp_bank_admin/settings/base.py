@@ -148,6 +148,7 @@ TEMPLATES = [
                 'mtp_common.context_processors.analytics',
                 'mtp_common.context_processors.app_environment',
                 'mtp_common.context_processors.govuk_localisation',
+                'bank_admin.context_processors.bank_admin_settings',
             ],
         },
     },
@@ -268,6 +269,7 @@ ZENDESK_CUSTOM_FIELDS = {
     'user_agent': 23791776,
     'contact_email': 30769508,
 }
+FOOTER_FEEDBACK_LINK = os.environ.get('FOOTER_FEEDBACK_LINK', None)
 
 GOVUK_NOTIFY_API_KEY = os.environ.get('GOVUK_NOTIFY_API_KEY', '')
 GOVUK_NOTIFY_REPLY_TO_PUBLIC = os.environ.get('GOVUK_NOTIFY_REPLY_TO_PUBLIC', '')
