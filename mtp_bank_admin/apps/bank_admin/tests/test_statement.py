@@ -162,5 +162,8 @@ class NoTransactionsTestCase(BankStatementTestCase):
         today = date(2016, 9, 13)
         mt940_file = generate_bank_statement(self.get_api_session(), today)
         parsed_file = mt940.parse(mt940_file)
-        self.assertEqual(len(parsed_file.transactions), 1)
-        self.assertEqual(parsed_file.transactions[0].data, {})
+        self.assertEqual(len(parsed_file.transactions), 0)
+        final_opening_balance = parsed_file.data['final_opening_balance'].amount
+        final_closing_balance = parsed_file.data['final_closing_balance'].amount
+        self.assertEqual(final_opening_balance, final_closing_balance)
+        self.assertEqual(final_closing_balance.amount * 100, OPENING_BALANCE)
