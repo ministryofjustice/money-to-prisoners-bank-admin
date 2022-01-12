@@ -26,6 +26,7 @@ logger = logging.getLogger('mtp')
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--date', help='Receipt date')
+        parser.add_argument('--prison', help='Only send emails for this prison')
         parser.add_argument('--scheduled', action='store_true')
 
     @cached_property
@@ -37,6 +38,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         date = options['date']
+        prison = options['prison']
         scheduled = options['scheduled']
 
         if date and scheduled:
@@ -63,12 +65,12 @@ class Command(BaseCommand):
             if date is None:
                 raise CommandError('Date cannot be parsed, use YYYY-MM-DD format')
 
-        self.process_batches(date)
+        self.process_batches(date, prison)
 
-    def process_batches(self, date):
+    def process_batches(self, date, prison=None):
         start_date, end_date = reconcile_for_date(self.api_session, date)
 
-        batches = retrieve_private_estate_batches(self.api_session, start_date, end_date)
+        batches = retrieve_private_estate_batches(self.api_session, start_date, end_date, prison)
         grouped_batches = combine_private_estate_batches(batches)
         if not grouped_batches:
             logger.info('No private estate batches to handle for %s', date)

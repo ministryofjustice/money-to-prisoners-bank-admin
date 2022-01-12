@@ -49,12 +49,17 @@ def retrieve_all_disbursements(api_session, **kwargs):
         api_session, 'disbursements/', **kwargs)
 
 
-def retrieve_private_estate_batches(api_session, start_date, end_date):
+def retrieve_private_estate_batches(api_session, start_date, end_date, prison=None):
+    filters = dict(
+        date__gte=start_date.date(),
+        date__lt=end_date.date(),
+    )
+    if prison:
+        filters['prison'] = prison
     return retrieve_all_pages_for_path(
         api_session,
         'private-estate-batches/',
-        date__gte=start_date.date(),
-        date__lt=end_date.date(),
+        **filters
     )
 
 

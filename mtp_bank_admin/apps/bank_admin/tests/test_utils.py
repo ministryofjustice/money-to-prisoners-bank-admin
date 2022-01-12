@@ -79,49 +79,49 @@ class ReconcileForDateTestCase(BankAdminTestCase):
 
 
 class WorkdayCheckerTestCase(BankAdminTestCase):
+    @classmethod
+    def make_checker(cls, rsps):
+        mock_bank_holidays(rsps)
+        return WorkdayChecker()
 
-    def setUp(self):
-        mock_bank_holidays()
-        self.checker = WorkdayChecker()
-
-    @responses.activate
     def test_christmas_is_not_workday(self):
-        self.assertFalse(self.checker.is_workday(date(2016, 12, 27)))
+        with responses.RequestsMock() as rsps:
+            self.assertFalse(self.make_checker(rsps).is_workday(date(2016, 12, 27)))
 
-    @responses.activate
     def test_weekend_is_not_workday(self):
-        self.assertFalse(self.checker.is_workday(date(2016, 12, 17)))
+        with responses.RequestsMock() as rsps:
+            self.assertFalse(self.make_checker(rsps).is_workday(date(2016, 12, 17)))
 
-    @responses.activate
     def test_weekday_is_workday(self):
-        self.assertTrue(self.checker.is_workday(date(2016, 12, 21)))
+        with responses.RequestsMock() as rsps:
+            self.assertTrue(self.make_checker(rsps).is_workday(date(2016, 12, 21)))
 
-    @responses.activate
     def test_next_workday_middle_of_week(self):
-        next_day = self.checker.get_next_workday(date(2016, 12, 21))
+        with responses.RequestsMock() as rsps:
+            next_day = self.make_checker(rsps).get_next_workday(date(2016, 12, 21))
         self.assertEqual(next_day, date(2016, 12, 22))
 
-    @responses.activate
     def test_next_workday_weekend(self):
-        next_day = self.checker.get_next_workday(date(2016, 12, 16))
+        with responses.RequestsMock() as rsps:
+            next_day = self.make_checker(rsps).get_next_workday(date(2016, 12, 16))
         self.assertEqual(next_day, date(2016, 12, 19))
 
-    @responses.activate
     def test_next_workday_bank_holidays(self):
-        next_day = self.checker.get_next_workday(date(2016, 12, 23))
+        with responses.RequestsMock() as rsps:
+            next_day = self.make_checker(rsps).get_next_workday(date(2016, 12, 23))
         self.assertEqual(next_day, date(2016, 12, 28))
 
-    @responses.activate
     def test_previous_workday_middle_of_week(self):
-        previous_day = self.checker.get_previous_workday(date(2016, 12, 22))
+        with responses.RequestsMock() as rsps:
+            previous_day = self.make_checker(rsps).get_previous_workday(date(2016, 12, 22))
         self.assertEqual(previous_day, date(2016, 12, 21))
 
-    @responses.activate
     def test_previous_workday_weekend(self):
-        previous_day = self.checker.get_previous_workday(date(2016, 12, 19))
+        with responses.RequestsMock() as rsps:
+            previous_day = self.make_checker(rsps).get_previous_workday(date(2016, 12, 19))
         self.assertEqual(previous_day, date(2016, 12, 16))
 
-    @responses.activate
     def test_previous_workday_bank_holidays(self):
-        previous_day = self.checker.get_previous_workday(date(2016, 12, 28))
+        with responses.RequestsMock() as rsps:
+            previous_day = self.make_checker(rsps).get_previous_workday(date(2016, 12, 28))
         self.assertEqual(previous_day, date(2016, 12, 23))
