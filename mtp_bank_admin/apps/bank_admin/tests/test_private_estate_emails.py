@@ -152,7 +152,15 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
                      'billing_address': None},
                 ],
             })
+
             call_command('send_private_estate_emails', scheduled=True)
+
+            batch_request = next(filter(lambda call: 'private-estate-batches/' in call.request.url, rsps.calls))
+            batch_filters = batch_request.request.params
+
+        self.assertEqual(batch_filters['date__gte'], '2019-02-15')
+        self.assertEqual(batch_filters['date__lt'], '2019-02-18')
+        self.assertNotIn('prison', batch_filters)
 
         self.assertEqual(mocked_send_csv.call_count, 2)
         pr1_call, pr2_call = mocked_send_csv.call_args_list
@@ -200,6 +208,68 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
                 ', , , ,Total , £1010.00, , ',
             ]
         )
+
+    @mock.patch('bank_admin.management.commands.send_private_estate_emails.send_csv')
+    @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
+    @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone')
+    def test_csv_created_for_one_prison(self, mocked_timezone, mocked_api_session, mocked_send_csv):
+        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
+        with responses.RequestsMock() as rsps:
+            mock_bank_holidays(rsps)
+            mock_api_session(mocked_api_session)
+            rsps.add(rsps.POST, api_url('transactions/reconcile/'))
+            rsps.add(rsps.GET, api_url('private-estate-batches/'), json={
+                'count': 2,
+                'results': [
+                    {'date': '2019-02-15',
+                     'prison': 'PR1',
+                     'total_amount': 2500,
+                     'bank_account': TEST_BANK_ACCOUNT,
+                     'remittance_emails': ['private@mtp.local']},
+                    {'date': '2019-02-17',
+                     'prison': 'PR1',
+                     'total_amount': 1200,
+                     'bank_account': TEST_BANK_ACCOUNT,
+                     'remittance_emails': ['private@mtp.local']},
+                ]
+            })
+            rsps.add(rsps.GET, api_url('prisons/'), json={'count': len(TEST_PRISONS), 'results': TEST_PRISONS})
+            rsps.add(rsps.PATCH, api_url('private-estate-batches/PR1/2019-02-15/'))
+            rsps.add(rsps.PATCH, api_url('private-estate-batches/PR1/2019-02-17/'))
+            rsps.add(rsps.GET, api_url('private-estate-batches/PR1/2019-02-15/credits/'), json={
+                'count': 1,
+                'results': [
+                    {'id': 1,
+                     'source': 'online',
+                     'amount': 500,
+                     'prisoner_name': 'JOHN HALLS',
+                     'prisoner_number': 'A1409AE',
+                     'sender_name': 'Jilly Halls',
+                     'billing_address': {'line1': 'Clive House 1', 'postcode': 'SW1H 9EX'}},
+                ],
+            })
+            rsps.add(rsps.GET, api_url('private-estate-batches/PR1/2019-02-17/credits/'), json={
+                'count': 1,
+                'results': [
+                    {'id': 2,
+                     'source': 'online',
+                     'amount': 1000,
+                     'prisoner_name': 'JILLY HALLS',
+                     'prisoner_number': 'A1401AE',
+                     'sender_name': 'John Halls',
+                     'billing_address': {'line1': 'Clive House 2', 'postcode': 'SW1H 9EX'}},
+                ],
+            })
+
+            call_command('send_private_estate_emails', prison='PR1', scheduled=True)
+
+            batch_request = next(filter(lambda call: 'private-estate-batches/' in call.request.url, rsps.calls))
+            batch_filters = batch_request.request.params
+
+        self.assertEqual(batch_filters['date__gte'], '2019-02-15')
+        self.assertEqual(batch_filters['date__lt'], '2019-02-18')
+        self.assertEqual(batch_filters['prison'], 'PR1')
+        self.assertEqual(mocked_send_csv.call_count, 1)
 
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.upload_to_s3')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
