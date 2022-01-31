@@ -2,6 +2,6 @@
 
 money-to-prisoners-common~=13.4.0
 
-mt940-writer~=0.3.0
+mt940-writer~=0.4
 openpyxl~=3.0
 Pillow>=8,<9
