@@ -71,6 +71,7 @@ INSTALLED_APPS += PROJECT_APPS
 WSGI_APPLICATION = 'mtp_bank_admin.wsgi.application'
 ROOT_URLCONF = 'mtp_bank_admin.urls'
 MIDDLEWARE = (
+    'mtp_common.metrics.middleware.RequestMetricsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
