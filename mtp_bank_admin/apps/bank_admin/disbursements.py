@@ -154,16 +154,17 @@ def add_disbursements(journal, journal_date, prisons, disbursements):
             if disbursement[field] is None:
                 disbursement[field] = ''
 
-        creator = 'Unknown'
-        confirmer = 'Unknown'
+        creator = 'Business hub'
+        confirmer = 'Business hub'
         for log in disbursement['log_set']:
-            if log['action'] == 'created':
+            user = log['user']
+            if log['action'] == 'created' and user:
                 creator = '%s %s' % (
-                    log['user']['first_name'][0], log['user']['last_name']
+                    user['first_name'][0], user['last_name']
                 )
-            if log['action'] == 'confirmed':
+            if log['action'] == 'confirmed' and user:
                 confirmer = '%s %s' % (
-                    log['user']['first_name'][0], log['user']['last_name']
+                    user['first_name'][0], user['last_name']
                 )
 
         journal.add_disbursement_row(
