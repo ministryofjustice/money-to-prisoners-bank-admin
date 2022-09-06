@@ -57,7 +57,7 @@ class DashboardView(TemplateView):
         api_session = get_api_session(self.request)
         workday_list = get_preceding_workday_list(20, offset=2)
         user = self.request.user
-        if user.has_perm('transaction.view_bank_details_transaction'):
+        if settings.SHOW_ACCESS_PAY_REFUNDS and user.has_perm('transaction.view_bank_details_transaction'):
             context['missed_refunds'] = get_missing_downloads(
                 api_session, ACCESSPAY_LABEL, workday_list
             )
