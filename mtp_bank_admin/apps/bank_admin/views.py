@@ -84,7 +84,7 @@ class DashboardView(TemplateView):
 def download_refund_file(request, receipt_date):
     api_session = get_api_session(request)
     try:
-        csvfile = refund.get_refund_file(
+        csv_file = refund.get_refund_file(
             api_session, receipt_date, mark_refunded=True
         )
         record_download(api_session, ACCESSPAY_LABEL, receipt_date)
@@ -94,7 +94,7 @@ def download_refund_file(request, receipt_date):
 
     filename = settings.REFUND_OUTPUT_FILENAME.format(date=date.today())
 
-    response = HttpResponse(csvfile, content_type='text/plain')
+    response = HttpResponse(csv_file, content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename="%s"' % filename
 
     logger.info('User "%(username)s" is downloading AccessPay file for %(date)s', {
@@ -111,7 +111,7 @@ def download_refund_file(request, receipt_date):
 def download_adi_journal(request, receipt_date):
     api_session = get_api_session(request)
     try:
-        filedata = adi.get_adi_journal_file(
+        xlsm_file = adi.get_adi_journal_file(
             api_session, receipt_date, user=request.user
         )
         record_download(api_session, ADI_JOURNAL_LABEL, receipt_date)
@@ -125,7 +125,7 @@ def download_adi_journal(request, receipt_date):
     )
 
     response = HttpResponse(
-        filedata,
+        xlsm_file,
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = 'attachment; filename="%s"' % filename
@@ -144,7 +144,7 @@ def download_adi_journal(request, receipt_date):
 def download_bank_statement(request, receipt_date):
     api_session = get_api_session(request)
     try:
-        bai2file = statement.get_bank_statement_file(api_session, receipt_date)
+        mt940_file = statement.get_bank_statement_file(api_session, receipt_date)
         record_download(api_session, MT940_STMT_LABEL, receipt_date)
     except EmptyFileError as e:
         record_download(api_session, MT940_STMT_LABEL, receipt_date)
@@ -154,7 +154,7 @@ def download_bank_statement(request, receipt_date):
         account_number=settings.BANK_STMT_ACCOUNT_NUMBER, date=receipt_date
     )
 
-    response = HttpResponse(bai2file, content_type='application/octet-stream')
+    response = HttpResponse(mt940_file, content_type='application/octet-stream')
     response['Content-Disposition'] = 'attachment; filename="%s"' % filename
 
     logger.info('User "%(username)s" is downloading bank statement file for %(date)s', {
@@ -171,7 +171,7 @@ def download_bank_statement(request, receipt_date):
 def download_disbursements(request, receipt_date):
     api_session = get_api_session(request)
     try:
-        filedata = disbursements.get_disbursements_file(
+        xlsm_file = disbursements.get_disbursements_file(
             api_session, receipt_date, mark_sent=True
         )
         record_download(api_session, DISBURSEMENTS_LABEL, receipt_date)
@@ -182,7 +182,7 @@ def download_disbursements(request, receipt_date):
     filename = settings.DISBURSEMENT_OUTPUT_FILENAME.format(date=receipt_date)
 
     response = HttpResponse(
-        filedata,
+        xlsm_file,
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = 'attachment; filename="%s"' % filename
