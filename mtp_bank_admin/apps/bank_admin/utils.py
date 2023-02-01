@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime, time, timedelta
+import io
 from itertools import count, islice
 import time as systime
 import os
@@ -8,7 +9,7 @@ from django.utils.timezone import now, utc
 from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.dates import WorkdayChecker
 from openpyxl import load_workbook, styles
-from openpyxl.writer.excel import save_virtual_workbook
+from openpyxl.writer.excel import save_workbook
 
 from .exceptions import EarlyReconciliationError
 
@@ -172,7 +173,9 @@ class Journal:
         return None
 
     def create_file(self):
-        return save_virtual_workbook(self.wb)
+        f = io.BytesIO()
+        save_workbook(self.wb, f)
+        return f.getvalue()
 
 
 def get_cached_file_path(label, date, extension=None):
