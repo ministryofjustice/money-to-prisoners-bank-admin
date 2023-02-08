@@ -1,8 +1,8 @@
 [main]
 host = https://www.transifex.com
 
-[mtp.bank_admin]
+[o:ministry-of-justice:p:mtp:r:bank_admin]
 file_filter = mtp_bank_admin/translations/<lang>/LC_MESSAGES/django.po
 source_file = mtp_bank_admin/translations/django.pot
 source_lang = en_GB
-type = PO
+type        = PO
