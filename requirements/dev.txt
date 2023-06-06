@@ -4,4 +4,4 @@ money-to-prisoners-common[testing]~=16.0.0
 
 -r base.txt
 
-mt-940~=4.28
+mt-940~=4.30
