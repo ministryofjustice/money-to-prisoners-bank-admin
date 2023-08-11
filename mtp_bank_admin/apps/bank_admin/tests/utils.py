@@ -240,7 +240,7 @@ def get_query_dict(url):
     for key, value in query_params:
         if key not in query_dict:
             query_dict[key] = value
-        elif type(query_dict[key]) == list:
+        elif isinstance(query_dict[key], list):
             query_dict[key].append(value)
         else:
             query_dict[key] = [query_dict[key], value]
