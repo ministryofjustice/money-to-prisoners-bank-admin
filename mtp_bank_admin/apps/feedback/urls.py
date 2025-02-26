@@ -1,6 +1,5 @@
 from django.conf import settings
-from django.conf.urls import url
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, re_path
 from mtp_common.views import GetHelpView as BaseGetHelpView, GetHelpSuccessView
 
 
@@ -11,6 +10,6 @@ class GetHelpView(BaseGetHelpView):
 
 
 urlpatterns = [
-    url(r'^feedback/$', GetHelpView.as_view(), name='submit_ticket'),
-    url(r'^feedback/success/$', GetHelpSuccessView.as_view(), name='feedback_success'),
+    re_path(r'^feedback/$', GetHelpView.as_view(), name='submit_ticket'),
+    re_path(r'^feedback/success/$', GetHelpSuccessView.as_view(), name='feedback_success'),
 ]
