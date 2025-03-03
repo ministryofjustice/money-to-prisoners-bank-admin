@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import logging
 from unittest import mock
 from urllib.parse import quote_plus
@@ -7,7 +7,6 @@ from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
 from django.utils.encoding import escape_uri_path
-from django.utils.timezone import utc
 from django.utils.translation import gettext_lazy as _
 from mtp_common.auth.exceptions import Forbidden
 from mtp_common.auth.test_utils import generate_tokens
@@ -251,8 +250,8 @@ class DownloadRefundFileViewTestCase(BankAdminViewTestCase):
                 limit=str(settings.REQUEST_PAGE_SIZE),
                 offset='0',
                 status='refundable',
-                received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=utc)),
-                received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=utc))
+                received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=timezone.utc)),
+                received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=timezone.utc))
             )
         )
         self.assert_called_with(
@@ -423,8 +422,8 @@ class DownloadAdiFileViewTestCase(BankAdminViewTestCase):
             '?receipt_date=2014-12-11'
         )
 
-        start_date = str(datetime(2014, 12, 11, 0, 0, tzinfo=utc))
-        end_date = str(datetime(2014, 12, 12, 0, 0, tzinfo=utc))
+        start_date = str(datetime(2014, 12, 11, 0, 0, tzinfo=timezone.utc))
+        end_date = str(datetime(2014, 12, 12, 0, 0, tzinfo=timezone.utc))
 
         self.assert_called_with(
             api_url('/credits/'), responses.GET,
@@ -606,8 +605,8 @@ class DownloadBankStatementViewTestCase(BankAdminViewTestCase):
             dict(
                 limit=str(settings.REQUEST_PAGE_SIZE),
                 offset='0',
-                received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=utc)),
-                received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=utc))
+                received_at__gte=str(datetime(2014, 11, 12, 0, 0, tzinfo=timezone.utc)),
+                received_at__lt=str(datetime(2014, 11, 13, 0, 0, tzinfo=timezone.utc))
             )
         )
         self.assert_called_with(
@@ -735,8 +734,8 @@ class DownloadDisbursementsFileViewTestCase(BankAdminViewTestCase):
             '?receipt_date=2014-12-11'
         )
 
-        start_date = str(datetime(2014, 12, 11, 0, 0, tzinfo=utc))
-        end_date = str(datetime(2014, 12, 12, 0, 0, tzinfo=utc))
+        start_date = str(datetime(2014, 12, 11, 0, 0, tzinfo=timezone.utc))
+        end_date = str(datetime(2014, 12, 12, 0, 0, tzinfo=timezone.utc))
 
         self.assert_called_with(
             api_url('/disbursements/'), responses.GET,

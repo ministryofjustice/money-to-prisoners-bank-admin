@@ -1,9 +1,9 @@
 import datetime
+from datetime import timezone
 from unittest import mock
 
 from django.core.management import call_command
 from django.test import SimpleTestCase, override_settings
-from django.utils.timezone import utc
 from mtp_common.auth.api_client import MoJOAuth2Session
 from mtp_common.auth.test_utils import generate_tokens
 from mtp_common.test_utils.notify import NotifyMock, GOVUK_NOTIFY_TEST_API_KEY
@@ -25,12 +25,12 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
     def test_not_scheduled_on_weekend_or_bank_holiday(self, mocked_timezone, mocked_api_session):
         mocked_api_session.side_effect = AssertionError('Should not be called')
 
-        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 17, 12, tzinfo=utc)
+        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 17, 12, tzinfo=timezone.utc)
         with responses.RequestsMock() as rsps:
             mock_bank_holidays(rsps)
             call_command('send_private_estate_emails', scheduled=True)
 
-        mocked_timezone.now.return_value = datetime.datetime(2016, 12, 26, 12, tzinfo=utc)
+        mocked_timezone.now.return_value = datetime.datetime(2016, 12, 26, 12, tzinfo=timezone.utc)
         with responses.RequestsMock() as rsps:
             mock_bank_holidays(rsps)
             call_command('send_private_estate_emails', scheduled=True)
@@ -40,7 +40,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
     def test_runs_on_weekday(self, mocked_timezone, mocked_api_session):
         mocked_api_session.side_effect = AssertionError('Must be called')
 
-        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
+        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=timezone.utc)
         with responses.RequestsMock() as rsps:
             mock_bank_holidays(rsps)
             with self.assertRaisesMessage(AssertionError, 'Must be called'):
@@ -50,7 +50,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone')
     def test_empty_batches(self, mocked_timezone, mocked_api_session, mocked_send_csv):
-        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
+        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=timezone.utc)
         mocked_send_csv.side_effect = AssertionError('Should not be called')
         with responses.RequestsMock() as rsps:
             mock_bank_holidays(rsps)
@@ -66,7 +66,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone')
     def test_csv_created(self, mocked_timezone, mocked_api_session, mocked_send_csv):
-        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
+        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=timezone.utc)
         with responses.RequestsMock() as rsps:
             mock_bank_holidays(rsps)
             mock_api_session(mocked_api_session)
@@ -213,7 +213,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone')
     def test_csv_created_for_one_prison(self, mocked_timezone, mocked_api_session, mocked_send_csv):
-        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
+        mocked_timezone.now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=timezone.utc)
         with responses.RequestsMock() as rsps:
             mock_bank_holidays(rsps)
             mock_api_session(mocked_api_session)
@@ -276,7 +276,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone.now')
     @override_settings(GOVUK_NOTIFY_API_KEY=GOVUK_NOTIFY_TEST_API_KEY)
     def test_email_sent(self, mocked_now, mocked_api_session, mocked_upload_to_s3):
-        mocked_now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=utc)
+        mocked_now.return_value = datetime.datetime(2019, 2, 18, 12, tzinfo=timezone.utc)
         with NotifyMock() as rsps:
             mock_bank_holidays(rsps)
             mock_api_session(mocked_api_session)
