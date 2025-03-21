@@ -1,11 +1,11 @@
 from collections import defaultdict
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 import io
 from itertools import count, islice
 import time as systime
 import os
 
-from django.utils.timezone import now, utc
+from django.utils.timezone import now
 from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.dates import WorkdayChecker
 from openpyxl import load_workbook, styles
@@ -30,7 +30,7 @@ def retrieve_prisons(api_session):
 
 
 def set_worldpay_cutoff(date):
-    return datetime.combine(date, time(0, 0, 0, tzinfo=utc))
+    return datetime.combine(date, time(0, 0, 0, tzinfo=timezone.utc))
 
 
 def get_start_and_end_date(date):

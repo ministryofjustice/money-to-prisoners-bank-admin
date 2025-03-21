@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import logging
 import os
 from unittest import mock, skipUnless
@@ -7,7 +7,6 @@ from urllib.parse import quote_plus
 
 from django.test.client import RequestFactory
 from django.urls import reverse
-from django.utils.timezone import utc
 from mtp_common.auth.api_client import get_api_session
 from mtp_common.auth.models import MojUser
 from mtp_common.test_utils import silence_logger
@@ -306,8 +305,8 @@ class AdiPaymentFileGenerationTestCase(BankAdminTestCase):
         self.assert_called_with(
             api_url('/transactions/reconcile/'), responses.POST,
             {
-                'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
-                'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()
+                'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=timezone.utc).isoformat(),
+                'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=timezone.utc).isoformat()
             }
         )
 

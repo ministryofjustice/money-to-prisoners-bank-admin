@@ -1,10 +1,9 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 import random
 from unittest import mock
 
 from django.test.client import RequestFactory
 from django.urls import reverse
-from django.utils.timezone import utc
 import mt940
 from mtp_common.auth.api_client import get_api_session
 from mtp_common.auth.models import MojUser
@@ -136,8 +135,8 @@ class BankStatementGenerationTestCase(BankStatementTestCase):
         self.assert_called_with(
             api_url('/transactions/reconcile/'), responses.POST,
             {
-                'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=utc).isoformat(),
-                'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=utc).isoformat()
+                'received_at__gte': datetime(2016, 9, 13, 0, 0, tzinfo=timezone.utc).isoformat(),
+                'received_at__lt': datetime(2016, 9, 14, 0, 0, tzinfo=timezone.utc).isoformat()
             }
         )
 

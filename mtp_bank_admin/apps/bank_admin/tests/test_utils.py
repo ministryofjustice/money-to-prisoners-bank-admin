@@ -1,7 +1,6 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from unittest import mock
 
-from django.utils.timezone import utc
 from mtp_common.auth.api_client import get_api_session
 from mtp_common.auth.test_utils import generate_tokens
 import responses
@@ -33,13 +32,13 @@ class ReconcileForDateTestCase(BankAdminTestCase):
         self.assert_called_with(
             api_url('/transactions/reconcile/'), responses.POST,
             {
-                'received_at__gte': datetime(2016, 9, 15, 0, 0, tzinfo=utc).isoformat(),
-                'received_at__lt': datetime(2016, 9, 16, 0, 0, tzinfo=utc).isoformat()
+                'received_at__gte': datetime(2016, 9, 15, 0, 0, tzinfo=timezone.utc).isoformat(),
+                'received_at__lt': datetime(2016, 9, 16, 0, 0, tzinfo=timezone.utc).isoformat()
             }
         )
 
-        self.assertEqual(start_date, datetime(2016, 9, 15, 0, 0, tzinfo=utc))
-        self.assertEqual(end_date, datetime(2016, 9, 16, 0, 0, tzinfo=utc))
+        self.assertEqual(start_date, datetime(2016, 9, 15, 0, 0, tzinfo=timezone.utc))
+        self.assertEqual(end_date, datetime(2016, 9, 16, 0, 0, tzinfo=timezone.utc))
 
     @responses.activate
     def test_reconciles_weekend(self):
@@ -55,27 +54,27 @@ class ReconcileForDateTestCase(BankAdminTestCase):
         self.assert_called_with(
             api_url('/transactions/reconcile/'), responses.POST,
             {
-                'received_at__gte': datetime(2016, 10, 7, 0, 0, tzinfo=utc).isoformat(),
-                'received_at__lt': datetime(2016, 10, 8, 0, 0, tzinfo=utc).isoformat()
+                'received_at__gte': datetime(2016, 10, 7, 0, 0, tzinfo=timezone.utc).isoformat(),
+                'received_at__lt': datetime(2016, 10, 8, 0, 0, tzinfo=timezone.utc).isoformat()
             }
         )
         self.assert_called_with(
             api_url('/transactions/reconcile/'), responses.POST,
             {
-                'received_at__gte': datetime(2016, 10, 8, 0, 0, tzinfo=utc).isoformat(),
-                'received_at__lt': datetime(2016, 10, 9, 0, 0, tzinfo=utc).isoformat()
+                'received_at__gte': datetime(2016, 10, 8, 0, 0, tzinfo=timezone.utc).isoformat(),
+                'received_at__lt': datetime(2016, 10, 9, 0, 0, tzinfo=timezone.utc).isoformat()
             }
         )
         self.assert_called_with(
             api_url('/transactions/reconcile/'), responses.POST,
             {
-                'received_at__gte': datetime(2016, 10, 9, 0, 0, tzinfo=utc).isoformat(),
-                'received_at__lt': datetime(2016, 10, 10, 0, 0, tzinfo=utc).isoformat()
+                'received_at__gte': datetime(2016, 10, 9, 0, 0, tzinfo=timezone.utc).isoformat(),
+                'received_at__lt': datetime(2016, 10, 10, 0, 0, tzinfo=timezone.utc).isoformat()
             }
         )
 
-        self.assertEqual(start_date, datetime(2016, 10, 7, 0, 0, tzinfo=utc))
-        self.assertEqual(end_date, datetime(2016, 10, 10, 0, 0, tzinfo=utc))
+        self.assertEqual(start_date, datetime(2016, 10, 7, 0, 0, tzinfo=timezone.utc))
+        self.assertEqual(end_date, datetime(2016, 10, 10, 0, 0, tzinfo=timezone.utc))
 
 
 class WorkdayCheckerTestCase(BankAdminTestCase):
