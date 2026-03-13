@@ -2,6 +2,8 @@
 
 SSCL staff facing site for [Prisoner Money suite of apps](https://github.com/ministryofjustice/money-to-prisoners).
 
+Overview and guidelines are found [here](guidelines.md) on how to run locally
+
 ## Requirements
 
 - Unix-like platform with Python 3.12 and NodeJS 24 (e.g. via [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or [fnm](https://github.com/Schniz/fnm#installation))
