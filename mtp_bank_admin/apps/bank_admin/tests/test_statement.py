@@ -1,5 +1,7 @@
 from datetime import date, datetime, timezone
+import os
 import random
+import tempfile
 from unittest import mock
 
 from django.test.client import RequestFactory
@@ -13,7 +15,9 @@ from .utils import (
     get_test_transactions, NO_TRANSACTIONS, ORIGINAL_REF, SENDER_NAME,
     mock_balance, OPENING_BALANCE, api_url, mock_bank_holidays, BankAdminTestCase
 )
-from bank_admin.statement import generate_bank_statement
+from bank_admin.statement import generate_bank_statement, get_bank_statement_file
+from bank_admin.utils import get_cached_file_path
+from bank_admin import MT940_STMT_LABEL
 
 
 def get_test_transactions_for_stmt(count=20):
@@ -166,3 +170,66 @@ class NoTransactionsTestCase(BankStatementTestCase):
         final_closing_balance = parsed_file.data['final_closing_balance'].amount
         self.assertEqual(final_opening_balance, final_closing_balance)
         self.assertEqual(final_closing_balance.amount * 100, OPENING_BALANCE)
+
+
+class BankStatementCachingTestCase(BankStatementTestCase):
+    """Tests that the file cache can be bypassed with force=True."""
+
+    RECEIPT_DATE = date(2016, 9, 13)
+
+    def _setup_responses(self, transaction_count=20):
+        responses.add(
+            responses.POST,
+            api_url('/transactions/reconcile/'),
+            status=200
+        )
+        test_data = mock_test_transactions(count=transaction_count)
+        mock_balance()
+        mock_bank_holidays()
+        return test_data
+
+    @responses.activate
+    def test_cached_file_is_reused_without_force(self):
+        """Second call without force= returns the cached file without hitting the API."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache_path = os.path.join(tmpdir, 'MT940_BANK_STMT', '20160913')
+            with mock.patch(
+                'bank_admin.utils.get_cached_file_path',
+                return_value=cache_path
+            ):
+                os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                # Write a sentinel file to represent an already-cached statement
+                with open(cache_path, 'wb') as f:
+                    f.write(b'CACHED_CONTENT')
+
+                # Call without force — should return the existing cached file untouched
+                api_session = self.get_api_session()
+                returned = get_bank_statement_file(api_session, self.RECEIPT_DATE, force=False)
+                self.assertEqual(returned.read(), b'CACHED_CONTENT')
+                # No API calls should have been made
+                self.assertEqual(len(responses.calls), 0)
+
+    @responses.activate
+    def test_force_regenerates_cached_file(self):
+        """force=True causes the file to be regenerated even when a cached copy exists."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache_path = os.path.join(tmpdir, 'MT940_BANK_STMT', '20160913')
+            with mock.patch(
+                'bank_admin.utils.get_cached_file_path',
+                return_value=cache_path
+            ):
+                os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                # Write a stale sentinel file
+                with open(cache_path, 'wb') as f:
+                    f.write(b'STALE_CONTENT')
+
+                self._setup_responses(transaction_count=5)
+
+                api_session = self.get_api_session()
+                returned = get_bank_statement_file(api_session, self.RECEIPT_DATE, force=True)
+                content = returned.read()
+
+                # The stale sentinel should have been overwritten
+                self.assertNotEqual(content, b'STALE_CONTENT')
+                # The API should have been called
+                self.assertGreater(len(responses.calls), 0)

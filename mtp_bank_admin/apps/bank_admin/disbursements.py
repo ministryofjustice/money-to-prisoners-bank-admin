@@ -20,13 +20,14 @@ PAYMENT_METHODS = {
 }
 
 
-def get_disbursements_file(api_session, receipt_date, mark_sent=False):
+def get_disbursements_file(api_session, receipt_date, mark_sent=False, force=False):
     filepath = get_or_create_file(
         DISBURSEMENTS_LABEL,
         receipt_date,
         generate_disbursements_journal,
         f_args=[api_session, receipt_date],
-        file_extension='xlsm'
+        file_extension='xlsm',
+        force=force
     )
     if mark_sent:
         mark_as_sent(api_session, receipt_date)

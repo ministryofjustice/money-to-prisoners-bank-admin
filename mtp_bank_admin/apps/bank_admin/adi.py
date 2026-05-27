@@ -14,14 +14,15 @@ from .utils import (
 )
 
 
-def get_adi_journal_file(api_session, receipt_date, user=None):
+def get_adi_journal_file(api_session, receipt_date, user=None, force=False):
     filepath = get_or_create_file(
         ADI_JOURNAL_LABEL,
         receipt_date,
         generate_adi_journal,
         f_args=[api_session, receipt_date],
         f_kwargs={'user': user},
-        file_extension='xlsm'
+        file_extension='xlsm',
+        force=force
     )
     journal = AdiJournal(
         filepath,

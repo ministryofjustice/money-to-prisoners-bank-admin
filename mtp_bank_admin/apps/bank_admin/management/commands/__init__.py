@@ -17,6 +17,10 @@ class FileGenerationCommand(BaseCommand):
     def add_arguments(self, parser):
         super().add_arguments(parser)
         parser.add_argument('--date', dest='date', type=str, help='Receipt date')
+        parser.add_argument(
+            '--force', action='store_true', dest='force', default=False,
+            help='Force regeneration of the file even if a cached copy already exists'
+        )
 
     def handle(self, *args, **options):
         if options['date']:
@@ -33,4 +37,4 @@ class FileGenerationCommand(BaseCommand):
             settings.BANK_ADMIN_USERNAME,
             settings.BANK_ADMIN_PASSWORD
         )
-        self.__class__.function(api_session, receipt_date)
+        self.__class__.function(api_session, receipt_date, force=options['force'])

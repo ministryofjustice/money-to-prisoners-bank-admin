@@ -13,12 +13,13 @@ from .utils import (
 )
 
 
-def get_refund_file(api_session, receipt_date, mark_refunded=False):
+def get_refund_file(api_session, receipt_date, mark_refunded=False, force=False):
     filepath = get_or_create_file(
         ACCESSPAY_LABEL,
         receipt_date,
         generate_refund_file_for_date,
-        f_args=[api_session, receipt_date]
+        f_args=[api_session, receipt_date],
+        force=force
     )
     if mark_refunded:
         mark_as_refunded(api_session, receipt_date)

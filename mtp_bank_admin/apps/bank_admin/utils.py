@@ -185,12 +185,12 @@ def get_cached_file_path(label, date, extension=None):
     return filepath
 
 
-def get_or_create_file(label, date, creation_func, f_args=None, f_kwargs=None, file_extension=None):
+def get_or_create_file(label, date, creation_func, f_args=None, f_kwargs=None, file_extension=None, force=False):
     f_args = f_args or []
     f_kwargs = f_kwargs or {}
 
     filepath = get_cached_file_path(label, date, extension=file_extension)
-    if not os.path.isfile(filepath):
+    if force or not os.path.isfile(filepath):
         filedata = creation_func(*f_args, **f_kwargs)
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, 'wb+') as f:

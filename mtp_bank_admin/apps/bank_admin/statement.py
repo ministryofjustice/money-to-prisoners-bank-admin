@@ -11,12 +11,13 @@ from .utils import (
 )
 
 
-def get_bank_statement_file(api_session, receipt_date):
+def get_bank_statement_file(api_session, receipt_date, force=False):
     filepath = get_or_create_file(
         MT940_STMT_LABEL,
         receipt_date,
         generate_bank_statement,
-        f_args=[api_session, receipt_date]
+        f_args=[api_session, receipt_date],
+        force=force
     )
     return open(filepath, 'rb')
 
