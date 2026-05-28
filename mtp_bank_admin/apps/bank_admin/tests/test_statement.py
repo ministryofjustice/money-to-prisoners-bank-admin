@@ -16,9 +16,6 @@ from .utils import (
     mock_balance, OPENING_BALANCE, api_url, mock_bank_holidays, BankAdminTestCase
 )
 from bank_admin.statement import generate_bank_statement, get_bank_statement_file
-from bank_admin.utils import get_cached_file_path
-from bank_admin import MT940_STMT_LABEL
-
 
 def get_test_transactions_for_stmt(count=20):
     transactions = get_test_transactions(count=int(count*0.75))
