@@ -2,6 +2,7 @@ from collections import defaultdict
 from datetime import datetime, time, timedelta, timezone
 import io
 from itertools import count, islice
+import logging
 import time as systime
 import os
 
@@ -10,8 +11,20 @@ from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.dates import WorkdayChecker
 from openpyxl import load_workbook, styles
 from openpyxl.writer.excel import save_workbook
+import requests
 
 from .exceptions import EarlyReconciliationError
+
+logger = logging.getLogger('mtp')
+
+# The `transactions/reconcile/` endpoint reconciles the whole day's transactions, payments and
+# credits in a single DB transaction, so it can run close to the API client's default 30s timeout
+# at peak volume. Give this specific call a longer timeout and retry on timeout: the endpoint is
+# idempotent (it only acts on not-yet-reconciled records), so a retry simply completes any work a
+# timed-out attempt left outstanding.
+RECONCILE_REQUEST_TIMEOUT = 120  # seconds
+RECONCILE_MAX_ATTEMPTS = 3
+RECONCILE_RETRY_DELAY = 5  # seconds
 
 
 def retrieve_all_transactions(api_session, **kwargs):
@@ -49,16 +62,32 @@ def reconcile_for_date(api_session, receipt_date):
     reconciliation_date = start_date
     while reconciliation_date < end_date:
         end_of_day = reconciliation_date + timedelta(days=1)
-        api_session.post(
-            'transactions/reconcile/',
-            json={
-                'received_at__gte': reconciliation_date.isoformat(),
-                'received_at__lt': end_of_day.isoformat(),
-            }
-        )
+        _reconcile_day(api_session, reconciliation_date, end_of_day)
         reconciliation_date = end_of_day
 
     return start_date, end_date
+
+
+def _reconcile_day(api_session, reconciliation_date, end_of_day):
+    for attempt in range(1, RECONCILE_MAX_ATTEMPTS + 1):
+        try:
+            api_session.post(
+                'transactions/reconcile/',
+                json={
+                    'received_at__gte': reconciliation_date.isoformat(),
+                    'received_at__lt': end_of_day.isoformat(),
+                },
+                timeout=RECONCILE_REQUEST_TIMEOUT,
+            )
+            return
+        except requests.exceptions.Timeout:
+            if attempt >= RECONCILE_MAX_ATTEMPTS:
+                raise
+            logger.warning(
+                'Timed out reconciling %s (attempt %d/%d), retrying in %ds',
+                reconciliation_date.date(), attempt, RECONCILE_MAX_ATTEMPTS, RECONCILE_RETRY_DELAY,
+            )
+            systime.sleep(RECONCILE_RETRY_DELAY)
 
 
 def retrieve_last_balance(api_session, date):
