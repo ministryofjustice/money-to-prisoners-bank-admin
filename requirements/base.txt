@@ -1,6 +1,6 @@
 # Dependencies needed for all environments
 
-money-to-prisoners-common~=21.2.6
+money-to-prisoners-common~=21.2.7
 
 mt940-writer==0.8
 openpyxl~=3.1
