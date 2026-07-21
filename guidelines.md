@@ -20,9 +20,8 @@ The application interacts with several APIs and libraries:
 
 - **MTP API (`money-to-prisoners-api`)**:
   - Central data store and authentication provider.
+  - Staff sign in against it via OAuth2 (`mtp_common.auth.backends.MojBackend`); user accounts live in its database.
   - Used for fetching transactions, credits, and disbursements.
-- **HMPPS Auth**:
-  - Used for authenticating staff accounts via the MTP API.
 - **GOV.UK Notify**:
   - Sends email notifications for disbursements and private estate emails.
 - **GOV.UK Bank Holidays**:
