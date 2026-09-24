@@ -108,4 +108,5 @@ Users should be assigned one of the following roles based on their required acce
 - **Excel Templates**:
   - ADI and Disbursement templates (Excel format) are located in `local_files/`. These are used as bases for generated journals and disbursement files.
 - **Docker**:
-  - Run with `./run.py local_docker` for a production-like environment.
+  - `docker compose up` runs this app from your checkout with the database and API; add `--profile full` for the other apps.
+    See [Running locally with Docker](README.md#running-locally-with-docker).

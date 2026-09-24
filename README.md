@@ -11,7 +11,32 @@ Overview and guidelines are found [here](guidelines.md) on how to run locally
 
 - Unix-like platform with Python 3.12 and NodeJS 24 (e.g. via [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or [fnm](https://github.com/Schniz/fnm#installation))
 
-## Running locally
+## Running locally with Docker
+
+This is the quickest way to get started: you only need this repository and
+[Docker](https://www.docker.com/products/docker-desktop/). Run
+
+```shell
+docker compose up
+```
+
+This starts the site from your checkout, together with a database and the
+[API](https://github.com/ministryofjustice/money-to-prisoners-api/) (from its published image),
+which is loaded with test data the first time it starts. The first start takes a few minutes.
+
+- The app is at [http://localhost:8002/](http://localhost:8002/), or [http://localhost:3002/](http://localhost:3002/)
+  to have the browser reload as you change templates, styles and scripts
+- Sign in as `refund-bank-admin` / `refund-bank-admin` or `disbursement-bank-admin` / `disbursement-bank-admin`
+- The API admin is at [http://localhost:8000/admin/](http://localhost:8000/admin/) – sign in as `admin` / `adminadmin`
+
+Run `docker compose --profile full up` to also start the other Prisoner Money apps, from their published images.
+Run `docker compose up --build` after changing Python or Node.js dependencies,
+and `docker compose down -v` to start again with fresh test data.
+
+The [getting-started guide](https://github.com/ministryofjustice/money-to-prisoners-deploy/blob/main/docs/getting-started.md)
+covers all the test logins, local addresses and what does not work locally.
+
+## Running locally without Docker
 
 It’s recommended that you use a python virtual environment to isolate each application.
 
@@ -45,17 +70,6 @@ The former also starts browser-sync at [http://localhost:3002/](http://localhost
 You should be able to login using following credentials: `refund-bank-admin` or `disbursement-bank-admin`
 
 All build/development actions can be listed with `./run.py --verbosity 2 help`.
-
-### Alternative: Docker
-
-In order to run a server that’s exactly similar to the production machines,
-you need to have [Docker](https://www.docker.com/products/developer-tools) installed. Run
-
-```shell
-./run.py local_docker
-```
-
-and you should be able to connect to the local server.
 
 ## Developing
 
