@@ -238,6 +238,8 @@ if os.environ.get('SENTRY_DSN'):
         environment=ENVIRONMENT,
         release=APP_GIT_COMMIT or 'unknown',
         send_default_pii=DEBUG,
+        # Email personalisation contains bearer links and must not appear in stack frame data.
+        include_local_variables=False,
         max_request_body_size='medium' if DEBUG else 'never',
     )
 
