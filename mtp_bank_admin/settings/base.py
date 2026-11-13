@@ -20,6 +20,9 @@ MOJ_INTERNAL_SITE = True
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or 'CHANGE_ME'
+PRIVATE_ESTATE_DOWNLOAD_SIGNING_KEY = os.environ.get('PRIVATE_ESTATE_DOWNLOAD_SIGNING_KEY', '')
+PRIVATE_ESTATE_DOWNLOAD_LIFETIME_SECONDS = int(os.environ.get('PRIVATE_ESTATE_DOWNLOAD_LIFETIME_SECONDS', 28 * 86400))
+PRIVATE_ESTATE_DOWNLOAD_RETENTION_DAYS = int(os.environ.get('PRIVATE_ESTATE_DOWNLOAD_RETENTION_DAYS', 70))
 ALLOWED_HOSTS = ['*']
 
 START_PAGE_URL = os.environ.get('START_PAGE_URL', 'https://www.gov.uk/send-prisoner-money')
