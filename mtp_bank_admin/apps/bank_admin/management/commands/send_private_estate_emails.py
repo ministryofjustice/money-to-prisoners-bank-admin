@@ -12,6 +12,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import activate, get_language
 from mtp_common.api import retrieve_all_pages_for_path
 from mtp_common.auth import api_client
+from mtp_common.private_estate_downloads import PREFIX, issue_token
 from mtp_common.s3_bucket import generate_upload_path, get_download_url
 from mtp_common.stack import StackException, is_first_instance
 from mtp_common.tasks import send_email, upload_to_s3
@@ -65,6 +66,10 @@ class Command(BaseCommand):
             if date is None:
                 raise CommandError('Date cannot be parsed, use YYYY-MM-DD format')
 
+        if (not settings.PRIVATE_ESTATE_DOWNLOAD_SIGNING_KEY
+                or not 0 < settings.PRIVATE_ESTATE_DOWNLOAD_LIFETIME_SECONDS
+                <= settings.PRIVATE_ESTATE_DOWNLOAD_RETENTION_DAYS * 86400):
+            raise CommandError('Private estate download signing key and link lifetime within object retention required')
         self.process_batches(date, prison)
 
     def process_batches(self, date, prison=None):
@@ -163,8 +168,11 @@ def send_csv(prison, date, batches, csv_contents, total, count):
         'date': format_date(date, 'Y-m-d'),
         'prison': prison['nomis_id'],
     }
-    bucket_path_prefix = 'emails/private-estate-credits/%(date)s/%(prison)s' % naming_context
+    bucket_path_prefix = PREFIX + '%(date)s/%(prison)s' % naming_context
     bucket_path = generate_upload_path(bucket_path_prefix, csv_name)
+    token = issue_token(bucket_path, settings.PRIVATE_ESTATE_DOWNLOAD_SIGNING_KEY,
+                        settings.PRIVATE_ESTATE_DOWNLOAD_LIFETIME_SECONDS,
+                        settings.PRIVATE_ESTATE_DOWNLOAD_RETENTION_DAYS * 86400)
     upload_to_s3(
         file_contents=csv_contents,
         path=bucket_path,
@@ -179,7 +187,7 @@ def send_csv(prison, date, batches, csv_contents, total, count):
         personalisation={
             'prison_name': prison_name,
             'date': format_date(date, 'd/m/Y'),
-            'attachment': get_download_url(bucket_path),
+            'attachment': get_download_url(bucket_path, private_estate_token=token),
         },
         reference='bank-admin-private-csv-%(date)s-%(prison)s' % naming_context,
         staff_email=True,

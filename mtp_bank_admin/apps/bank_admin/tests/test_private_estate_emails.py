@@ -1,15 +1,18 @@
 import datetime
 from datetime import timezone
 from unittest import mock
+from urllib.parse import parse_qs, urlsplit
 
-from django.core.management import call_command
+from django.core.management import call_command, CommandError
 from django.test import SimpleTestCase, override_settings
 from mtp_common.auth.api_client import MoJOAuth2Session
 from mtp_common.auth.test_utils import generate_tokens
+from mtp_common.private_estate_downloads import read_token
 from mtp_common.test_utils.notify import NotifyMock, GOVUK_NOTIFY_TEST_API_KEY
 import responses
 
 from bank_admin.tests.utils import TEST_PRISONS, TEST_BANK_ACCOUNT, api_url, mock_bank_holidays
+from bank_admin.management.commands.send_private_estate_emails import send_csv
 
 
 def mock_api_session(mocked_api_session):
@@ -18,8 +21,38 @@ def mock_api_session(mocked_api_session):
     mocked_api_session.return_value = mock_session
 
 
-@override_settings(GOVUK_NOTIFY_REPLY_TO_STAFF='test-1234567-1234567', EMAILS_URL='http://localhost:8006')
+@override_settings(GOVUK_NOTIFY_REPLY_TO_STAFF='test-1234567-1234567', EMAILS_URL='http://localhost:8006',
+                   PRIVATE_ESTATE_DOWNLOAD_SIGNING_KEY='test-signing-key',
+                   PRIVATE_ESTATE_DOWNLOAD_LIFETIME_SECONDS=28 * 86400)
 class PrivateEstateEmailTestCase(SimpleTestCase):
+    @override_settings(PRIVATE_ESTATE_DOWNLOAD_SIGNING_KEY='')
+    @mock.patch('bank_admin.management.commands.send_private_estate_emails.Command.process_batches')
+    def test_missing_signing_key_fails_before_batches_are_processed(self, process_batches):
+        with self.assertRaisesMessage(CommandError, 'signing key'):
+            call_command('send_private_estate_emails', date='2019-02-15')
+        process_batches.assert_not_called()
+
+    @override_settings(PRIVATE_ESTATE_DOWNLOAD_LIFETIME_SECONDS=70 * 86400 + 1)
+    @mock.patch('bank_admin.management.commands.send_private_estate_emails.Command.process_batches')
+    def test_link_lifetime_cannot_exceed_object_retention(self, process_batches):
+        with self.assertRaisesMessage(CommandError, 'object retention'):
+            call_command('send_private_estate_emails', date='2019-02-15')
+        process_batches.assert_not_called()
+
+    @override_settings(PRIVATE_ESTATE_DOWNLOAD_LIFETIME_SECONDS=90 * 86400,
+                       PRIVATE_ESTATE_DOWNLOAD_RETENTION_DAYS=100)
+    @mock.patch('bank_admin.management.commands.send_private_estate_emails.send_email')
+    @mock.patch('bank_admin.management.commands.send_private_estate_emails.upload_to_s3')
+    def test_longer_configured_expiry_can_be_issued(self, upload, email):
+        prison = {'short_name': 'Private 1', 'name': 'Private 1', 'nomis_id': 'PR1', 'cms_establishment_code': '10'}
+        with mock.patch('mtp_common.private_estate_downloads.time.time', return_value=1000) as clock:
+            send_csv(prison, datetime.date(2019, 2, 15), [{'remittance_emails': ['private@mtp.local']}],
+                     b'example', 100, 1)
+            url = email.call_args.kwargs['personalisation']['attachment']
+            token = parse_qs(urlsplit(url).query)['token'][0]
+            clock.return_value += 89 * 86400
+            self.assertEqual(read_token(token, 'test-signing-key'), upload.call_args.kwargs['path'])
+
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.api_client.get_authenticated_api_session')
     @mock.patch('bank_admin.management.commands.send_private_estate_emails.timezone')
     def test_not_scheduled_on_weekend_or_bank_holiday(self, mocked_timezone, mocked_api_session):
@@ -313,7 +346,7 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
         self.assertEqual(len(send_email_request_data), 1)
         send_email_request_data = send_email_request_data[0]
         send_email_request_data.pop('template_id')  # because template_id is random
-        send_email_request_data['personalisation'].pop('attachment')  # because bucket path is part-random
+        attachment = send_email_request_data['personalisation'].pop('attachment')
         self.assertDictEqual(send_email_request_data, {
             'email_address': 'private@mtp.local',
             'email_reply_to_id': 'test-1234567-1234567',
@@ -324,7 +357,11 @@ class PrivateEstateEmailTestCase(SimpleTestCase):
             'reference': 'bank-admin-private-csv-2019-02-15-PR1',
         })
         bucket_path = upload_to_s3_kwargs['path']
-        self.assertTrue(bucket_path.startswith('emails/private-estate-credits/2019-02-15/PR1/'))
+        self.assertTrue(bucket_path.startswith('private-estate-credits-v2/2019-02-15/PR1/'))
+        parsed_url = urlsplit(attachment)
+        self.assertEqual(parsed_url.path, '/download-private')
+        token = parse_qs(parsed_url.query)['token'][0]
+        self.assertEqual(read_token(token, 'test-signing-key'), bucket_path)
         self.assertTrue(bucket_path.endswith('/payment_10_20190218_120000.csv'))
         csv_contents = upload_to_s3_kwargs['file_contents']
         self.assertIn('£25.01'.encode('cp1252'), csv_contents)
